@@ -1,0 +1,140 @@
+%{
+
+only use one set up sim experiment file, but have flags to 
+
+use s = 1, 2, ..., S scan positions, 
+noise or no noise, some number of exposures
+focused beam or pinhole
+
+
+just use different m files to define the different parameters, simulated PETN or ptycho experiments, 
+
+
+what about bragg 2d vs 3d?
+
+bragg slices + rocking curve is different vs transmission
+
+tomo type transmission vs bragg type tomo
+
+
+
+%}
+
+
+
+
+
+
+
+%
+
+try divide and concur ER, Solv Flip
+
+canny filter on wavelet A component, use for H, V, D also?
+
+
+install matlab LANL dell
+wifi drivers LANL dell
+
+heathers desktop?
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+function [ support ] = shrinkwrap( shrnkwrap_me, N, sw )
+
+% COMMENT ME ASSHAT!! COMMENT ME ASSHAT!! COMMENT ME ASSHAT!! COMMENT ME ASSHAT!!
+% COMMENT ME ASSHAT!! COMMENT ME ASSHAT!! COMMENT ME ASSHAT!! COMMENT ME ASSHAT!!
+% COMMENT ME ASSHAT!! COMMENT ME ASSHAT!! COMMENT ME ASSHAT!! COMMENT ME ASSHAT!!
+
+%--------------------------------------------------------------------------------------------------
+
+if ~isfield(sw,'thresh_type'), sw.thresh_type = 'use_value'; end
+
+if ~isfield(sw,'sigma'), sw.sigma = []; end
+
+%--------------------------------------------------------------------------------------------------
+
+shrnkwrap_me = abs( shrnkwrap_me );
+
+%--------------------------------------------------------------------------------------------------
+
+if ~isempty( sw.sigma ), shrnkwrap_me = lpf_gauss( shrnkwrap_me, N, sw.sigma, sw.sigma ); end
+
+%--------------------------------------------------------------------------------------------------
+
+%shrnkwrap_me = shrnkwrap_me *  max( shrnkwrap_me(:) ) / max( shrnkwrap_me(:) );
+%shrnkwrap_me = shrnkwrap_me *  norm( shrnkwrap_me, 'fro' ) / norm( shrnkwrap_me, 'fro' );
+
+%--------------------------------------------------------------------------------------------------
+
+if strcmp( sw.thresh_type, 'use_sparsity_lvl' )
+
+  thresh = find_thresh_from_sparsitylevel( shrnkwrap_me, sw.num2keep );
+  
+  support.in = ( shrnkwrap_me >= thresh );
+  
+elseif strcmp(sw.thresh_type, 'use_const_thresh'),  
+  
+  support.in = ( shrnkwrap_me >= sw.thresh_val );
+  
+elseif strcmp(sw.thresh_type, 'use_percent_max'), 
+  
+  support.in = ( shrnkwrap_me >= ( sw.thresh_val * max(max( shrnkwrap_me ))) );
+  
+else
+  
+  error('!!! must specify how to choose thresholding value !!!')
+  
+end
+
+%--------------------------------------------------------------------------------------------------
+
+support.out = not( support.in );
+
+%--------------------------------------------------------------------------------------------------
+
+end
+
+
+
+
+
+
+
+
+
+function [ sol ] = config_shrinkwrap_params( sol, N )
+
+%-------------------------------------------------------------------\
+% default shrink wrap parameters of the exit wave (in sample space) |
+%-------------------------------------------------------------------/
+
+% default sparsity level when performing shrinkwrap on sample space support:
+sol.shrinkwrap.sparsity_lvl = 0.20; % 0.085 for simulated string bean
+
+% compute the number of elements we wish to keep based on sparsity level:
+sol.shrinkwrap.num2keep = round( N.NcNr * sol.shrinkwrap.sparsity_lvl );
+
+% default gaussian blurring when performing shrinkwrap on sample space support:
+sol.shrinkwrap.sigma = 5;
+
+% default thresh parameter type when performing shrinkwrap; options are use_sparsity_lvl, use_percent_max, use_value
+sol.shrinkwrap.thresh_type = 'use_sparsity_lvl'; 
+%sol.shrinkwrap.thresh_type = 'use_const_thresh'; 
+
+%==================================================================================================
+
+
