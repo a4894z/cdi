@@ -2,6 +2,8 @@
 
 %{
 
+cd /net/s8iddata/export/8-id-ECA/Analysis/atripath/cdi
+
 clear; close all; runsolver_ptycho2DTPA_multiple_trials
 
 %}
