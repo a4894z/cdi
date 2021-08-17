@@ -11,8 +11,8 @@ function expt = ptycho2DTPA_saveresults( sol, expt, ii )
     sample = sol.sample; 
     spos   = sol.spos; 
     
-    if isfield( 'sol', 'metrics' ), metrics = sol.metrics; end
-    if isfield( 'sol', 'timings' ), timings = sol.timings; end
+    if isfield( sol, 'metrics' ), metrics = sol.metrics; end
+    if isfield( sol, 'timings' ), timings = sol.timings; end
 
     A = sprintf('_%s', datestr( now, 'ddmmmyyyy_tHHMMSS' ));
     B = num2str( sol.it.epoch, '_it%d.mat');

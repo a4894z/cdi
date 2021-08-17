@@ -48,8 +48,8 @@ N_trials = 10;
 
 for ii = 1 : N_trials
     
-    path_data = '/net/s8iddata/export/8-id-ECA/Analysis/atripath/04Aug_minibatch_vs_stoch_vs_full_rPIE_alpha/cdi_rPIE_full_alpha01_randT/independenttrials_14Aug2021_t081939/';
-    cdi_ER_rPIE_0p01{ ii } = load( [ path_data, num2str( ii, 'trial_%d/sim_ptycho2DTPA.mat') ] );
+    path_data = '/net/s8iddata/export/8-id-ECA/Analysis/atripath/04Aug_minibatch_vs_stoch_vs_full_rPIE_alpha/cdi_rPIE_full_alpha25_randT/independenttrials_16Aug2021_t092814/';
+    cdi_ER_rPIE_0p25{ ii } = load( [ path_data, num2str( ii, 'trial_%d/sim_ptycho2DTPA.mat') ] );
 
 end
 
@@ -61,12 +61,43 @@ hold on
 
 for ii = 1 : N_trials
     
-    plot( cdi_ER_rPIE_0p01{ ii }.sol.it.mtot( 1 : skip : end ), log10( cdi_ER_rPIE_0p01{ ii }.sol.metrics.meas_all( 1 : skip : end ) ), '-', 'linewidth', 2 )
+    plot( cdi_ER_rPIE_0p25{ ii }.sol.it.mtot( 1 : skip : end ), log10( cdi_ER_rPIE_0p25{ ii }.sol.metrics.meas_all( 1 : skip : end ) ), '-', 'linewidth', 2 )
 
 end
 
 xlabel('Epoch')
-ylabel('rPIE alpha = 0.01, Cost Function Value')
+ylabel('rPIE alpha = 0.25, Cost Function Value')
+hold off
+title('$log_{10}\bigg[ \frac{1}{N_s} \sum_{s=1}^{N_s} \left \Vert \sqrt{W_s} -  \sqrt{ \sum_p \left\vert \mathcal{F}[ \phi_p \odot T_s ] \right\vert^2} \right\Vert^2_F \bigg]$', 'FontWeight','bold', 'FontSize', 14, 'Interpreter', 'latex' );
+grid on
+ylim( y_lim )
+legend( 'Location', 'southwest' )
+
+%====================================================================================================================================================
+
+N_trials = 10;
+
+for ii = 1 : N_trials
+    
+    path_data = '/net/s8iddata/export/8-id-ECA/Analysis/atripath/04Aug_minibatch_vs_stoch_vs_full_rPIE_alpha/cdi_rPIE_full_alpha10_randT/independenttrials_15Aug2021_t170501/';
+    cdi_ER_rPIE_0p10{ ii } = load( [ path_data, num2str( ii, 'trial_%d/sim_ptycho2DTPA.mat') ] );
+
+end
+
+skip = 1;
+
+figure; 
+
+hold on
+
+for ii = 1 : N_trials
+    
+    plot( cdi_ER_rPIE_0p10{ ii }.sol.it.mtot( 1 : skip : end ), log10( cdi_ER_rPIE_0p10{ ii }.sol.metrics.meas_all( 1 : skip : end ) ), '-', 'linewidth', 2 )
+
+end
+
+xlabel('Epoch')
+ylabel('rPIE alpha = 0.10, Cost Function Value')
 hold off
 title('$log_{10}\bigg[ \frac{1}{N_s} \sum_{s=1}^{N_s} \left \Vert \sqrt{W_s} -  \sqrt{ \sum_p \left\vert \mathcal{F}[ \phi_p \odot T_s ] \right\vert^2} \right\Vert^2_F \bigg]$', 'FontWeight','bold', 'FontSize', 14, 'Interpreter', 'latex' );
 grid on
@@ -110,8 +141,8 @@ N_trials = 10;
 
 for ii = 1 : N_trials
     
-    path_data = '/net/s8iddata/export/8-id-ECA/Analysis/atripath/04Aug_minibatch_vs_stoch_vs_full_rPIE_alpha/cdi_rPIE_full_alpha10_randT/independenttrials_15Aug2021_t170501/';
-    cdi_ER_rPIE_0p10{ ii } = load( [ path_data, num2str( ii, 'trial_%d/sim_ptycho2DTPA.mat') ] );
+    path_data = '/net/s8iddata/export/8-id-ECA/Analysis/atripath/04Aug_minibatch_vs_stoch_vs_full_rPIE_alpha/cdi_rPIE_full_alpha01_randT/independenttrials_14Aug2021_t081939/';
+    cdi_ER_rPIE_0p01{ ii } = load( [ path_data, num2str( ii, 'trial_%d/sim_ptycho2DTPA.mat') ] );
 
 end
 
@@ -123,12 +154,12 @@ hold on
 
 for ii = 1 : N_trials
     
-    plot( cdi_ER_rPIE_0p10{ ii }.sol.it.mtot( 1 : skip : end ), log10( cdi_ER_rPIE_0p10{ ii }.sol.metrics.meas_all( 1 : skip : end ) ), '-', 'linewidth', 2 )
+    plot( cdi_ER_rPIE_0p01{ ii }.sol.it.mtot( 1 : skip : end ), log10( cdi_ER_rPIE_0p01{ ii }.sol.metrics.meas_all( 1 : skip : end ) ), '-', 'linewidth', 2 )
 
 end
 
 xlabel('Epoch')
-ylabel('rPIE alpha = 0.10, Cost Function Value')
+ylabel('rPIE alpha = 0.01, Cost Function Value')
 hold off
 title('$log_{10}\bigg[ \frac{1}{N_s} \sum_{s=1}^{N_s} \left \Vert \sqrt{W_s} -  \sqrt{ \sum_p \left\vert \mathcal{F}[ \phi_p \odot T_s ] \right\vert^2} \right\Vert^2_F \bigg]$', 'FontWeight','bold', 'FontSize', 14, 'Interpreter', 'latex' );
 grid on
