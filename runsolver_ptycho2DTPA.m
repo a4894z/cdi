@@ -73,7 +73,7 @@ function [ sol, expt ] = runsolver_ptycho2DTPA
     
     sol.use_gpu = true; 
     
-    sol.gpu_id = 1; 
+    sol.gpu_id = 2; 
     
     if sol.use_gpu == true, reset( gpuDevice( sol.gpu_id )); end
 
