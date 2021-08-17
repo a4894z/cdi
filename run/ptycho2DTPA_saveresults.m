@@ -11,23 +11,48 @@ function expt = ptycho2DTPA_saveresults( sol, expt, ii )
     sample = sol.sample; 
     spos   = sol.spos; 
     
-    if isfield( sol, 'metrics' ), metrics = sol.metrics; end
-    if isfield( sol, 'timings' ), timings = sol.timings; end
-
+    %========
+        
+    if isfield( sol, 'metrics' )
+        
+        metrics = sol.metrics; 
+        
+    else
+        
+        metrics = [];
+        
+    end
+    
+    %========
+    
+    if isfield( sol, 'timings' ) 
+        
+        timings = sol.timings; 
+        
+    else
+        
+        metrics = [];
+        
+    end
+    
+    %========
+    
     A = sprintf('_%s', datestr( now, 'ddmmmyyyy_tHHMMSS' ));
     B = num2str( sol.it.epoch, '_it%d.mat');
     
     expt.paths.most_recent_date_time_save{ ii } = [ expt.paths.rsdata( 1 : end - 4 ), A, B ];
     
-    try
-        
-        save( expt.paths.most_recent_date_time_save{ ii }, 'probe', 'sample', 'spos', 'metrics', 'timings' );
-        
-    catch
-        
-        save( expt.paths.most_recent_date_time_save{ ii }, 'probe', 'sample', 'spos' );
-        
-    end
+    save( expt.paths.most_recent_date_time_save{ ii }, 'probe', 'sample', 'spos', 'metrics', 'timings' );
+
+%     try
+%         
+%         save( expt.paths.most_recent_date_time_save{ ii }, 'probe', 'sample', 'spos', 'metrics', 'timings' );
+%         
+%     catch
+%         
+%         save( expt.paths.most_recent_date_time_save{ ii }, 'probe', 'sample', 'spos' );
+%         
+%     end
 
     fprintf('done saving data!\n'); 
     fprintf('========================================================================================================\n\n'); 
