@@ -43,10 +43,12 @@ N_trials = 10;
 % paths_run{ end + 1 } = '/net/s8iddata/export/8-id-ECA/Analysis/atripath/gpu4/cdi_rPIE_stochGD_alpha08/';
 % paths_run{ end + 1 } = '/net/s8iddata/export/8-id-ECA/Analysis/atripath/gpu4/cdi_rPIE_stochGD_alpha09/';
 % paths_run{ end + 1 } = '/net/s8iddata/export/8-id-ECA/Analysis/atripath/gpu4/cdi_rPIE_stochGD_alpha10/';
-% 
-% % % test paths
-% % for pp = 1 : length( paths_run ), cd( paths_run{ pp }); end
-% 
+
+% % test paths
+% for pp = 1 : length( paths_run ) 
+%     cd( paths_run{ pp }); 
+% end
+
 % %========
 % 
 % N_trials = 10;

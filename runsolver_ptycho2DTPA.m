@@ -60,7 +60,7 @@ function [ sol, expt ] = runsolver_ptycho2DTPA
     
     %=========
     
-    sol.rPIE_alpha = single( 0.09 );
+    sol.rPIE_alpha = single( 0.50 );
     
     %=========
     
@@ -73,7 +73,7 @@ function [ sol, expt ] = runsolver_ptycho2DTPA
     
     sol.use_gpu = true; 
 
-    sol.gpu_id = 3; 
+    sol.gpu_id = 2; 
  
     if sol.use_gpu == true, reset( gpuDevice( sol.gpu_id )); end
 
@@ -100,6 +100,7 @@ function [ sol, expt ] = runsolver_ptycho2DTPA
 %     sol.it.probe_orthog         = single( round( 50 / N_repeat ));
     
     sol.it.metrics_and_plotting = single( 100 );
+    sol.plot_true               = logical( 0 );             %#ok<LOGL>
     sol.it.probe_orthog         = single( 25 );
     
     %============
@@ -125,8 +126,8 @@ function [ sol, expt ] = runsolver_ptycho2DTPA
         % fullbatch
         %==========
 
-%         [ sol, expt ] = ptycho2DTPA_runGPU_stochcoordgrad( sol, expt, N_epochs );    
-        [ sol, expt ] = ptycho2DTPA_runGPU_totalgrad( sol, expt, N_epochs );     
+        [ sol, expt ] = ptycho2DTPA_runGPU_stochcoordgrad( sol, expt, N_epochs );    
+%         [ sol, expt ] = ptycho2DTPA_runGPU_totalgrad( sol, expt, N_epochs );     
 
         %========
 

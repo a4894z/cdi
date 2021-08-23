@@ -1,5 +1,7 @@
 function ptycho2DTPA_plotresults( sol, expt )
 
+        if sol.plot_true == false, return; end
+        
         %==============================
         % probe mode correlation matrix
         %==============================

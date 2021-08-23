@@ -48,8 +48,8 @@ N_trials = 10;
 
 for ii = 1 : N_trials
     
-    path_data = '/net/s8iddata/export/8-id-ECA/Analysis/atripath/04Aug_minibatch_vs_stoch_vs_full_rPIE_alpha/cdi_rPIE_full_alpha25_randT/independenttrials_16Aug2021_t092814/';
-    cdi_ER_rPIE_0p25{ ii } = load( [ path_data, num2str( ii, 'trial_%d/sim_ptycho2DTPA.mat') ] );
+    path_data = '/net/s8iddata/export/8-id-ECA/Analysis/atripath/04Aug_minibatch_vs_stoch_vs_full_rPIE_alpha/cdi_rPIE_full_alpha50_randT/independenttrials_17Aug2021_t015208/';
+    cdi_ER_rPIE_0p50{ ii } = load( [ path_data, num2str( ii, 'trial_%d/sim_ptycho2DTPA.mat') ] );
 
 end
 
@@ -61,7 +61,38 @@ hold on
 
 for ii = 1 : N_trials
     
-    plot( cdi_ER_rPIE_0p25{ ii }.sol.it.mtot( 1 : skip : end ), log10( cdi_ER_rPIE_0p25{ ii }.sol.metrics.meas_all( 1 : skip : end ) ), '-', 'linewidth', 2 )
+    plot( cdi_ER_rPIE_0p50{ ii }.sol.it.mtot( 1 : skip : end ), log10( cdi_ER_rPIE_0p50{ ii }.sol.metrics.meas_all( 1 : skip : end ) ), '-', 'linewidth', 2 )
+
+end
+
+xlabel('Epoch')
+ylabel('rPIE alpha = 0.50, Cost Function Value')
+hold off
+title('$log_{10}\bigg[ \frac{1}{N_s} \sum_{s=1}^{N_s} \left \Vert \sqrt{W_s} -  \sqrt{ \sum_p \left\vert \mathcal{F}[ \phi_p \odot T_s ] \right\vert^2} \right\Vert^2_F \bigg]$', 'FontWeight','bold', 'FontSize', 14, 'Interpreter', 'latex' );
+grid on
+ylim( y_lim )
+legend( 'Location', 'southwest' )
+
+%====================================================================================================================================================
+
+N_trials = 10;
+
+for ii = 1 : N_trials
+    
+    path_data = '/net/s8iddata/export/8-id-ECA/Analysis/atripath/04Aug_minibatch_vs_stoch_vs_full_rPIE_alpha/cdi_rPIE_full_alpha30_randT/independenttrials_16Aug2021_t092814/';
+    cdi_ER_rPIE_0p30{ ii } = load( [ path_data, num2str( ii, 'trial_%d/sim_ptycho2DTPA.mat') ] );
+
+end
+
+skip = 1;
+
+figure; 
+
+hold on
+
+for ii = 1 : N_trials
+    
+    plot( cdi_ER_rPIE_0p30{ ii }.sol.it.mtot( 1 : skip : end ), log10( cdi_ER_rPIE_0p30{ ii }.sol.metrics.meas_all( 1 : skip : end ) ), '-', 'linewidth', 2 )
 
 end
 
@@ -134,6 +165,12 @@ title('$log_{10}\bigg[ \frac{1}{N_s} \sum_{s=1}^{N_s} \left \Vert \sqrt{W_s} -  
 grid on
 ylim( y_lim )
 legend( 'Location', 'southwest' )
+
+%====================================================================================================================================================
+
+####
+/net/s8iddata/export/8-id-ECA/Analysis/atripath/04Aug_minibatch_vs_stoch_vs_full_rPIE_alpha/cdi_rPIE_full_alpha02_randT
+
 
 %====================================================================================================================================================
 
