@@ -33,19 +33,13 @@ function [ sol, expt ] = ptycho2DTPA_runGPU_totalgrad( sol, expt, N_epochs )
 
     for kk = 1 : N_epochs
         
-        %======================
-        % Epoch counter display
-        %======================
-
-        S2 = num2str( sol.it.epoch, 'Epoch = %d, Iteration = N/A, Update Repeat = N/A' );
-
-        fprintf( [ S2, '\n'])
+        start_epoch = tic;
         
-        %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-        %                                   Exitwave Update
-        %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+        %============================================================================================================================================
+        % Exitwave Update
+        %================
         
-        tic
+        start_exwv = tic;
         
         %========
 
@@ -75,13 +69,36 @@ function [ sol, expt ] = ptycho2DTPA_runGPU_totalgrad( sol, expt, N_epochs )
                                                
         %=======
         
-        sol.timings.exwv_update( sol.it.epoch ) = toc;
+        sol.timings.exwv_update( sol.it.epoch ) = toc( start_exwv );
         
-        %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-        %                                       Sample Update
-        %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+        %====================================================================================================================================
+        % Sample Update
+        %==============
         
-        tic
+        
+        
+        
+        
+        
+        
+%                 %======================================================================================
+%                 %!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+%                 % EXPERIMENTAL: keep a copy of the current sample for use in probe update testing below
+%                 
+%                 sol.GPU.TFv_old = sol.GPU.TFv;
+%                 
+%                 %!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+%                 %======================================================================================
+        
+        
+        
+        
+
+
+
+        
+        
+        start_sample = tic;
         
         %========
         
@@ -89,7 +106,7 @@ function [ sol, expt ] = ptycho2DTPA_runGPU_totalgrad( sol, expt, N_epochs )
                                                     
             [ sol.GPU.TFv ] = batchgradupdate_2DTPAsample( sol.GPU.psi,        ...
                                                            sol.GPU.TFv,        ...
-                                                           sol.GPU.phi,      ...
+                                                           sol.GPU.phi,        ...
                                                            sol.GPU.ind_offset, ...
                                                            sol.GPU.rc,         ...
                                                            sol.GPU.Nspos,      ...
@@ -152,13 +169,57 @@ function [ sol, expt ] = ptycho2DTPA_runGPU_totalgrad( sol, expt, N_epochs )
 
         end
         
-        sol.timings.sample_update( sol.it.epoch ) = toc;
+        sol.timings.sample_update( sol.it.epoch ) = toc( start_sample );
             
-        %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-        %                                       Probe Update
-        %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         
-        tic
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+                %================================================================
+                %!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+                % EXPERIMENTAL: another exitwave update using just updated sample
+ 
+                sol.GPU.psi = ER_GPU_arrays_hadamard( sol.GPU.phi,     ...                      % ERvec
+                                                      sol.GPU.TFv,       ...
+                                                      sol.GPU.ind,       ...
+                                                      sol.GPU.sz,        ...
+                                                      sol.GPU.Nspos,     ...
+                                                      sol.GPU.sqrt_rc,   ...
+                                                      sol.GPU.meas_D,    ...
+                                                      sol.GPU.meas_Deq0, ...
+                                                      sol.GPU.measLPF );
+                                                  
+                %!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+                %================================================================
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        %====================================================================================================================================
+        % Probe Update
+        %=============
+        
+        start_probe = tic;
         
         if ( mod( sol.it.epoch, sol.it.probe_update ) == 0 ) && ( sol.it.epoch > sol.it.probe_start )
 
@@ -172,6 +233,46 @@ function [ sol, expt ] = ptycho2DTPA_runGPU_totalgrad( sol, expt, N_epochs )
             
             sol.GPU.phi = sol.GPU.phi + ( sum( conj( TFview ) .* sol.GPU.psi - sol.GPU.phi .* abs2_TFview, 4 ) ) ./ ( 1e-7 + sum( abs2_TFview, 4 ) );
 
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+%                     %======================================================
+%                     %!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+%                     % EXPERIMENTAL: use old sample estimate to update probe
+% 
+%                     T_view = reshape( sol.GPU.TFv_old( sol.GPU.ind ), [ sol.GPU.sz, 1, sol.GPU.Nspos ]);
+% 
+%                     abs2_TFview = abs( T_view ) .^ 2;
+% 
+%                     sol.GPU.phi = sol.GPU.phi + ( sum( conj( T_view ) .* sol.GPU.psi - sol.GPU.phi .* abs2_TFview, 4 ) ) ./ ( 1e-7 + sum( abs2_TFview, 4 ) );
+% 
+%                     %!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+%                     %======================================================
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
             %==============
             % Probe Support
             %==============
@@ -251,7 +352,13 @@ function [ sol, expt ] = ptycho2DTPA_runGPU_totalgrad( sol, expt, N_epochs )
         
         end
         
-        sol.timings.probe_update( sol.it.epoch ) = toc;
+        sol.timings.probe_update( sol.it.epoch ) = toc( start_probe );
+
+        %=============
+        % Epoch timing
+        %=============
+        
+        sol.timings.epoch( sol.it.epoch ) = toc( start_epoch );
 
         %============================================
         % Collect cost function metrics, Plot results
@@ -267,11 +374,19 @@ function [ sol, expt ] = ptycho2DTPA_runGPU_totalgrad( sol, expt, N_epochs )
             ptycho2DTPA_plotresults( sol, expt );
 
         end
+        
+        %===============================
+        % Feedback for iteration counter
+        %===============================
+        
+        S2 = num2str( [ kk, N_epochs, sol.it.epoch, sol.timings.epoch( sol.it.epoch ) ], 'Local Epoch = %d / %d, Total Epochs = %d, t_epoch = %e' );
 
+        fprintf( [ S2, '\n'])
+        
         %========================
         % Epoch iteration counter
         %========================
-
+                
         sol.it.epoch = sol.it.epoch + 1;  
 
     end

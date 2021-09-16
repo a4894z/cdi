@@ -27,92 +27,72 @@ function [ sol ] = ptycho2DTPA_collectmetrics( sol, expt )
     %===========================================================================
 
     meas_residual = meas_Deq0 .* sqrt( sum( abs( tmp1 ) .^ 2, 3 )) - meas_D;
-%     meas_residual = squeeze( sqrt( sum( sum( abs( meas_residual ) .^ 2, 1 ), 2 )));
     meas_residual = squeeze( sum( sum( abs( meas_residual ) .^ 2, 1 ), 2 ));
-    
-%     clear( 'tmp1', 'TF' )
-
-%     %============================
-%     % RAAR exitwave change metric
-%     %============================
-% 
-%     psi = RAAR_GPU_arrays_hadamard_v2(  tmp0,            ...
-%                                         sol.probe.phi,     ...
-%                                         TFv,             ...
-%                                         spos.frameindx,  ...
-%                                         sol.sz.sz,       ...
-%                                         sol.spos.N,      ...
-%                                         sol.sz.sqrt_rc,  ...
-%                                         meas_D,          ...
-%                                         meas_Deq0,       ...
-%                                         sol.measLPF,     ...
-%                                         sol.RAAR.beta );
-% 
-% 
-%     raar_exwv_change = abs( psi - tmp0 ) .^ 2;
-% 
-%     clear( 'tmp0', 'TFv', 'meas_D', 'meas_Deq0', 'spos' )
 
     %================
     % collect metrics
     %================
 
-%     raar_exwv_change_batch = raar_exwv_change( sol.spos.batch_indxsubset );
-%     raar_exwv_change_batch = raar_exwv_change_batch( : );
-
-%     sol.metrics.exwv_change( sol.it.metr ) = sum( raar_exwv_change_batch ) / length( raar_exwv_change_batch );
     sol.metrics.meas_all( sol.it.metr ) = sum( meas_residual ) / length( meas_residual );
     
-    %========
-
-    % fprintf( [ '\n\n', num2str( [ kk, Nit, sol.it.epoch, sol.metrics.meas( sol.it.metr ), sol.metrics.exwv_change( sol.it.metr )], ...
-    %             'iteration = %d / %d, iter total = %d, meas metric = %.2f, exit wave sample probe difference = %.2f' ), '\n\n' ]);
-
     sol.it.mtot( sol.it.metr ) = sol.it.epoch;
 
-    %========
+    %================================================================================================================================================
 
-    figure( 666 ); 
-    set( gcf, 'Visible', 'off', 'Position',[ 1, 1, 1920, 1080 ] )     
-
-%     subplot( 2, 1, 1 ); 
-
-    hold on
-
-    semilogy( sol.it.mtot, sol.metrics.meas_all, '--', 'Linewidth', 4, 'color', [ 0, 0, 0 ] )
-
-    % semilogy( sol.it.mtot, sol.metrics.meas, '-o', 'Linewidth', 2, 'Color', [0.8, 0, 0 ] ); 
-    % semilogy( sol.it.mtot, sol.metrics.meas_IN, '-o', 'Linewidth', 2, 'Color', [0.0, 0.8, 0 ] ); 
-    % semilogy( sol.it.mtot, sol.metrics.meas_OUT, '-o', 'Linewidth', 2, 'Color', [0.0, 0.0, 0.8 ] ); 
-
-    hold off
-    grid on
-    title('$ \frac{1}{N_s} \sum_s \left \Vert \sqrt{W_s} -  \sqrt{ \sum_p \left\vert \mathcal{F}[ \phi_p \odot T_s ] \right\vert^2} \right\Vert^2_F $', 'FontWeight','bold', 'FontSize', 14, 'Interpreter', 'latex' );
+    if sol.print_img == true 
     
-    %legend
-    % legend({'total', 'IN random subset',  'OUT random subset'})
+        figure( 666 ); 
+        set( gcf, 'Visible', 'off', 'Position',[ 1, 1, 1920, 1080 ] )     
 
-%     subplot( 2, 1, 2 ); 
-%     hold on
-% 
-%     semilogy( sol.it.mtot, sol.metrics.exwv_change( : ) , '-o', 'Linewidth', 2 )
-% 
-% 
-%     % semilogy( sol.it.mtot, sol.metrics.exwv_SP, '-o', 'Linewidth', 2, 'Color', [0.8, 0.0, 0.0 ] ); 
-%     % semilogy( sol.it.mtot, sol.metrics.exwv_SP_IN, '-o', 'Linewidth', 2, 'Color', [0.0, 0.8, 0.0 ] ); 
-%     % semilogy( sol.it.mtot, sol.metrics.exwv_SP_OUT, '-o', 'Linewidth', 2, 'Color', [0.0, 0.0, 0.8 ] ); 
-% 
-%     hold off
-%     % title('$ \sum_s || \phi_s - P( \mathbf{r} )  T( \mathbf{r} - \mathbf{r}_s ) ||_F $','Interpreter','latex');
-%     grid on
-%     title('$ \frac{1}{N_p} \frac{1}{N_s} \sum_s \sum_p \left \Vert \psi_{sp} -  \phi_p \odot T_s \right\Vert^2_F $', 'FontWeight','bold', 'FontSize', 14, 'Interpreter', 'latex' );
-%     % legend({'total', 'IN random subset',  'OUT random subset'})
+    %     subplot( 2, 1, 1 ); 
+
+        hold on
+
+        semilogy( sol.it.mtot, sol.metrics.meas_all, '--', 'Linewidth', 4, 'color', [ 0, 0, 0 ] )
+
+        % semilogy( sol.it.mtot, sol.metrics.meas, '-o', 'Linewidth', 2, 'Color', [0.8, 0, 0 ] ); 
+        % semilogy( sol.it.mtot, sol.metrics.meas_IN, '-o', 'Linewidth', 2, 'Color', [0.0, 0.8, 0 ] ); 
+        % semilogy( sol.it.mtot, sol.metrics.meas_OUT, '-o', 'Linewidth', 2, 'Color', [0.0, 0.0, 0.8 ] ); 
+
+        hold off
+        grid on
+        title('$ \frac{1}{N_s} \sum_s \left \Vert \sqrt{W_s} -  \sqrt{ \sum_p \left\vert \mathcal{F}[ \phi_p \odot T_s ] \right\vert^2} \right\Vert^2_F $', 'FontWeight','bold', 'FontSize', 14, 'Interpreter', 'latex' );
+
+        %legend
+        % legend({'total', 'IN random subset',  'OUT random subset'})
+
+    %     subplot( 2, 1, 2 ); 
+    %     hold on
+    % 
+    %     semilogy( sol.it.mtot, sol.metrics.exwv_change( : ) , '-o', 'Linewidth', 2 )
+    % 
+    % 
+    %     % semilogy( sol.it.mtot, sol.metrics.exwv_SP, '-o', 'Linewidth', 2, 'Color', [0.8, 0.0, 0.0 ] ); 
+    %     % semilogy( sol.it.mtot, sol.metrics.exwv_SP_IN, '-o', 'Linewidth', 2, 'Color', [0.0, 0.8, 0.0 ] ); 
+    %     % semilogy( sol.it.mtot, sol.metrics.exwv_SP_OUT, '-o', 'Linewidth', 2, 'Color', [0.0, 0.0, 0.8 ] ); 
+    % 
+    %     hold off
+    %     % title('$ \sum_s || \phi_s - P( \mathbf{r} )  T( \mathbf{r} - \mathbf{r}_s ) ||_F $','Interpreter','latex');
+    %     grid on
+    %     title('$ \frac{1}{N_p} \frac{1}{N_s} \sum_s \sum_p \left \Vert \psi_{sp} -  \phi_p \odot T_s \right\Vert^2_F $', 'FontWeight','bold', 'FontSize', 14, 'Interpreter', 'latex' );
+    %     % legend({'total', 'IN random subset',  'OUT random subset'})
 
 
-    % export_fig( num2str( sol.it.exwv, 'meas_metric-%d.jpg' ), '-r90.0' )
-    export_fig( 'meas_metric.jpg', '-r90.0' )
+        % export_fig( num2str( sol.it.exwv, 'meas_metric-%d.jpg' ), '-r90.0' )
+        export_fig( 'meas_metric.jpg', '-r90.0' )
 
-    close all;
+        close all;
+    
+    end
+
+    %=====================================================================
+    % update the counter that keeps track of metric computation occurances
+    %=====================================================================
+    
+    sol.it.metr = sol.it.metr + 1;   
+
+end
+
 
     %======================
     % PROBE SCALING METRICS
@@ -150,11 +130,3 @@ function [ sol ] = ptycho2DTPA_collectmetrics( sol, expt )
 %     export_fig( 'metrics_probe_scaling.jpg', '-r90.0' )
 % 
 %     close all;
-
-    %=====================================================================
-    % update the counter that keeps track of metric computation occurances
-    %=====================================================================
-    
-    sol.it.metr = sol.it.metr + 1;   
-
-end

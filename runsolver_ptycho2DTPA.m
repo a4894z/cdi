@@ -42,7 +42,7 @@ function [ sol, expt ] = runsolver_ptycho2DTPA
     restoredefaultpath; 
     addpath( genpath( pwd ));
     clearvars -except expt sol
- 
+    
     %================================================================================================================================================
 
     data_path = [ pwd, '/sim_ptycho2DTPA.mat' ];
@@ -60,7 +60,7 @@ function [ sol, expt ] = runsolver_ptycho2DTPA
     
     %=========
     
-    sol.rPIE_alpha = single( 0.50 );
+    sol.rPIE_alpha = single( 0.05 );
     
     %=========
     
@@ -77,32 +77,30 @@ function [ sol, expt ] = runsolver_ptycho2DTPA
  
     if sol.use_gpu == true, reset( gpuDevice( sol.gpu_id )); end
 
-    %=====================
-    % Minibatch Parameters
-    %=====================
+    %================================
+    % Stochastic minibatch parameters
+    %================================
 
-    sol.spos.rand_spos_subset_pct = single( 0.3333 );      
-
-    if sol.spos.rand_spos_subset_pct > 1.00, sol.spos.rand_spos_subset_pct = 1.00; end
+%     sol.spos.rand_spos_subset_pct = single( 0.333333 );      
+% 
+%     if sol.spos.rand_spos_subset_pct > 1.00, sol.spos.rand_spos_subset_pct = 1.00; end
 
     %======================================================
     % epoch, iteration, and iteration repeat specifications
     %======================================================
-    
-    N_pauseandsave = single( 1 );
-    
-    N_epochs = single( 5000 );
 
-    N_repeat = single( 1 );
+    N_epochs       = single( 5000 );
+    N_pauseandsave = single( 1 );
+    N_repeat       = single( 1 );
     
 %     N_epochs = single( round( N_epochs / N_repeat ));
 %     sol.it.metrics_and_plotting = single( round( 50 / N_repeat ));
 %     sol.it.probe_orthog         = single( round( 50 / N_repeat ));
-    
-    sol.it.metrics_and_plotting = single( 100 );
-    sol.plot_true               = logical( 0 );             %#ok<LOGL>
+
     sol.it.probe_orthog         = single( 25 );
-    
+    sol.it.metrics_and_plotting = single( 100 );
+    sol.print_img               = logical( 0 );             %#ok<LOGL>
+
     %============
     % CHEAT CODES
     %============
@@ -126,8 +124,8 @@ function [ sol, expt ] = runsolver_ptycho2DTPA
         % fullbatch
         %==========
 
-        [ sol, expt ] = ptycho2DTPA_runGPU_stochcoordgrad( sol, expt, N_epochs );    
-%         [ sol, expt ] = ptycho2DTPA_runGPU_totalgrad( sol, expt, N_epochs );     
+%         [ sol, expt ] = ptycho2DTPA_runGPU_stochcoordgrad( sol, expt, N_epochs );         
+        [ sol, expt ] = ptycho2DTPA_runGPU_totalgrad( sol, expt, N_epochs );     
 
         %========
 

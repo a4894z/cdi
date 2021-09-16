@@ -12,12 +12,15 @@ clear; close all; runsolver_ptycho2DTPA_multiple_trials
 
 paths_run = {};
 
-paths_run{ end + 1 } = '/net/s8iddata/export/8-id-ECA/Analysis/atripath/gpu1/cdi_ePIE_full_randT/';
-paths_run{ end + 1 } = '/net/s8iddata/export/8-id-ECA/Analysis/atripath/gpu1/cdi_rPIE_full_alpha01_randT/';
-paths_run{ end + 1 } = '/net/s8iddata/export/8-id-ECA/Analysis/atripath/gpu1/cdi_rPIE_full_alpha05_randT/';
-paths_run{ end + 1 } = '/net/s8iddata/export/8-id-ECA/Analysis/atripath/gpu1/cdi_rPIE_full_alpha10_randT/';
-paths_run{ end + 1 } = '/net/s8iddata/export/8-id-ECA/Analysis/atripath/gpu1/cdi_rPIE_full_alpha25_randT/';
-paths_run{ end + 1 } = '/net/s8iddata/export/8-id-ECA/Analysis/atripath/gpu1/cdi_rPIE_full_alpha50_randT/';
+paths_run{ end + 1 } = '/net/s8iddata/export/8-id-ECA/Analysis/atripath/gpu4/cdi_rPIE_mb01_alpha05/';
+paths_run{ end + 1 } = '/net/s8iddata/export/8-id-ECA/Analysis/atripath/gpu4/cdi_rPIE_mb01_alpha10/';
+paths_run{ end + 1 } = '/net/s8iddata/export/8-id-ECA/Analysis/atripath/gpu4/cdi_rPIE_mb01_alpha20/';
+paths_run{ end + 1 } = '/net/s8iddata/export/8-id-ECA/Analysis/atripath/gpu4/cdi_rPIE_mb01_alpha30/';
+paths_run{ end + 1 } = '/net/s8iddata/export/8-id-ECA/Analysis/atripath/gpu4/cdi_rPIE_mb01_alpha40/';
+paths_run{ end + 1 } = '/net/s8iddata/export/8-id-ECA/Analysis/atripath/gpu4/cdi_rPIE_mb01_alpha50/';
+paths_run{ end + 1 } = '/net/s8iddata/export/8-id-ECA/Analysis/atripath/gpu4/cdi_rPIE_mb01_alpha70/';
+paths_run{ end + 1 } = '/net/s8iddata/export/8-id-ECA/Analysis/atripath/gpu4/cdi_rPIE_mb01_alpha100/';
+
 
 %{
 
