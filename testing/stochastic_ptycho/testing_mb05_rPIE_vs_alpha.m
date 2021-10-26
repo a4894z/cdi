@@ -10,49 +10,49 @@ rootpath_data = '/net/s8iddata/export/8-id-ECA/Analysis/atripath/minibatch_vs_st
 path_data = {};
 N_trials  = [];
 
-path_data{ end + 1 } = [ rootpath_data, '/cdi_rPIE_mb0p05_alpha0p0001/independenttrials_08Sep2021_t235455/' ];
-N_trials( end + 1 )  = 8;
-
-path_data{ end + 1 } = [ rootpath_data, '/cdi_rPIE_mb0p05_alpha0p001/independenttrials_08Sep2021_t121600/' ];
-N_trials( end + 1 )  = 10;
-
-path_data{ end + 1 } = [ rootpath_data, '/cdi_rPIE_mb0p05_alpha0p0025/independenttrials_10Sep2021_t092114/' ];
-N_trials( end + 1 )  = 10;
-
-path_data{ end + 1 } = [ rootpath_data, '/cdi_rPIE_mb0p05_alpha0p005/independenttrials_09Sep2021_t214215/' ];
-N_trials( end + 1 )  = 10;
-
-path_data{ end + 1 } = [ rootpath_data, '/cdi_rPIE_mb0p05_alpha0p0075/independenttrials_09Sep2021_t095311/' ];
-N_trials( end + 1 )  = 10;
+% path_data{ end + 1 } = [ rootpath_data, '/cdi_rPIE_mb0p05_alpha0p0001/independenttrials_08Sep2021_t235455/' ];
+% N_trials( end + 1 )  = 8;
+% 
+% path_data{ end + 1 } = [ rootpath_data, '/cdi_rPIE_mb0p05_alpha0p001/independenttrials_08Sep2021_t121600/' ];
+% N_trials( end + 1 )  = 10;
+% 
+% path_data{ end + 1 } = [ rootpath_data, '/cdi_rPIE_mb0p05_alpha0p0025/independenttrials_10Sep2021_t092114/' ];
+% N_trials( end + 1 )  = 10;
+% 
+% path_data{ end + 1 } = [ rootpath_data, '/cdi_rPIE_mb0p05_alpha0p005/independenttrials_09Sep2021_t214215/' ];
+% N_trials( end + 1 )  = 10;
+% 
+% path_data{ end + 1 } = [ rootpath_data, '/cdi_rPIE_mb0p05_alpha0p0075/independenttrials_09Sep2021_t095311/' ];
+% N_trials( end + 1 )  = 10;
 
 path_data{ end + 1 } = [ rootpath_data, '/cdi_rPIE_mb0p05_alpha0p01/independenttrials_16Aug2021_t173355/' ];
 N_trials( end + 1 )  = 10;
 
-path_data{ end + 1 } = [ rootpath_data, '/cdi_rPIE_mb0p05_alpha0p03/independenttrials_03Sep2021_t163043/' ];
-N_trials( end + 1 )  = 10;
+% path_data{ end + 1 } = [ rootpath_data, '/cdi_rPIE_mb0p05_alpha0p03/independenttrials_03Sep2021_t163043/' ];
+% N_trials( end + 1 )  = 10;
+% 
+% path_data{ end + 1 } = [ rootpath_data, '/cdi_rPIE_mb0p05_alpha0p05/independenttrials_17Aug2021_t105554/' ];
+% N_trials( end + 1 )  = 10;
+% 
+% path_data{ end + 1 } = [ rootpath_data, '/cdi_rPIE_mb0p05_alpha0p07/independenttrials_04Sep2021_t094428/' ];
+% N_trials( end + 1 )  = 10;
+% 
+% path_data{ end + 1 } = [ rootpath_data, '/cdi_rPIE_mb0p05_alpha0p10/independenttrials_18Aug2021_t053649/' ];
+% N_trials( end + 1 )  = 10;
+% 
+% path_data{ end + 1 } = [ rootpath_data, '/cdi_rPIE_mb0p05_alpha0p30/independenttrials_19Aug2021_t013134/' ];
+% N_trials( end + 1 )  = 10;
+% 
+% path_data{ end + 1 } = [ rootpath_data, '/cdi_rPIE_mb0p05_alpha0p50/independenttrials_05Sep2021_t030345/' ];
+% N_trials( end + 1 )  = 10;
+% 
+% path_data{ end + 1 } = [ rootpath_data, '/cdi_rPIE_mb0p05_alpha0p70/independenttrials_05Sep2021_t154235/' ];
+% N_trials( end + 1 )  = 10;
+% 
+% path_data{ end + 1 } = [ rootpath_data, '/cdi_rPIE_mb0p05_alpha1p00/independenttrials_06Sep2021_t033324/' ];
+% N_trials( end + 1 )  = 10;
 
-path_data{ end + 1 } = [ rootpath_data, '/cdi_rPIE_mb0p05_alpha0p05/independenttrials_17Aug2021_t105554/' ];
-N_trials( end + 1 )  = 10;
-
-path_data{ end + 1 } = [ rootpath_data, '/cdi_rPIE_mb0p05_alpha0p07/independenttrials_04Sep2021_t094428/' ];
-N_trials( end + 1 )  = 10;
-
-path_data{ end + 1 } = [ rootpath_data, '/cdi_rPIE_mb0p05_alpha0p10/independenttrials_18Aug2021_t053649/' ];
-N_trials( end + 1 )  = 10;
-
-path_data{ end + 1 } = [ rootpath_data, '/cdi_rPIE_mb0p05_alpha0p30/independenttrials_19Aug2021_t013134/' ];
-N_trials( end + 1 )  = 10;
-
-path_data{ end + 1 } = [ rootpath_data, '/cdi_rPIE_mb0p05_alpha0p50/independenttrials_05Sep2021_t030345/' ];
-N_trials( end + 1 )  = 10;
-
-path_data{ end + 1 } = [ rootpath_data, '/cdi_rPIE_mb0p05_alpha0p70/independenttrials_05Sep2021_t154235/' ];
-N_trials( end + 1 )  = 10;
-
-path_data{ end + 1 } = [ rootpath_data, '/cdi_rPIE_mb0p05_alpha1p00/independenttrials_06Sep2021_t033324/' ];
-N_trials( end + 1 )  = 10;
-
-%========
+%====================================================================================================================================================
 
 for jj = 1 : length( path_data )
     
