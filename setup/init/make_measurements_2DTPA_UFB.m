@@ -295,13 +295,13 @@ fprintf('\n');
 % measurments just defined are noise free, now introduce poisson noise + detector background noise, 
 % i.e. a noise model like: In = Poiss[ I ] + Unif[ ]
 
-meas.noisy = 0;
+meas.noisy = 1;
 
 if logical( meas.noisy ) == true
 
 
     % total number of exposures for sample in measurement:
-    meas.NexposuresSI = 5;
+    meas.NexposuresSI = 1;
 
     % total number of exposures for sample out measurement:
     meas.NexposuresSO = 1;
@@ -336,12 +336,7 @@ if logical( meas.noisy ) == true
 
     meas_noisy = gather( csum / meas.NexposuresSI );
     
-%     figure; imagesc(log10( 1 + 10^2 * fftshift(abs(meas.D(:,:,155) .^ 2))))
-%     
-%     figure; imagesc(log10( 1 + 10^2 * fftshift(abs(meas_noisy(:,:,155)))))
-%     
-%     5;
-%     
+
     %============================================
     
 %     Nchonk = gpuArray( floor( sz( 3 ) /  Nchunk ));
@@ -393,6 +388,12 @@ if logical( meas.noisy ) == true
     meas_noisy( meas_noisy < 0 ) = 0;
 
     %==============
+    
+    figure; imagesc(log10( 1 + 10^0 * fftshift(abs(meas.D(:,:,155) .^ 2))))
+    
+    figure; imagesc(log10( 1 + 10^0 * fftshift(abs(meas_noisy(:,:,155)))))
+    
+    5;
     
     meas.D    = sqrt( meas_noisy );
     meas.Deq0 = meas_noisy == 0;
@@ -492,8 +493,8 @@ end
 % Background removal
 %===================
 
-% meas.rmbackgrnd = 1;
-%
+% meas.rmbackgrnd = 0;
+% 
 % if logical( meas.rmbackgrnd ) == true
 %     
 %     % constant background subtraction on intensity:

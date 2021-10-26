@@ -31,7 +31,7 @@ csys.z3.dLx = 55e-6 / 1;
 %===============================
 
 sz.r = round( 256 + 0 ); 
-sz.c = round( 256 + 0 );
+sz.c = round( 128 + 0 );
 sz.sz = [ sz.r, sz.c ]; 
 sz.rc = sz.r * sz.c;
 sz.sqrt_rc = sqrt( sz.rc );
@@ -120,7 +120,7 @@ csys.z2.dLx = csys.z2.Lx / sz.c;
 % probe.scpm.occ = [ 0.32, 0.33, 0.35 ];
 % probe.scpm.occ = [ 0.05, 0.20, 0.75 ];
 % probe.scpm.occ = [ 0.05, 0.10, 0.85 ];
-% probe.scpm.occ = [ 0.03, 0.07, 0.90 ];
+probe.scpm.occ = [ 0.03, 0.07, 0.90 ];
 % probe.scpm.occ = [ 0.02, 0.03, 0.95 ];
 
 % probe.scpm.occ = [ 0.005, 0.015, 0.02, 0.03, 0.05, 0.08, 0.80 ];
@@ -133,7 +133,7 @@ csys.z2.dLx = csys.z2.Lx / sz.c;
 
 % probe.scpm.occ = random('unif', 0, 1, length( paths.probe ));
 
-probe.scpm.occ = exp( -4 * linspace( 1, 0, 5 ));
+% probe.scpm.occ = exp( -4 * linspace( 1, 0, 5 ));
 
 % make sure the mode occupancy adds up to 1.0:
 probe.scpm.occ = sort( probe.scpm.occ / norm( probe.scpm.occ, 1 ));

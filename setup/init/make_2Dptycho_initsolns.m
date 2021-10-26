@@ -17,7 +17,7 @@ sol.sz                 = expt.sz;
 
 sol.sample.T = rand( expt.sample.sz.r, expt.sample.sz.c ) .* exp( 1i * 2 * pi * rand( expt.sample.sz.r, expt.sample.sz.c ));
 
-sol.sample.T = lpf_gauss( sol.sample.T, [ 0.1 * expt.sample.sz.r, 0.1 * expt.sample.sz.r ] );
+sol.sample.T = lpf_gauss( sol.sample.T, [ 0.02 * expt.sample.sz.r, 0.02 * expt.sample.sz.c ] );
 
 sol.sample.T = modulus_limits_scale( sol.sample.T, [ 0.01, 0.999 ] );
 sol.sample.T = phase_limits_scale( sol.sample.T, [ 0 * pi, 0.7 * pi ] );
@@ -32,13 +32,13 @@ sol.sample.sz = expt.sample.sz;
 
 sol.probe.scpm = expt.probe.scpm;
 
-% sol.probe.scpm.occ = [ 1 ];
+sol.probe.scpm.occ = [ 1 ];
 % sol.probe.scpm.occ = [ 0.05, 0.1, 0.2, 0.4, 0.9 ];
 % sol.probe.scpm.occ = [ 0.2, 0.8 ];
 % sol.probe.scpm.occ = [ 0.01, 0.04, 0.95 ];
 % sol.probe.scpm.occ = [ 0.32, 0.33, 0.35 ];
 % sol.probe.scpm.occ = [ 0.2, 0.2, 0.2, 0.2, 0.2 ];
-sol.probe.scpm.occ = exp( -7 * linspace( 1, 0, 8 ));
+% sol.probe.scpm.occ = exp( -7 * linspace( 1, 0, 8 ));
 
 sol.probe.scpm.occ = sol.probe.scpm.occ / norm( sol.probe.scpm.occ, 1 );
 

@@ -67,8 +67,12 @@ fprintf('=======================================================================
 % expt.paths.code     = '~/Documents/Science/Matlab/Code/cdi/';   
 % expt.paths.rimgdata = '/media/ash/Saltwater/Data/simulated/';   
 
-expt.paths.code     = '/net/s8iddata/export/8-id-ECA/Analysis/atripath/cdi/';   
-expt.paths.rimgdata = '/net/s8iddata/export/8-id-ECA/Analysis/atripath/data/simulated/img/';   
+expt.paths.code     = '~/Documents/Science/Matlab/Code/cdi/';   
+expt.paths.rimgdata = '/home/ash/Documents/Science/Matlab/Data/simulated/img/';   
+
+
+% expt.paths.code     = '/net/s8iddata/export/8-id-ECA/Analysis/atripath/cdi/';   
+% expt.paths.rimgdata = '/net/s8iddata/export/8-id-ECA/Analysis/atripath/data/simulated/img/';   
 
 %==================================================================================================
 %------------------------------------- load misc stuff --------------------------------------------
