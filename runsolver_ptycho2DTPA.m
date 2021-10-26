@@ -60,12 +60,12 @@ function [ sol, expt ] = runsolver_ptycho2DTPA
     
     %=========
     
-    sol.rPIE_alpha = single( 0.05 );
+    sol.rPIE_alpha = single( 0.00001 );
     
     %=========
     
-    sol.sample.T = rand( sol.sample.sz.sz, 'single' ) + 1i * rand( sol.sample.sz.sz, 'single' );
-    sol.sample.T = sol.sample.T / max( abs( sol.sample.T( : )));
+%     sol.sample.T = rand( sol.sample.sz.sz, 'single' ) + 1i * rand( sol.sample.sz.sz, 'single' );
+%     sol.sample.T = sol.sample.T / max( abs( sol.sample.T( : )));
     
     %=========
     % GPU Init
@@ -73,7 +73,7 @@ function [ sol, expt ] = runsolver_ptycho2DTPA
     
     sol.use_gpu = true; 
 
-    sol.gpu_id = 2; 
+    sol.gpu_id = 1; 
  
     if sol.use_gpu == true, reset( gpuDevice( sol.gpu_id )); end
 
@@ -81,23 +81,21 @@ function [ sol, expt ] = runsolver_ptycho2DTPA
     % Stochastic minibatch parameters
     %================================
 
-%     sol.spos.rand_spos_subset_pct = single( 0.333333 );      
-% 
-%     if sol.spos.rand_spos_subset_pct > 1.00, sol.spos.rand_spos_subset_pct = 1.00; end
+    sol.spos.rand_spos_subset_pct = 0.20;      
+    
+    sol.spos.rand_spos_subset_pct = single( sol.spos.rand_spos_subset_pct );  
+    if sol.spos.rand_spos_subset_pct > 1.00, sol.spos.rand_spos_subset_pct = single( 1.00 ); end
 
     %======================================================
     % epoch, iteration, and iteration repeat specifications
     %======================================================
-
-    N_epochs       = single( 5000 );
-    N_pauseandsave = single( 1 );
-    N_repeat       = single( 1 );
     
-%     N_epochs = single( round( N_epochs / N_repeat ));
-%     sol.it.metrics_and_plotting = single( round( 50 / N_repeat ));
-%     sol.it.probe_orthog         = single( round( 50 / N_repeat ));
+    N_pauseandsave              = single( 1 );
+    
+    N_epochs                    = single( 5000 );
 
     sol.it.probe_orthog         = single( 25 );
+    
     sol.it.metrics_and_plotting = single( 100 );
     sol.print_img               = logical( 0 );             %#ok<LOGL>
 
@@ -108,7 +106,7 @@ function [ sol, expt ] = runsolver_ptycho2DTPA
     % sol.sample.T      = expt.sample.T;
     % sol.probe.phi     = expt.probe.phi;
     % sol.probe.scpm     = expt.phi.scpm;
-    % sol.probe.scpm.max = 1e3;
+    % sol.probe.scpm.max = 1e3; 
 
     %================================================================================================================================================
 
@@ -118,14 +116,14 @@ function [ sol, expt ] = runsolver_ptycho2DTPA
         % minibatch
         %==========
 
-%         [ sol, expt ] = ptycho2DTPA_runGPU_stochminibatchgrad( sol, expt, N_epochs, N_repeat );    
+        [ sol, expt ] = ptycho2DTPA_runGPU_stochminibatchgrad( sol, expt, N_epochs );    
 
         %==========
         % fullbatch
         %==========
 
 %         [ sol, expt ] = ptycho2DTPA_runGPU_stochcoordgrad( sol, expt, N_epochs );         
-        [ sol, expt ] = ptycho2DTPA_runGPU_totalgrad( sol, expt, N_epochs );     
+%         [ sol, expt ] = ptycho2DTPA_runGPU_totalgrad( sol, expt, N_epochs );     
 
         %========
 
@@ -212,7 +210,7 @@ function [ sol, expt ] = runsolver_ptycho2DTPA_config( sol, expt )
     sol.it.probe_update    = single( 1 );
     sol.it.probe_scaling   = single( 1 );
     sol.it.probe_support   = single( 1 );
-    sol.it.probe_centering = single( 10 );
+    sol.it.probe_centering = single( 1e99 );
     sol.it.probe_orthog    = single( 50 );
     sol.it.probe_maxvals   = single( 1e99 );
 

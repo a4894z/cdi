@@ -22,6 +22,7 @@ paths_run{ end + 1 } = '/net/s8iddata/export/8-id-ECA/Analysis/atripath/gpu4/cdi
 paths_run{ end + 1 } = '/net/s8iddata/export/8-id-ECA/Analysis/atripath/gpu4/cdi_rPIE_mb01_alpha100/';
 
 
+
 %{
 
 % test paths

@@ -36,28 +36,28 @@ function [ sol, expt ] = ptycho2DTPA_runGPU_totalgrad( sol, expt, N_epochs )
         start_epoch = tic;
         
         %============================================================================================================================================
-        % Exitwave Update
-        %================
+        %                                                           Exitwave Update
+        %============================================================================================================================================
         
         start_exwv = tic;
         
         %========
 
-        sol.GPU.psi = ER_GPU_arrays_hadamard( sol.GPU.phi,     ...                      % ERvec
-                                              sol.GPU.TFv,       ...
-                                              sol.GPU.ind,       ...
-                                              sol.GPU.sz,        ...
-                                              sol.GPU.Nspos,     ...
-                                              sol.GPU.sqrt_rc,   ...
-                                              sol.GPU.meas_D,    ...
-                                              sol.GPU.meas_Deq0, ...
-                                              sol.GPU.measLPF );
+        sol.GPU.psi = exitwave_vectorized_update_2DTPA_meas_projection( sol.GPU.phi,       ...                      % ERvec
+                                                                        sol.GPU.TFvec,     ...
+                                                                        sol.GPU.ind,       ...
+                                                                        sol.GPU.sz,        ...
+                                                                        sol.GPU.Nspos,     ...
+                                                                        sol.GPU.sqrt_rc,   ...
+                                                                        sol.GPU.meas_D,    ...
+                                                                        sol.GPU.meas_Deq0, ...
+                                                                        sol.GPU.measLPF );
 
         %========
         
 %         sol.GPU.psi = RAAR_GPU_arrays_hadamard_v2( sol.GPU.psi,         ...              % avgDMERvec
 %                                                    sol.GPU.phi,       ...  
-%                                                    sol.GPU.TFv,         ...
+%                                                    sol.GPU.TFvec,         ...
 %                                                    sol.GPU.ind,         ...
 %                                                    sol.GPU.sz,          ...
 %                                                    sol.GPU.Nspos,       ...
@@ -71,46 +71,29 @@ function [ sol, expt ] = ptycho2DTPA_runGPU_totalgrad( sol, expt, N_epochs )
         
         sol.timings.exwv_update( sol.it.epoch ) = toc( start_exwv );
         
-        %====================================================================================================================================
-        % Sample Update
-        %==============
-        
-        
-        
-        
-        
-        
-        
-%                 %======================================================================================
-%                 %!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-%                 % EXPERIMENTAL: keep a copy of the current sample for use in probe update testing below
-%                 
-%                 sol.GPU.TFv_old = sol.GPU.TFv;
-%                 
-%                 %!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-%                 %======================================================================================
-        
-        
-        
-        
+        %============================================================================================================================================
+        %                                                   Sample Update
+        %============================================================================================================================================
 
-
-
-        
-        
-        start_sample = tic;
-        
-        %========
-        
         if mod( sol.it.epoch, sol.it.sample_update ) == 0
-                                                    
-            [ sol.GPU.TFv ] = batchgradupdate_2DTPAsample( sol.GPU.psi,        ...
-                                                           sol.GPU.TFv,        ...
-                                                           sol.GPU.phi,        ...
-                                                           sol.GPU.ind_offset, ...
-                                                           sol.GPU.rc,         ...
-                                                           sol.GPU.Nspos,      ...
-                                                           sol.GPU.rPIE_alpha );                               
+            
+            start_sample = tic;
+
+            %========================================================================       
+            % keep a copy of the current sample for use in probe update testing below
+            %========================================================================       
+            
+            sol.GPU.TFvec_old = sol.GPU.TFvec;
+            
+            %========
+
+            [ sol.GPU.TFvec ] = rPIEupdate_batch_2DTPA_sample( sol.GPU.psi,          ...
+                                                               sol.GPU.TFvec,        ...
+                                                               sol.GPU.phi,          ...
+                                                               sol.GPU.ind_offset,   ...
+                                                               sol.GPU.rc,           ...
+                                                               sol.GPU.Nspos,        ...
+                                                               sol.GPU.rPIE_alpha );                               
 
             %====================
             % Sparse Sample Edges
@@ -122,9 +105,9 @@ function [ sol, expt ] = ptycho2DTPA_runGPU_totalgrad( sol, expt, N_epochs )
                 % Sparsity using TV variants
                 %===========================
 
-                [ sol.GPU.TFv ] = sparseFDxy_update_2Dsample( reshape( sol.GPU.TFv, sol.GPU.samsz ), sol.GPU.sparseGPU );
+                [ sol.GPU.TFvec ] = sparseFDxy_update_2Dsample( reshape( sol.GPU.TFvec, sol.GPU.samsz ), sol.GPU.sparseGPU );
 
-                sol.GPU.TFv = sol.GPU.TFv( : );
+                sol.GPU.TFvec = sol.GPU.TFvec( : );
 
             end
 
@@ -134,13 +117,13 @@ function [ sol, expt ] = ptycho2DTPA_runGPU_totalgrad( sol, expt, N_epochs )
 
             if mod( sol.it.epoch, sol.it.sample_mag_phs_ineq ) == 0
 
-                sol.GPU.TFv = modulus_limits_project( sol.GPU.TFv, sol.GPU.abs_TF_lim );
+                sol.GPU.TFvec = modulus_limits_project( sol.GPU.TFvec, sol.GPU.abs_TF_lim );
 
-    %             sol.GPU.TFv = modulus_limits_project( sol.GPU.TFv, [ 0, 1 ] );
-    %             sol.GPU.TFv = modulus_limits_scale( sol.GPU.TFv, sol.GPU.abs_TF_lim );
+    %             sol.GPU.TFvec = modulus_limits_project( sol.GPU.TFvec, [ 0, 1 ] );
+    %             sol.GPU.TFvec = modulus_limits_scale( sol.GPU.TFvec, sol.GPU.abs_TF_lim );
 
-%                     sol.GPU.TFv = phase_limits_project( sol.GPU.TFv, sol.GPU.phs_TF_lim );
-%                     sol.GPU.TFv = phase_limits_scale( sol.GPU.TFv, sol.GPU.phs_TF_lim );
+%                     sol.GPU.TFvec = phase_limits_project( sol.GPU.TFvec, sol.GPU.phs_TF_lim );
+%                     sol.GPU.TFvec = phase_limits_scale( sol.GPU.TFvec, sol.GPU.phs_TF_lim );
 
             end
 
@@ -150,129 +133,74 @@ function [ sol, expt ] = ptycho2DTPA_runGPU_totalgrad( sol, expt, N_epochs )
 
 %             if 0 %mod( sol.it.epoch, 50 ) == 0
 % 
-%                 abs_TF = abs( sol.GPU.TFv );
+%                 abs_TF = abs( sol.GPU.TFvec );
 %                 abs_TF = abs_TF - min( abs_TF( : ));
 %                 abs_TF = abs_TF / max( abs_TF( : ));
 % 
-%                 phs_TF = angle( sol.GPU.TFv );
+%                 phs_TF = angle( sol.GPU.TFvec );
 %                 phs_TF = phs_TF - min( phs_TF( : ));
 %                 phs_TF = phs_TF / max( phs_TF( : ));
 % 
 %     %             as = 0.75;
 %     %             ps = 0.9;
-%     %             sol.GPU.TFv = ( as * abs_TF + ( 1 - as ) * phs_TF ) .* exp( 1i * 2 * pi * (  ps * abs_TF + ( 1 - ps ) * phs_TF ));
+%     %             sol.GPU.TFvec = ( as * abs_TF + ( 1 - as ) * phs_TF ) .* exp( 1i * 2 * pi * (  ps * abs_TF + ( 1 - ps ) * phs_TF ));
 % 
 %                 as = 0.5;
-%                 sol.GPU.TFv = ( as * abs_TF + ( 1 - as ) * phs_TF ) .* exp( 1i * angle( sol.GPU.TFv ));
+%                 sol.GPU.TFvec = ( as * abs_TF + ( 1 - as ) * phs_TF ) .* exp( 1i * angle( sol.GPU.TFvec ));
 % 
 %             end  
 
-        end
-        
-        sol.timings.sample_update( sol.it.epoch ) = toc( start_sample );
+            sol.timings.sample_update( sol.it.epoch ) = toc( start_sample );
             
+        end
+       
+        %============================================================================================================================================
+        %                                                       Exitwave Update
+        %============================================================================================================================================
+
+        % Update exitwaves using recently updated sample transfer function  
+        start_exwv = tic;  
         
+        sol.GPU.psi = exitwave_vectorized_update_2DTPA_meas_projection( sol.GPU.phi,       ...                      % ERvec
+                                                                        sol.GPU.TFvec,     ...
+                                                                        sol.GPU.ind,       ...
+                                                                        sol.GPU.sz,        ...
+                                                                        sol.GPU.Nspos,     ...
+                                                                        sol.GPU.sqrt_rc,   ...
+                                                                        sol.GPU.meas_D,    ...
+                                                                        sol.GPU.meas_Deq0, ...
+                                                                        sol.GPU.measLPF );
+                                          
+        sol.timings.exwv_update( sol.it.epoch ) = sol.timings.exwv_update( sol.it.epoch ) + toc( start_exwv );
         
-        
-        
-        
-        
-        
-        
-        
-        
-        
-                %================================================================
-                %!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-                % EXPERIMENTAL: another exitwave update using just updated sample
- 
-                sol.GPU.psi = ER_GPU_arrays_hadamard( sol.GPU.phi,     ...                      % ERvec
-                                                      sol.GPU.TFv,       ...
-                                                      sol.GPU.ind,       ...
-                                                      sol.GPU.sz,        ...
-                                                      sol.GPU.Nspos,     ...
-                                                      sol.GPU.sqrt_rc,   ...
-                                                      sol.GPU.meas_D,    ...
-                                                      sol.GPU.meas_Deq0, ...
-                                                      sol.GPU.measLPF );
-                                                  
-                %!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-                %================================================================
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        %====================================================================================================================================
-        % Probe Update
-        %=============
-        
-        start_probe = tic;
-        
+        %============================================================================================================================================
+        %                                                       Probe Update
+        %============================================================================================================================================
+
         if ( mod( sol.it.epoch, sol.it.probe_update ) == 0 ) && ( sol.it.epoch > sol.it.probe_start )
 
-            %=============================
-            % Vectorized ePIE probe update
-            %=============================
+            start_probe = tic;
+        
+            %=====================================================================================================
+            % Vectorized ePIE probe update using new T^{(k+1)} for exitwave update, new T^{(k+1)} for probe update
+            %=====================================================================================================
             
-            TFview = reshape( sol.GPU.TFv( sol.GPU.ind ), [ sol.GPU.sz, 1, sol.GPU.Nspos ]);
-
+            TFview = reshape( sol.GPU.TFvec( sol.GPU.ind ), [ sol.GPU.sz, 1, sol.GPU.Nspos ]);
             abs2_TFview = abs( TFview ) .^ 2;
-            
-            sol.GPU.phi = sol.GPU.phi + ( sum( conj( TFview ) .* sol.GPU.psi - sol.GPU.phi .* abs2_TFview, 4 ) ) ./ ( 1e-7 + sum( abs2_TFview, 4 ) );
+            sol.GPU.phi = sol.GPU.phi + sum( conj( TFview ) .* sol.GPU.psi - sol.GPU.phi .* abs2_TFview, 4 ) ./ sum( abs2_TFview, 4 );
 
+            %===================================================================================================
+            % Vectorized ePIE probe update using old T^{(k)} for exitwave update, old T^{(k+1)} for probe update
+            %===================================================================================================
             
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-%                     %======================================================
-%                     %!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-%                     % EXPERIMENTAL: use old sample estimate to update probe
-% 
-%                     T_view = reshape( sol.GPU.TFv_old( sol.GPU.ind ), [ sol.GPU.sz, 1, sol.GPU.Nspos ]);
-% 
-%                     abs2_TFview = abs( T_view ) .^ 2;
-% 
-%                     sol.GPU.phi = sol.GPU.phi + ( sum( conj( T_view ) .* sol.GPU.psi - sol.GPU.phi .* abs2_TFview, 4 ) ) ./ ( 1e-7 + sum( abs2_TFview, 4 ) );
-% 
-%                     %!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-%                     %======================================================
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
+            % CHECK THE DERIVATION ON THIS...WHAT WEIGHTING ARE WE USING FOR THE PROX TERM?
+                            
+%             T_view = reshape( sol.GPU.TFvec_old( sol.GPU.ind ), [ sol.GPU.sz, 1, sol.GPU.Nspos ]);
+%             abs2_TFview = abs( T_view ) .^ 2;
+%             sol.GPU.phi = sol.GPU.phi + sum( conj( T_view ) .* sol.GPU.psi - sol.GPU.phi .* abs2_TFview, 4 ) ./ sum( abs2_TFview, 4 );
+
+%             sol.GPU.phi = sol.GPU.phi + sum( conj( T_view ) .* sol.GPU.psi - sol.GPU.phi .* abs2_TFview, 4 ) ./ ( aa * sum( abs2_TFview, 4 ) + ( 1 - aa ) * abs2_TFview );
+
             %==============
             % Probe Support
             %==============
@@ -350,9 +278,9 @@ function [ sol, expt ] = ptycho2DTPA_runGPU_totalgrad( sol, expt, N_epochs )
 
             end
         
+            sol.timings.probe_update( sol.it.epoch ) = toc( start_probe );
+
         end
-        
-        sol.timings.probe_update( sol.it.epoch ) = toc( start_probe );
 
         %=============
         % Epoch timing
@@ -366,7 +294,7 @@ function [ sol, expt ] = ptycho2DTPA_runGPU_totalgrad( sol, expt, N_epochs )
         
         if ( mod( sol.it.epoch, sol.it.metrics_and_plotting ) == 0 ) || ( sol.it.epoch == 1 )
 
-            sol.sample.T  = gather( reshape( sol.GPU.TFv, sol.sample.sz.sz ));
+            sol.sample.T  = gather( reshape( sol.GPU.TFvec, sol.sample.sz.sz ));
             sol.probe.phi = gather( sol.GPU.phi );
             
             [ sol ] = ptycho2DTPA_collectmetrics( sol, expt );
@@ -390,6 +318,9 @@ function [ sol, expt ] = ptycho2DTPA_runGPU_totalgrad( sol, expt, N_epochs )
         sol.it.epoch = sol.it.epoch + 1;  
 
     end
+    
+    sol.sample.T  = gather( reshape( sol.GPU.TFvec, [ sol.sample.sz.sz ]));
+    sol.probe.phi = gather( sol.GPU.phi );
     
     sol = rmfield( sol, 'sample_sposview_indices' );
 %     sol = rmfield( sol, 'psi' );
@@ -471,7 +402,7 @@ function [ GPU ] = CPUmem2GPUmem( sol, expt )
     
     %========
     
-    GPU.TFv        = gpuArray( sol.sample.T( : ));
+    GPU.TFvec      = gpuArray( sol.sample.T( : ));
     GPU.abs_TF_lim = gpuArray( [ sol.sample.absL, sol.sample.absH ]);
     GPU.phs_TF_lim = gpuArray( [ sol.sample.phsL, sol.sample.phsH ]);
 
@@ -566,7 +497,7 @@ function [ GPU ] = CPUmem( sol, expt )
     
     %==============
     
-    GPU.TFv        = single( sol.sample.T( : ));
+    GPU.TFvec      = single( sol.sample.T( : ));
     GPU.abs_TF_lim = single( [ sol.sample.absL, sol.sample.absH ]);
     GPU.phs_TF_lim = single( [ sol.sample.phsL, sol.sample.phsH ]);
 

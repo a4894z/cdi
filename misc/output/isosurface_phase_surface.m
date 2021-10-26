@@ -1,6 +1,8 @@
 function isosurface_phase_surface( obj, params )
 
-% obj = permute( obj, [ 3, 2, 1 ] );
+obj = permute( obj, [ 3, 2, 1 ] );
+
+
 
     szr = size( obj, 1 );
     szc = size( obj, 2 );
