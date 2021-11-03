@@ -2,8 +2,8 @@
 
 %{
 
-codelocation = '/net/s8iddata/export/8-id-ECA/Analysis/atripath/cdi/'; 
-% codelocation = '~/Documents/Science/Matlab/Code/cdi/'; 
+% codelocation = '/net/s8iddata/export/8-id-ECA/Analysis/atripath/cdi/'; 
+codelocation = '~/Documents/Science/Matlab/Code/cdi/'; 
 
 cd( codelocation ); 
 restoredefaultpath; 
@@ -19,8 +19,8 @@ clear; close all; testing_poisson_exwv_steplength
 
 %====================================================================================================================================================
 
-load /net/s8iddata/export/8-id-ECA/Analysis/atripath/sim_ptycho2DTPA_poissonsteplength.mat
-% load /home/ash/Documents/Science/Matlab/Code/cdi/sim_ptycho2DTPA.mat
+% load /net/s8iddata/export/8-id-ECA/Analysis/atripath/sim_ptycho2DTPA_poissonsteplength.mat
+load /home/ash/Documents/Science/Matlab/Code/cdi/sim_ptycho2DTPA.mat
 
 rng( 'shuffle' )
 reset( gpuDevice )
@@ -35,13 +35,13 @@ a = single( 0.2 );
 sol.probe.phi = ( 1 - a ) * expt.probe.phi + a * rand( [ expt.sz.sz, expt.probe.scpm.N ], 'single' );
 sol.probe.scpm = expt.probe.scpm;
 
-a = single( 0.4 );
+a = single( 0.2 );
 sol.sample.T = ( 1 - a ) * expt.sample.T + a * rand( expt.sample.sz.sz, 'single' );
 
-% sol.sample.T( abs( sol.sample.T ) > 1 ) = 1;
-% sol.sample.T = lpf_gauss( sol.sample.T, [ 0.06 * expt.sample.sz.r, 0.06 * expt.sample.sz.c ] );
-
-clear( 'a' )
+% % sol.sample.T( abs( sol.sample.T ) > 1 ) = 1;
+% % sol.sample.T = lpf_gauss( sol.sample.T, [ 0.06 * expt.sample.sz.r, 0.06 * expt.sample.sz.c ] );
+% 
+% clear( 'a' )
 
 %========
 
@@ -71,9 +71,7 @@ T = reshape( sol.sample.T( ind ), [ sol.sz.sz, 1, spos_N ]);
 % form exit wave across all scan positions
 %=========================================
 
-psi = T .* sol.probe.phi;
-
-psi = squeeze( psi );
+psi = squeeze( T .* sol.probe.phi );
 
 %==============================================================================
 % measurement constraints assuming Gaussian noise with (ignored) constant stdev
@@ -88,13 +86,15 @@ clear( 'psi', 'T', 'ind', 'ind_offset', 'sample_sposview_indices' )
 
 %====================================================================================================================================================
 
-Nalpha = single( 50 );
+% Nalpha = single( 20 );
+% alpha_test = linspace( single( 0.00 ), single( 2 ), Nalpha );
 
-alpha_test = linspace( single( 0.00 ), single( 3 ), Nalpha );
+alpha_test = 1 * ( 0.00 : 0.025 : 4.00 );
+Nalpha = length( alpha_test );
 
 %====================================================================================================================================================
 
-use_GPU = logical( 1 );
+use_GPU = logical( 0 );
 
 if use_GPU == true
 
@@ -120,7 +120,7 @@ I_e      = squeeze( sum( abs_Psi2, 2 )); % sum over scpm
 xi = 1 - I_m ./ I_e;
 xi( isnan( xi ) | isinf( xi ) ) = 0;
 
-% clear( 'I_e' )
+clear( 'I_e' )
 
 %=============================================
 % compute the step length by exact line search
@@ -130,47 +130,7 @@ tic
 
 grad_Psi = Psi .* reshape( xi, [ sol.sz.rc, 1, spos_N ] );
 
-% abs2_Psi_alpha = gpuArray.zeros( [ sol.sz.rc, sol.probe.scpm.N, spos_N, Nalpha ], 'single' );
-% 
-% for aa =  1 : Nalpha
-%     
-%     abs2_Psi_alpha( :, :, :, aa ) = abs( Psi - alpha_test( aa ) .* grad_Psi ) .^ 2;
-%     % I_e_alpha = abs( Psi - alpha_test .* grad_Psi ) .^ 2;
-% 
-% end
-% 
-% clear( 'aa' )
-
 abs2_Psi_alpha = abs( Psi - reshape( alpha_test, [ 1, 1, 1, length( alpha_test ) ] ) .* grad_Psi ) .^ 2;
-
-%========
-
-% tic
-% 
-% poisson_cost = gpuArray.zeros( spos_N, Nalpha, sol.probe.scpm.N, 'single' );
-% 
-% kk = 1;
-% 
-% for pp = 1 : sol.probe.scpm.N
-% 
-%     A_i_q_alpha_p = squeeze( abs2_Psi_alpha( :, pp, :, : ) + sum( abs2_Psi, 2 ) - abs2_Psi( :, pp, : ) );
-% 
-%     poisson_cost( :, :, pp ) = squeeze( sum( A_i_q_alpha_p - I_m .* log( A_i_q_alpha_p ), 1 ));     % sum over q
-% 
-% %     poisson_cost( :, :, pp ) = poisson_cost( :, :, pp ) - min( poisson_cost( :, :, pp ), [], 2 );
-% % 
-% %     figure( 666 );
-% %     subplot( 1, 3, kk )
-% % %     imagesc( alpha_test, spos_test, log10( 1 + abs( poisson_cost )))
-% %     imagesc( alpha_test, 1 : length( spos_test ), log10( 1 + abs( poisson_cost( :, :, pp ) )))
-% %     title( num2str( pp, 'pp = %d' ))
-% %     
-% %     kk = kk + 1;
-% 
-% end
-% 
-% toc
-
 
 A_i_q_alpha_p = abs2_Psi_alpha + sum( abs2_Psi, 2 ) - abs2_Psi;
 
@@ -203,44 +163,13 @@ end
 
 %========
 
-% clear( 'pp', 'kk', 'A_i_q_alpha_p', 'grad_Psi', 'abs2_Psi_alpha' )
+clear( 'pp', 'kk', 'A_i_q_alpha_p', 'grad_Psi', 'abs2_Psi_alpha' )
  
 %================================================
 % compute the step length by 1st order optimality
 %================================================
 
 xi_abs_Psi2 = reshape( xi, [ sol.sz.rc, 1, spos_N ] ) .* abs_Psi2;
-
-% tic
-% 
-% lhs_steplength_eqn_B = gpuArray.zeros( spos_N, sol.probe.scpm.N, Nalpha, 'single' );
-% rhs_steplength_eqn_B = gpuArray.zeros( spos_N, sol.probe.scpm.N, Nalpha, 'single' );
-% 
-% % xi          = reshape( xi, [ sol.sz.rc, 1, spos_N ] );
-% % xi_abs_Psi2 = xi .* abs_Psi2;
-% 
-% 
-% for pp = 1 : sol.probe.scpm.N
-%     
-%     for aa =  1 : Nalpha
-%         
-%         tmp0 = ( alpha_test( aa ) * xi - 1 );
-%         tmp2 = squeeze( xi_abs_Psi2( :, pp, : ));
-%         
-%         lhs_steplength_eqn_B( :, pp, aa ) = sum( tmp2 .* tmp0, 1 );
-%         
-%         tmp1 = squeeze( abs_Psi2( :, pp, : ));
-%         
-%         numer = I_m .* tmp0;
-%         denom = tmp1 .* ( tmp0 .^ 2 ) + squeeze( sum( abs2_Psi, 2 ) - abs2_Psi( :, pp, : ));
-%         
-%         rhs_steplength_eqn_B( :, pp, aa ) = sum( tmp2 .* ( numer ./ denom ), 1 );
-%     
-%     end
-% 
-% end
-% 
-% toc
 
 tic
 
@@ -251,17 +180,14 @@ numer = reshape( I_m .* xi_alpha_minus_one, [ sol.sz.rc, 1, spos_N, Nalpha ] );
 denom = abs_Psi2 .* reshape( xi_alpha_minus_one .^ 2, [ sol.sz.rc, 1, spos_N, Nalpha ] ) + sum( abs2_Psi, 2 ) - abs2_Psi ;
 rhs_steplength_eqn = squeeze( sum( xi_abs_Psi2 .* ( numer ./ denom ), 1 ));
 
-% norm( lhs_steplength_eqn_B(:) - lhs_steplength_eqn(:) )
-% norm( rhs_steplength_eqn_B(:) - rhs_steplength_eqn(:) )
-
-f_eq_0   = abs( lhs_steplength_eqn - rhs_steplength_eqn   );
-% f_eq_0_B = abs( lhs_steplength_eqn_B - rhs_steplength_eqn_B );
+f_eq_0 = abs( lhs_steplength_eqn - rhs_steplength_eqn );
 
 toc
 
+%========
+
 f_eq_0 = permute( f_eq_0, [ 2, 1, 3 ] );
 f_eq_0 = f_eq_0 - min( f_eq_0, [], 3 );
-% f_eq_0_B = f_eq_0_B - min( f_eq_0_B, [], 3 );
 
 kk = 1;
 
@@ -282,38 +208,103 @@ for pp = 1 : sol.probe.scpm.N
     
 end
 
-% kk = 1;
-% 
-% for pp = 1 : sol.probe.scpm.N
-%     
-%     figure( 668 );
-%     subplot( 1, 3, kk )
-%     imagesc( alpha_test, 1 : length( spos_test ), log10( 1 + squeeze( f_eq_0_B( :, pp, : )) ))
-%     title( num2str( pp, 'pp = %d' ))
-%     grid on
-%     colormap turbo
-%     
-%     kk = kk + 1;
-%     
-% end
+%======================================================
+% increasing step until "zero" is found, using for loop
+%======================================================
+
+xi  = reshape( xi,  [ sol.sz.rc, 1, spos_N ] );
+I_m = reshape( I_m, [ sol.sz.rc, 1, spos_N ] );
+
+xi_abs_Psi2 = xi .* abs_Psi2;
+
+sum_pprime_neq_p = ( sum( abs2_Psi, 2 ) - abs2_Psi );
+
+pp = 3;
+% alpha_test = linspace( 0.0, 2, 10 );
+alpha_test_2 = alpha_test;
+spos_test_2  = spos_test;
+
+alpha_found = zeros( spos_N, 1, 'single' );
+
+%========
+
+% test a step length to see if the step length equation is positive
 
 
-% kk = 1;
-% 
-% for pp = 1 : sol.probe.scpm.N
-%     
-%     figure( 669 );
-%     subplot( 1, 3, kk )
-% %     imagesc( alpha_test, spos_test, log10( 1 + abs( poisson_cost )))
-%     imagesc( alpha_test, 1 : length( spos_test ), squeeze( f_eq_0_B( :, pp, : )) - squeeze( f_eq_0( :, pp, : )) )
-% %     imagesc( log10( 1 + abs( squeeze( f_eq_0( :, pp, : )) )))
-%     title( num2str( pp, 'pp = %d' ))
-%     grid on
-%     colormap turbo
-%     
-%     kk = kk + 1;
-%     
-% end
+tic
+
+% for aa = 1 : 5
+for aa = 1 : length( alpha_test_2 )
+    
+    %========
+    
+    xi_alpha_minus_one = xi .* alpha_test_2( aa ) - 1;
+
+    lhs_steplength_eqn = squeeze( sum( xi_abs_Psi2( :, pp, : ) .* xi_alpha_minus_one, 1 ));
+
+    numer = xi_alpha_minus_one .* I_m;
+    denom = abs_Psi2( :, pp, : ) .* ( xi_alpha_minus_one .^ 2 ) + sum_pprime_neq_p( :, pp, : );
+    rhs_steplength_eqn = squeeze( sum( xi_abs_Psi2( :, pp, : ) .* ( numer ./ denom ), 1 ));
+    
+    %========
+    
+    goofy_nonlinear_eqn_equal_0 = lhs_steplength_eqn - rhs_steplength_eqn;
+
+    found_a_step         = ( goofy_nonlinear_eqn_equal_0 > 0 );
+    step_found_spos_indx = spos_test_2( found_a_step );
+
+    alpha_found( step_found_spos_indx ) =  alpha_test_2( aa );
+        
+%     if isempty( step_found_spos_indx ), continue; end
+
+    %========
+
+    % remove scan positions from the process since we've found a step length for them
+    
+    spos_test_2( found_a_step ) = [];
+    if isempty( spos_test_2 ), break; end
+    
+    xi(               :, :, found_a_step ) = [];
+    I_m(              :, :, found_a_step ) = [];
+    xi_abs_Psi2(      :, :, found_a_step ) = [];
+    sum_pprime_neq_p( :, :, found_a_step ) = [];
+    abs_Psi2(         :, :, found_a_step ) = [];
+
+end
+
+toc
+
+tmp0 = squeeze( f_eq_0( :, pp, : ));
+
+[ ~, II ] = min( tmp0, [], 2 );
+
+figure; 
+hold on
+plot( alpha_test( II ), 'linewidth', 3, 'color', [ 0.0, 0.0, 0.0 ] )
+plot( alpha_found, '-.', 'linewidth', 2, 'color', [ 0.0, 0.7, 0.0 ] )
+hold off
+ylim( [ 0.0, max( alpha_test ) ] )
+grid on
+
+return
+
+
+%=================================================================
+% sample/probe update direction scaling for approximation in Eq 21
+%=================================================================
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 %============================================
 % actually perform gradient descent iteration
