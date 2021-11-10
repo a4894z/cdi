@@ -1,13 +1,25 @@
 function [ spos ] = make_2Dptycho_spos_concentric_circles( expt )
 
-%====================================================================================================================================================
+%================================================
+% load a set of previously defined scan positions
+%================================================
 
+Z = load( '/net/s8iddata/export/8-id-ECA/Analysis/atripath/rPIE_vs_MB_mat/no_noise/sim_ptycho2DTPA_0.mat', 'expt' );
+
+spos = Z.expt.spos;
+
+
+
+
+
+
+return
+
+%============================================================================
 % create a 2 x ( # of scan pos ) array of scan positions with units of pixels
-
 % define downstream optical axis as +y, then +x ( horizontal ) is inboard 
 % (towards storage ring as viewed from beamline ), and +z (vertical) is up.
-
-%====================================================================================================================================================
+%============================================================================
 
 if isfield( expt, 'spos' ), spos = expt.spos; end
 

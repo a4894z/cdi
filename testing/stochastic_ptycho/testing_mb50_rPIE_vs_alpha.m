@@ -9,7 +9,7 @@ clear; close all; testing_mb50_rPIE_vs_alpha
 
 %====================================================================================================================================================
 
-addpath( '/net/s8iddata/export/8-id-ECA/Analysis/atripath/shadedErrorBar/' );  
+addpath( '/net/s8iddata/export/8-id-ECA/Analysis/atripath/cdi/misc/output/shadedErrorBar/' );  
 
 %====================================================================================================================================================
 

@@ -60,23 +60,23 @@ fprintf('=======================================================================
 % expt = struct;
 % sol  = struct;
 
-%==================================================================================================
-%----------------------------- set up paths for phase retrieval code ------------------------------
-%==================================================================================================
+%======================================
+% set up paths for phase retrieval code
+%======================================
 
 % expt.paths.code     = '~/Documents/Science/Matlab/Code/cdi/';   
 % expt.paths.rimgdata = '/media/ash/Saltwater/Data/simulated/';   
 
-expt.paths.code     = '~/Documents/Science/Matlab/Code/cdi/';   
-expt.paths.rimgdata = '/home/ash/Documents/Science/Matlab/Data/simulated/img/';   
+% expt.paths.code     = '~/Documents/Science/Matlab/Code/cdi/';   
+% expt.paths.rimgdata = '/home/ash/Documents/Science/Matlab/Data/simulated/img/';   
 
 
-% expt.paths.code     = '/net/s8iddata/export/8-id-ECA/Analysis/atripath/cdi/';   
-% expt.paths.rimgdata = '/net/s8iddata/export/8-id-ECA/Analysis/atripath/data/simulated/img/';   
+expt.paths.code     = '/net/s8iddata/export/8-id-ECA/Analysis/atripath/cdi/';   
+expt.paths.rimgdata = '/net/s8iddata/export/8-id-ECA/Analysis/atripath/data/simulated/img/';   
 
-%==================================================================================================
-%------------------------------------- load misc stuff --------------------------------------------
-%==================================================================================================
+%================
+% load misc stuff 
+%================
 
 % color maps I like:
 
@@ -92,36 +92,36 @@ tmp1 = load( [ expt.paths.code, '/misc/colormaps/colormap_hsvD.mat' ]);
 expt.cm.hsvD = tmp1.hsvD;
 clear( 'tmp1' );
 
-%==================================================================================================
-%--------------------- define the various relevant experimental parameters ------------------------
-%==================================================================================================
+%====================================================
+% define the various relevant experimental parameters 
+%====================================================
 
 expt.energy = 10.000;                           % in keV
 expt.lambda = ( 12.4 / expt.energy ) * 1e-10;   % wavelength ( in meters )
 
-%==================================================================================================
-%---------------- load/create/define spatially coherent probe modes -------------------------------
-%==================================================================================================
+%==================================================
+% load/create/define spatially coherent probe modes 
+%==================================================
 
 % % load from images, past results, from experiment, etc:
 % [ expt.probe, expt.csys, expt.sz ] = make_2Dprobemodes_loadfromfile( expt );
 
-%================================================
+%========
 
 % using whatever goofy shapes you like:
 [ expt.probe, expt.csys, expt.sz ] = make_2Dprobemodes_goofy( expt );
 
-%================================================
+%========
 
 % % using a beam defining aperture ( e.g. pinhole ):
 % [ expt.probe, expt.csys, expt.sz ] = make_2Dprobemodes_UFB( expt );
 
-%================================================
+%========
 
 % % using a focusing optic:
 % [ expt.probe, expt.csys, expt.sz ] = make_2Dprobemodes_FB( expt );
 
-%================================================
+%========
 
 % clean up:
 expt      = orderfields( expt );
@@ -156,47 +156,53 @@ expt.csys = orderfields( expt.csys );
 
 [ expt.spos ] = make_2Dptycho_spos_concentric_circles( expt );
 
-tmp0 = randperm( expt.spos.N, round( 0.05 * expt.spos.N) );
+%=================
+% plotting of spos
+%=================
 
-    % plot scan positions
-
-    figure; 
-    plot_2Dscan_positions( expt.spos.rs, [], expt.spos.rs( tmp0, : ), [] )
-%     plot_2Dscan_positions( expt.spos.yv_xh_frameL, [], expt.spos.rs( 1 : 1 : end, : ), expt.spos.indxsubset( 1 : 1 : end ))
-    set( gca, 'xdir', 'reverse' )
-    set( gca, 'ydir', 'normal' )
-    daspect([1 1 1])
-%     xlabel('xh, lab frame'); ylabel('yv, lab frame');
-    %title('positions for scanning the probe on the sample')
-
-   
-    
-    
-
-    % distance between adjacent scan positions (in spos order)         
-
-    tmp = zeros( expt.spos.N - 1, 1, 'single' );
-
-    for ss = 1 : expt.spos.N - 1
-
-        tmp( ss ) = sqrt(( expt.spos.rs( ss, 1 ) - expt.spos.rs( ss + 1, 1 )) .^ 2 + ( expt.spos.rs( ss, 2 ) - expt.spos.rs( ss + 1, 2 )) .^ 2);
-
-    end
-
-    figure
-    plot( tmp, 'Linewidth', 1 ); 
-    xlabel('scan position index'); ylabel('distance between adjacent scan positions')
-    grid on
+% tmp0 = randperm( expt.spos.N, round( 0.05 * expt.spos.N) );
+% 
+%     % plot scan positions
+% 
+%     figure; 
+%     plot_2Dscan_positions( expt.spos.rs, [], expt.spos.rs( tmp0, : ), [] )
+% %     plot_2Dscan_positions( expt.spos.yv_xh_frameL, [], expt.spos.rs( 1 : 1 : end, : ), expt.spos.indxsubset( 1 : 1 : end ))
+%     set( gca, 'xdir', 'reverse' )
+%     set( gca, 'ydir', 'normal' )
+%     daspect([1 1 1])
+% %     xlabel('xh, lab frame'); ylabel('yv, lab frame');
+%     %title('positions for scanning the probe on the sample')
+% 
+%    
+%     
+%     
+% 
+%     % distance between adjacent scan positions (in spos order)         
+% 
+%     tmp = zeros( expt.spos.N - 1, 1, 'single' );
+% 
+%     for ss = 1 : expt.spos.N - 1
+% 
+%         tmp( ss ) = sqrt(( expt.spos.rs( ss, 1 ) - expt.spos.rs( ss + 1, 1 )) .^ 2 + ( expt.spos.rs( ss, 2 ) - expt.spos.rs( ss + 1, 2 )) .^ 2);
+% 
+%     end
+% 
+%     figure
+%     plot( tmp, 'Linewidth', 1 ); 
+%     xlabel('scan position index'); ylabel('distance between adjacent scan positions')
+%     grid on
 
 
 %===============================
 % introduce scan position errors
+%===============================
 
 % ???
 
-%========
-
+%=========
 % clean up
+%=========
+
 expt      = orderfields( expt );
 expt.spos = orderfields( expt.spos );
 % clearvars -except expt
@@ -295,7 +301,7 @@ copyfile( expt.paths.rsdata, [ expt.paths.rsdata( 1 : end - 4 ), '_0' , '.mat'] 
 fprintf(' done!\n\n');
 
 %==================================================================================================
-%---------------------------------------------- fin -----------------------------------------------
+%---------------------------------------------- END -----------------------------------------------
 %==================================================================================================
 
 end

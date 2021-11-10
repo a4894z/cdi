@@ -1,13 +1,25 @@
 function [ sample ] = make_2Dsample( expt )
 
-%==================================================================================================
-
 % create a 2D sample transmission function which we will use with 2D probe modes
 % to propagate exit waves ( using the projection approximation ) to the detector
 
-%==================================================================================================
+%====================================================================================================================================================
+% ----------------------------------------------- LOAD PREVIOUSLY DEFINED SAMPLE TRANSFER FUNCTION --------------------------------------------------
+%====================================================================================================================================================
+
+Z = load( '/net/s8iddata/export/8-id-ECA/Analysis/atripath/rPIE_vs_MB_mat/no_noise/sim_ptycho2DTPA_0.mat', 'expt' );
+
+sample = Z.expt.sample;
+
+return
+
+%====================================================================================================================================================
+% ----------------------------------------------- CREATE SAMPLE TRANSFER FUNCTION FROM IMAGE --------------------------------------------------------
+%====================================================================================================================================================
+
+%===============================================
 % image we use for the sample transfer function:
-%==================================================================================================
+%===============================================
 
 % sample.img = [ expt.paths.rimgdata, '/sample/anl.ppm' ];
 % sample.img = [ expt.paths.rimgdata, '/sample/brain2.ppm' ];
@@ -22,9 +34,9 @@ sample.img = [ expt.paths.rimgdata, '/sample/cells4.ppm' ];
 % sample.img = [ expt.paths.rimgdata, '/sample/airforceTP.ppm' ];
 % sample.img = [ expt.paths.rimgdata, '/sample/tulips.ppm' ];
 
-%================================================
+%=======================
 % array size for sample:
-%================================================
+%=======================
 
 % sample.sz.r = single( round( expt.sz.r * 2.70 ));
 % sample.sz.c = single( round( expt.sz.c * 2.70 ));
@@ -44,18 +56,18 @@ sample.sz.rc = sample.sz.r * sample.sz.c;
 sample.sz.sqrt_rc = sqrt( sample.sz.rc );
 sample.sz.sz = [ sample.sz.r, sample.sz.c ]; 
 
-%================================================
+%=======================================
 % define params for sample transmission:
-%================================================
+%=======================================
 
 sample.expofimgabs = false;
 sample.abs_minmax = single( [ +0.6000, +0.999 ] );
 sample.phs_minmax = single( 0.99 * [ -1.0, +1.0 ] * pi );
 sample.phs_offset = single( 0.0 * pi );
 
-%================================================
+%=================
 % make the sample:
-%================================================
+%=================
 
 % load an image, create it to hsv, val <--> abs, hue <--> phs 
 [ tmp1 ] = image2complex( sample.img, 3, 3 );
@@ -85,7 +97,7 @@ sample.T = imresize( tmp1, 1 * sample.sz.sz, 'box' );
 % sample.T = zeropadarray( sample.T, [ 128, 128 ] );
 % sample.T = imresize2D( sample.T, 1 * sample.sz.sz );
 
-%================================================
+%========
 
 sample.sz.r = single( size( sample.T, 1 ));
 sample.sz.c = single( size( sample.T, 2 ));
@@ -99,22 +111,22 @@ sample.sz.sz = [ sample.sz.r, sample.sz.c ];
 sample.vs.r = round( ( 0.5 * ( sample.sz.r - expt.sz.r ) + 1 ) : ( 0.5 * ( sample.sz.r + expt.sz.r )));
 sample.vs.c = round( ( 0.5 * ( sample.sz.c - expt.sz.c ) + 1 ) : ( 0.5 * ( sample.sz.c + expt.sz.c )));
 
-%================================================
+%========
 
 % sample.T = exp( -1 * abs( sample.T )) .* exp( 1i * angle( sample.T ));
 % sample.T = exp( -1 * abs( sample.T )) .* exp( 1i * abs( sample.T ));
 
-%================================================
+%========
 
 sample.T = modulus_limits_scale( sample.T, sample.abs_minmax );
 sample.T = phase_limits_scale( sample.T, sample.phs_minmax );
 
 % sample.T = abs( sample.T );
 
-%================================================
+%========
 
 % QUICK HACK: for an opaque region surrounding an isolated sample:
 
 % sample.T = (abs( sample.T ) > 0.333) .* sample.T;
 
-%================================================
+%========

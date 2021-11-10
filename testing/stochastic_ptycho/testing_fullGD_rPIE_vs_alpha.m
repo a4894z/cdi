@@ -9,11 +9,304 @@ clear; close all; testing_fullGD_rPIE_vs_alpha
 
 %====================================================================================================================================================
 
-addpath( '/net/s8iddata/export/8-id-ECA/Analysis/atripath/shadedErrorBar/' );  
+% addpath( '/net/s8iddata/export/8-id-ECA/Analysis/atripath/shadedErrorBar/' );  
 
 %====================================================================================================================================================
 
 rootpath_data = '/net/s8iddata/export/8-id-ECA/Analysis/atripath/minibatch_vs_stoch_vs_full_rPIE_alpha/full/';
+
+%====================================================================================================================================================
+
+%%{
+
+load( [ rootpath_data, 'metrics.mat' ] );
+
+y_lim = [-1, 6];
+
+% metrics_plot = [ 1, 2, 3, 4, 5, 6, 7 ];
+% metrics_plot = [ 1, 2, 5, 6 ];
+metrics_plot = [ 1, 4, 5, 6 ];
+
+%===========================================
+% using shaded error bars for trial variance
+%===========================================
+
+% skip  = 1;
+% tmp0 = {};
+% 
+% facecolors = [ [ 0.0, 0.0, 0.0 ]; ...
+%                [ 0.7, 0.0, 0.0 ]; ...
+%                [ 0.0, 0.0, 0.7 ]; ...
+%                [ 0.0, 0.7, 0.0 ]; ...
+%                [ 0.0, 0.7, 0.7 ]; ...
+%                [ 0.7, 0.0, 0.7 ]; ...
+%                [ 0.7, 0.7, 0.0 ]; ...
+%              ];
+%          
+% h1 = figure();     
+% set( h1, 'Visible', 'on', 'Position',[ 1, 1, 1920, 1080 ] )
+%     
+% 
+% hold on
+%     
+% for jj = 1 : length( metrics_plot )
+%     
+%     ii = metrics_plot( jj );
+%     
+%     x     = metrics{ ii }.it.mtot;
+%     x     = x( 1 : skip : end );
+%     
+% %     xconf = [ x, x( end : -1 : 1) ]; 
+% %     yconf = [ metrics{ ii }.log10_meas_all_max, fliplr( metrics{ ii }.log10_meas_all_min ) ];
+% % 
+% % %     p = fill( xconf, yconf, 'red' );
+% % %     p.FaceColor = [ 1, 0.8, 0.8 ];   
+% %     
+% % 
+% % 
+% % %     p = fill( xconf, yconf, facecolors( jj, : ) );
+% %     p = fill( xconf, yconf, [ 0, 0, 0 ] );
+% %     p.FaceColor = facecolors( jj, : );      
+% %     p.EdgeColor = 'none';     
+% %     p.FaceAlpha = 0.250;
+% % %     set( h1, 'facealpha', 0.25 )
+%     
+% 
+% 
+%     plot( x, metrics{ ii }.log10_meas_all_avg( 1 : skip : end ), '-', ...
+%                                                                  'linewidth', 2, ...
+%                                                                  'color', [ facecolors( jj, : ), 0.75 ] )
+% 
+% 
+%     xlabel('Epoch')
+%     ylabel( { [ metrics{ ii }.name_data, ',' ], 'Cost Function Value' }, 'Interpreter', 'none' )
+% 
+%     title('$log_{10}\bigg[ \frac{1}{N_s} \sum_{s=1}^{N_s} \left \Vert \sqrt{W_s} -  \sqrt{ \sum_p \left\vert \mathcal{F}[ \phi_p \odot T_s ] \right\vert^2} \right\Vert^2_F \bigg]$', 'FontWeight','bold', 'FontSize', 14, 'Interpreter', 'latex' );
+%     grid on
+%     ylim( y_lim )
+%     
+%     tmp0{ end + 1 } = metrics{ ii }.name_data; 
+% 
+%     %     legend( 'Location', 'northeast' ) 
+% 
+% end
+% 
+% hold off
+% 
+% legend( tmp0, 'interpreter', 'none' )
+% 
+% hold on
+% for jj = 1 : length( metrics_plot )
+%     
+%     ii = metrics_plot( jj );
+%     
+%     x     = metrics{ ii }.it.mtot;
+%     x     = x( 1 : skip : end );
+%     xconf = [ x, x( end : -1 : 1) ]; 
+%     
+%     y_max = metrics{ ii }.log10_meas_all_max;
+%     y_min = fliplr( metrics{ ii }.log10_meas_all_min );
+%     yconf = [ y_max( 1 : skip : end ), y_min( 1 : skip : end ) ];
+% 
+% %     p = fill( xconf, yconf, 'red' );
+% %     p.FaceColor = [ 1, 0.8, 0.8 ];   
+%     
+% 
+% 
+% %     p = fill( xconf, yconf, facecolors( jj, : ) );
+%     p = fill( xconf, yconf, [ 0, 0, 0 ] );
+%     p.FaceColor = facecolors( jj, : );      
+%     p.EdgeColor = 'none';     
+%     p.FaceAlpha = 0.08;
+% %     set( h1, 'facealpha', 0.25 )
+%     
+% end
+% 
+% hold off
+
+%==========================
+% using "normal "error bars
+%==========================
+
+tmp0 = {};
+
+skip = 5;
+
+h1 = figure();     
+set( h1, 'Visible', 'on', 'Position',[ 1, 1, 1920, 1080 ] )
+
+facecolors = [ [ 0.0, 0.0, 0.0 ]; ...
+               [ 0.7, 0.0, 0.0 ]; ...
+               [ 0.0, 0.0, 0.7 ]; ...
+               [ 0.0, 0.7, 0.0 ]; ...
+               [ 0.0, 0.7, 0.7 ]; ...
+               [ 0.7, 0.0, 0.7 ]; ...
+               [ 0.7, 0.7, 0.0 ]; ...
+             ];
+         
+for jj = 1 : length( metrics_plot )
+    
+    ii = metrics_plot( jj );
+    
+    x     = metrics{ ii }.it.mtot;
+    x     = x( 1 : skip : end );
+    
+    y     = metrics{ ii }.log10_meas_all_avg;
+    y     = y( 1 : skip : end );
+
+    %========
+
+    hold on
+    
+    err_max = transpose( metrics{ ii }.log10_meas_all_max( 1 : skip : end ) ) - y;
+
+    err_min = y - transpose( metrics{ ii }.log10_meas_all_min( 1 : skip : end ) );
+
+%     h = errorbar( x, y, err_min, err_max, '-o',            ...
+%                                           'linewidth', 2, ...
+%                                           'color', [ facecolors( jj, : ), 0.15 ] );
+                                      
+    h = errorbar( x, y, err_min, err_max, '-o',            ...
+                                          'linewidth', 2, ...
+                                          'color', [ facecolors( jj, : ), 0.15 ] );
+                                      
+    hold off
+    
+    %========
+        
+%     hold on
+%     
+%     S = std( metrics{ ii }.log10_meas_all, 1, 2 );
+%     
+%     h = errorbar( x, y, S, 'o',            ...
+%                            'linewidth', 2, ...
+%                            'color', [ facecolors( jj, : ), 0.15 ] );
+%                      
+%     hold off
+
+    %========
+    
+    xlabel('Epoch')
+    ylabel( { [ metrics{ ii }.name_data, ',' ], 'Cost Function Value' }, 'Interpreter', 'none' )
+
+    title('$log_{10}\bigg[ \frac{1}{N_s} \sum_{s=1}^{N_s} \left \Vert \sqrt{W_s} -  \sqrt{ \sum_p \left\vert \mathcal{F}[ \phi_p \odot T_s ] \right\vert^2} \right\Vert^2_F \bigg]$', 'FontWeight','bold', 'FontSize', 14, 'Interpreter', 'latex' );
+    grid on
+    ylim( y_lim )
+    
+    tmp0{ end + 1 } = metrics{ ii }.name_data; 
+
+    %     legend( 'Location', 'northeast' ) 
+
+    alpha = 0.15;
+    set( [ h.Bar, h.Line ], 'ColorType', 'truecoloralpha', 'ColorData', [ h.Line.ColorData( 1 : 3 ); 255 * alpha ])
+
+end
+
+
+legend( tmp0, 'interpreter', 'none' )
+tmp0 = {};
+
+%===============================================================
+% using CUSTOM FUNCTION for shaded error bars for trial variance
+%===============================================================
+
+tmp0 = {};
+
+skip = 1;
+
+h1 = figure();     
+set( h1, 'Visible', 'on', 'Position',[ 1, 1, 1920, 1080 ] )
+              
+facecolors = [ [ 0.0, 0.0, 0.0 ]; ...
+               [ 0.8, 0.0, 0.0 ]; ...
+               [ 0.0, 0.0, 0.8 ]; ...
+               [ 0.0, 0.8, 0.0 ]; ...
+               [ 0.5, 0.5, 0.5 ]; ...
+               [ 0.8, 0.0, 0.8 ]; ...
+               [ 0.8, 0.8, 0.0 ]; ...
+               [ 0.0, 0.8, 0.8 ]; ...
+             ];
+             
+for jj = 1 : length( metrics_plot )
+    
+    ii = metrics_plot( jj );
+    
+    x     = metrics{ ii }.it.mtot;
+    x     = x( 1 : skip : end );
+    
+    y     = metrics{ ii }.log10_meas_all_avg;
+    y     = y( 1 : skip : end );
+
+    %========
+
+    hold on
+    
+    err_max = transpose( metrics{ ii }.log10_meas_all_max( 1 : skip : end ) ) - y;
+    err_min = y - transpose( metrics{ ii }.log10_meas_all_min( 1 : skip : end ) );
+
+    h = shadedErrorBar( x, y, transpose( [ err_max, err_min ] ), 'lineprops', { '-', 'LineWidth', 2, 'Color', facecolors( jj, : ) }, ...
+                                                                 'transparent', true, 'patchSaturation', 0.10 );     
+        
+                                                             
+%     S = std( metrics{ ii }.log10_meas_all, 1, 2 );  
+% %     S = S - y;
+%     
+%     err_max = y + S;
+%     err_min = y - S;
+%     
+%     h = shadedErrorBar( x, y, transpose( [ S, S ] ), 'lineprops', { '-', 'LineWidth', 2, 'Color', facecolors( jj, : ) }, ...
+%                                                                  'transparent', true, 'patchSaturation', 0.10 );                                                               
+                                                             
+                                                             
+        
+                                                             
+                     
+    set( h.edge, 'LineWidth', 1.75, 'LineStyle', ':' )                                                
+             
+%     if mod( jj, 2 )
+% 
+%     %     h.patch.FaceColor = 0 * [ 0.5, 0.25, 0.25 ];
+% %         set( h.edge, 'LineWidth', 1.5, 'LineStyle', '--', 'Color', facecolors( jj, : ) )
+%         set( h.edge, 'LineWidth', 1.5, 'LineStyle', '--' )
+%     %     h.mainLine.LineWidth = 3;
+%     %     h.mainLine.LineWidth = 3;
+%     else
+%         
+%         set( h.edge, 'LineWidth', 1.25, 'LineStyle', '-', 'Color', facecolors( jj, : ) )
+%         
+%     end
+    
+%     set( h.edge, 'transparent', true, 'patchSaturation', 0.10 )
+    
+    hold off
+    
+    %========
+    
+    xlabel('Epoch')
+    ylabel( { [ metrics{ ii }.name_data, ',' ], 'Cost Function Value' }, 'Interpreter', 'none' )
+
+    title('$log_{10}\bigg[ \frac{1}{N_s} \sum_{s=1}^{N_s} \left \Vert \sqrt{W_s} -  \sqrt{ \sum_p \left\vert \mathcal{F}[ \phi_p \odot T_s ] \right\vert^2} \right\Vert^2_F \bigg]$', 'FontWeight','bold', 'FontSize', 14, 'Interpreter', 'latex' );
+    grid on
+    ylim( y_lim )
+    
+    tmp1 = metrics{ ii }.name_data;
+%     tmp1( end - 14 : end ) = [];
+    tmp0{ end + 1 } = tmp1; 
+    
+    %     legend( 'Location', 'northeast' ) 
+
+%     alpha = 0.15;
+%     set( [ h.Bar, h.Line ], 'ColorType', 'truecoloralpha', 'ColorData', [ h.Line.ColorData( 1 : 3 ); 255 * alpha ])
+
+end
+
+legend( tmp0, 'interpreter', 'none' )
+
+
+
+return
+
+%}
 
 %====================================================================================================================================================
 
@@ -22,39 +315,39 @@ N_trials  = [];
 
 %========
 
-path_data{ end + 1 } = [ rootpath_data, '/cdi_rPIE_full_alpha0p000000001_randT/independenttrials_04Sep2021_t141134/' ];
-N_trials( end + 1 )  = 10;
-
-path_data{ end + 1 } = [ rootpath_data, '/cdi_rPIE_full_alpha0p00000001_randT/independenttrials_02Sep2021_t105630/' ];
-N_trials( end + 1 )  = 10;
-
-path_data{ end + 1 } = [ rootpath_data, '/cdi_rPIE_full_alpha0p0000001_randT_a/independenttrials_31Aug2021_t092025/' ];
-N_trials( end + 1 )  = 10;
-
-path_data{ end + 1 } = [ rootpath_data, '/cdi_rPIE_full_alpha0p0000001_randT_b/independenttrials_01Sep2021_t192318/' ];
-N_trials( end + 1 )  = 10;
-
-path_data{ end + 1 } = [ rootpath_data, '/cdi_rPIE_full_alpha0p000001_randT_b/independenttrials_01Sep2021_t035527/' ];
-N_trials( end + 1 )  = 10;
-
-path_data{ end + 1 } = [ rootpath_data, '/cdi_rPIE_full_alpha0p000001_randT_a/independenttrials_31Aug2021_t092152/' ];
-N_trials( end + 1 )  = 10;
-
-path_data{ end + 1 } = [ rootpath_data, '/cdi_rPIE_full_alpha0p00001_randT/independenttrials_31Aug2021_t091637/' ];
-N_trials( end + 1 )  = 10;
-
-path_data{ end + 1 } = [ rootpath_data, '/cdi_rPIE_full_alpha0p0001_randT/independenttrials_26Aug2021_t033321/' ];
-N_trials( end + 1 )  = 10;
-
-path_data{ end + 1 } = [ rootpath_data, '/cdi_rPIE_full_alpha0p001_randT/independenttrials_25Aug2021_t115703/' ];
-N_trials( end + 1 )  = 10;
-
+% path_data{ end + 1 } = [ rootpath_data, '/cdi_rPIE_full_alpha0p000000001_randT/independenttrials_04Sep2021_t141134/' ];
+% N_trials( end + 1 )  = 10;
+% 
+% path_data{ end + 1 } = [ rootpath_data, '/cdi_rPIE_full_alpha0p00000001_randT/independenttrials_02Sep2021_t105630/' ];
+% N_trials( end + 1 )  = 10;
+% 
+% path_data{ end + 1 } = [ rootpath_data, '/cdi_rPIE_full_alpha0p0000001_randT_a/independenttrials_31Aug2021_t092025/' ];
+% N_trials( end + 1 )  = 10;
+% 
+% path_data{ end + 1 } = [ rootpath_data, '/cdi_rPIE_full_alpha0p0000001_randT_b/independenttrials_01Sep2021_t192318/' ];
+% N_trials( end + 1 )  = 10;
+% 
+% path_data{ end + 1 } = [ rootpath_data, '/cdi_rPIE_full_alpha0p000001_randT_b/independenttrials_01Sep2021_t035527/' ];
+% N_trials( end + 1 )  = 10;
+% 
+% path_data{ end + 1 } = [ rootpath_data, '/cdi_rPIE_full_alpha0p000001_randT_a/independenttrials_31Aug2021_t092152/' ];
+% N_trials( end + 1 )  = 10;
+% 
+% path_data{ end + 1 } = [ rootpath_data, '/cdi_rPIE_full_alpha0p00001_randT/independenttrials_31Aug2021_t091637/' ];
+% N_trials( end + 1 )  = 10;
+% 
+% path_data{ end + 1 } = [ rootpath_data, '/cdi_rPIE_full_alpha0p0001_randT/independenttrials_26Aug2021_t033321/' ];
+% N_trials( end + 1 )  = 10;
+% 
+% path_data{ end + 1 } = [ rootpath_data, '/cdi_rPIE_full_alpha0p001_randT/independenttrials_25Aug2021_t115703/' ];
+% N_trials( end + 1 )  = 10;
+% 
 % path_data{ end + 1 } = [ rootpath_data, '/cdi_rPIE_full_alpha0p005_randT/independenttrials_26Aug2021_t190514/' ];
 % N_trials( end + 1 )  = 10;
-
-path_data{ end + 1 } = [ rootpath_data, '/cdi_rPIE_full_alpha0p01_randT/independenttrials_14Aug2021_t081939/' ];
-N_trials( end + 1 )  = 10;
-
+% 
+% path_data{ end + 1 } = [ rootpath_data, '/cdi_rPIE_full_alpha0p01_randT/independenttrials_14Aug2021_t081939/' ];
+% N_trials( end + 1 )  = 10;
+% 
 % path_data{ end + 1 } = [ rootpath_data, '/cdi_rPIE_full_alpha0p02_randT/independenttrials_17Aug2021_t085244/' ];
 % N_trials( end + 1 )  = 10;
 % 
@@ -78,10 +371,10 @@ N_trials( end + 1 )  = 10;
 % 
 % path_data{ end + 1 } = [ rootpath_data, '/cdi_rPIE_full_alpha0p09_randT/independenttrials_22Aug2021_t054834/' ];
 % N_trials( end + 1 )  = 10;
-
-path_data{ end + 1 } = [ rootpath_data, '/cdi_rPIE_full_alpha0p10_randT/independenttrials_15Aug2021_t170501/' ];
-N_trials( end + 1 )  = 10;
-
+% 
+% path_data{ end + 1 } = [ rootpath_data, '/cdi_rPIE_full_alpha0p10_randT/independenttrials_15Aug2021_t170501/' ];
+% N_trials( end + 1 )  = 10;
+% 
 % path_data{ end + 1 } = [ rootpath_data, '/cdi_rPIE_full_alpha0p20_randT/independenttrials_18Aug2021_t095541/' ];
 % N_trials( end + 1 )  = 10;
 % 
@@ -105,19 +398,172 @@ N_trials( end + 1 )  = 10;
 % 
 % path_data{ end + 1 } = [ rootpath_data, '/cdi_rPIE_full_alpha0p90_randT/independenttrials_22Aug2021_t000627/' ];
 % N_trials( end + 1 )  = 10;
+% 
+% path_data{ end + 1 } = [ rootpath_data, '/cdi_rPIE_full_alpha1p00_randT/independenttrials_13Aug2021_t155848/' ];
+% N_trials( end + 1 )  = 10;
 
-path_data{ end + 1 } = [ rootpath_data, '/cdi_rPIE_full_alpha1p00_randT/independenttrials_13Aug2021_t155848/' ];
+%========
+
+path_data{ end + 1 } = [ rootpath_data, '/cdi_rPIE_full_alpha1p00_randT_oldsample_for_probe_update/independenttrials_21Oct2021_t022747/' ];
 N_trials( end + 1 )  = 10;
+
+path_data{ end + 1 } = [ rootpath_data, '/cdi_rPIE_full_alpha0p10_randT_oldsample_for_probe_update/independenttrials_02Oct2021_t235705/' ];
+N_trials( end + 1 )  = 10;
+
+path_data{ end + 1 } = [ rootpath_data, '/cdi_rPIE_full_alpha0p01_randT_oldsample_for_probe_update/independenttrials_20Sep2021_t142149/' ];
+N_trials( end + 1 )  = 10;
+
+path_data{ end + 1 } = [ rootpath_data, '/cdi_rPIE_full_alpha0p001_randT_oldsample_for_probe_update/independenttrials_02Oct2021_t071559/' ];
+N_trials( end + 1 )  = 10;
+
+path_data{ end + 1 } = [ rootpath_data, '/cdi_rPIE_full_alpha0p00001_randT_oldsample_for_probe_update/independenttrials_01Oct2021_t143516/' ];
+N_trials( end + 1 )  = 10;
+
+path_data{ end + 1 } = [ rootpath_data, '/cdi_rPIE_full_alpha0p0000001_randT_oldsample_for_probe_update/independenttrials_30Sep2021_t215726/' ];
+N_trials( end + 1 )  = 10;
+
+path_data{ end + 1 } = [ rootpath_data, '/cdi_rPIE_full_alpha0p000000001_randT_oldsample_for_probe_update/independenttrials_30Sep2021_t051649/' ];
+N_trials( end + 1 )  = 10;
+
 
 %====================================================================================================================================================
 
 for jj = 1 : length( path_data )
     
-    metrics( jj ) = load_and_plot( path_data{ jj }, N_trials( jj ) ); %#ok<SAGROW>
-
+    metrics{ jj } = load_and_plot( path_data{ jj }, N_trials( jj ) ); %#ok<SAGROW>
+    
+    metrics{ jj }.rootpath_data = rootpath_data;                        %#ok<SAGROW>
+    
 end
 
 %====================================================================================================================================================
+
+function metrics = load_and_plot( path_data, N_trials )
+
+    y_lim = [-1, 6];
+    
+    %========
+    
+    sim_ptycho2DTPA = cell( N_trials, 1 );
+    
+    for ii = 1 : N_trials
+
+        sim_ptycho2DTPA{ ii } = load( [ path_data, num2str( ii, 'trial_%d/sim_ptycho2DTPA.mat') ] );
+        
+    end
+
+    %========
+
+    meas_all_avg = 0;
+    
+    for ii = 1 : N_trials
+        
+        log10_meas_all( :, ii ) = log10( sim_ptycho2DTPA{ ii }.sol.metrics.meas_all ); %#ok<AGROW>
+
+        meas_all_avg = meas_all_avg + log10_meas_all( :, ii );
+
+    end
+
+    meas_all_avg = meas_all_avg / N_trials;
+
+    log10_meas_all_min = transpose( min( log10_meas_all, [], 2 ));
+    log10_meas_all_max = transpose( max( log10_meas_all, [], 2 ));  
+
+%     name_data = num2str( [ sim_ptycho2DTPA{ 1 }.sol.rPIE_alpha, sim_ptycho2DTPA{ 1 }.sol.spos.rand_spos_subset_pct ], 'rPIE_alpha = %0.8f, MBpct = %0.4f');
+
+    %=================================================
+    % create a struct from metrics data for future use
+    %=================================================
+    
+    for ii = 1 : N_trials
+        
+        metrics.meas_all( :, ii )          = sim_ptycho2DTPA{ ii }.sol.metrics.meas_all;
+        metrics.timing( ii )               = sim_ptycho2DTPA{ ii }.sol.timings;
+        metrics.it( ii )                   = sim_ptycho2DTPA{ ii }.sol.it;
+        metrics.rPIE_alpha( ii )           = sim_ptycho2DTPA{ ii }.sol.rPIE_alpha;
+%         metrics.rand_spos_subset_pct( ii ) = sim_ptycho2DTPA{ ii }.sol.spos.rand_spos_subset_pct;
+        
+    end
+    
+%     name_data = num2str( [ metrics.rPIE_alpha( 1 ), metrics.rand_spos_subset_pct( 1 ) ], 'rPIE_alpha = %0.8f, MBpct = %0.4f');
+    name_data = num2str( sim_ptycho2DTPA{ii}.sol.rPIE_alpha, 'rPIE_alpha = %0.8f');
+    
+    metrics.log10_meas_all_max  = log10_meas_all_max;
+    metrics.log10_meas_all_min  = log10_meas_all_min;
+    metrics.log10_meas_all      = log10_meas_all;
+    metrics.log10_meas_all_avg  = meas_all_avg;
+    metrics.name_data           = name_data;
+    metrics.N_trials            = N_trials;
+    metrics.path_data           = path_data;
+    
+    %============================================================
+    % create figures of the specified metrics over the trials run
+    %============================================================
+    
+%     skip = 1;
+%     
+%     h1 = figure();  
+%     set( h1, 'Visible', 'on', 'Position',[ 1, 1, 1920, 1080 ] )
+% 
+%     x     = metrics.it( 1 ).mtot( 1 : skip : end );
+%     xconf = [ x, x( end : -1 : 1) ]; 
+%     yconf = [ log10_meas_all_max, fliplr( log10_meas_all_min ) ];
+%     
+%     p = fill( xconf, yconf, 'red' );
+%     p.FaceColor = [ 1, 0.8, 0.8 ];      
+%     p.EdgeColor = 'none';           
+% 
+%     hold on
+% 
+%     plot( metrics.it( 1 ).mtot( 1 : skip : end ), meas_all_avg( 1 : skip : end ), '--', 'linewidth', 4, 'color', [ 0.0, 0.0, 0.0 ] )
+% 
+%     xlabel('Epoch')
+%     ylabel( { [ name_data, ',' ], 'Cost Function Value' }, 'Interpreter', 'none' )
+%     hold off
+%     title('$log_{10}\bigg[ \frac{1}{N_s} \sum_{s=1}^{N_s} \left \Vert \sqrt{W_s} -  \sqrt{ \sum_p \left\vert \mathcal{F}[ \phi_p \odot T_s ] \right\vert^2} \right\Vert^2_F \bigg]$', 'FontWeight','bold', 'FontSize', 14, 'Interpreter', 'latex' );
+%     grid on
+%     ylim( y_lim )
+% %     legend( 'Location', 'northeast' ) 
+%     
+%     hold off
+     
+    %========
+    
+    skip = 1;
+
+    h1 = figure();  
+    set( h1, 'Visible', 'on', 'Position',[ 1, 1, 1920, 1080 ] )
+
+    hold on
+
+    for ii = 1 : N_trials
+
+        plot( metrics.it( ii ).mtot( 1 : skip : end ), log10( metrics.meas_all( 1 : skip : end, ii )  ), '-', 'linewidth', 2 )
+
+    end
+
+    plot( metrics.it( 1 ).mtot( 1 : skip : end ), meas_all_avg( 1 : skip : end ), '--', 'linewidth', 4, 'color', [ 0.0, 0.0, 0.0 ] )
+
+    xlabel('Epoch')
+    ylabel( { [ name_data, ',' ], 'Cost Function Value' }, 'Interpreter', 'none' )
+    hold off
+    title('$log_{10}\bigg[ \frac{1}{N_s} \sum_{s=1}^{N_s} \left \Vert \sqrt{W_s} -  \sqrt{ \sum_p \left\vert \mathcal{F}[ \phi_p \odot T_s ] \right\vert^2} \right\Vert^2_F \bigg]$', 'FontWeight','bold', 'FontSize', 14, 'Interpreter', 'latex' );
+    grid on
+    ylim( y_lim )
+    legend( 'Location', 'northeast' ) 
+    
+    hold off
+
+end
+
+
+
+
+
+
+
+
+%{
 
 function metrics = load_and_plot( path_data, N_trials )
 
@@ -175,63 +621,65 @@ function metrics = load_and_plot( path_data, N_trials )
     % create metrics plots
     %=====================
 
-    skip = 1;
-    
-    h1 = figure();  
-    set( h1, 'Visible', 'on', 'Position',[ 1, 1, 1920, 1080 ] )
-
-    x     = metrics.it( 1 ).mtot( 1 : skip : end );
-    xconf = [ x, x( end : -1 : 1) ]; 
-    yconf = [ log10_meas_all_max, fliplr( log10_meas_all_min ) ];
-    
-    p = fill( xconf, yconf, 'red' );
-    p.FaceColor = [ 1, 0.8, 0.8 ];      
-    p.EdgeColor = 'none';           
-
-    hold on
-
-    plot( metrics.it( 1 ).mtot( 1 : skip : end ), meas_all_avg( 1 : skip : end ), '--', 'linewidth', 4, 'color', [ 0.0, 0.0, 0.0 ] )
-
-%     name_data = num2str( [ metrics.rPIE_alpha( 1 ), metrics.rand_spos_subset_pct( 1 ) ], 'rPIE_alpha = %0.8f, MBpct = %0.4f');
-     
-    xlabel('Epoch')
-    ylabel( { [ name_data, ',' ], 'Cost Function Value' }, 'Interpreter', 'none' )
-    hold off
-    title('$log_{10}\bigg[ \frac{1}{N_s} \sum_{s=1}^{N_s} \left \Vert \sqrt{W_s} -  \sqrt{ \sum_p \left\vert \mathcal{F}[ \phi_p \odot T_s ] \right\vert^2} \right\Vert^2_F \bigg]$', 'FontWeight','bold', 'FontSize', 14, 'Interpreter', 'latex' );
-    grid on
-    ylim( y_lim )
-%     legend( 'Location', 'northeast' ) 
-    
-    hold off
-    
-    %========
-
 %     skip = 1;
-% 
-% %     figure; 
+%     
 %     h1 = figure();  
 %     set( h1, 'Visible', 'on', 'Position',[ 1, 1, 1920, 1080 ] )
-%         
+% 
+%     x     = metrics.it( 1 ).mtot( 1 : skip : end );
+%     xconf = [ x, x( end : -1 : 1) ]; 
+%     yconf = [ log10_meas_all_max, fliplr( log10_meas_all_min ) ];
+%     
+%     p = fill( xconf, yconf, 'red' );
+%     p.FaceColor = [ 1, 0.8, 0.8 ];      
+%     p.EdgeColor = 'none';           
+% 
 %     hold on
 % 
-%     for ii = 1 : N_trials
+%     plot( metrics.it( 1 ).mtot( 1 : skip : end ), meas_all_avg( 1 : skip : end ), '--', 'linewidth', 4, 'color', [ 0.0, 0.0, 0.0 ] )
 % 
-%         plot( sim_ptycho2DTPA{ ii }.sol.it.mtot( 1 : skip : end ), log10( sim_ptycho2DTPA{ ii }.sol.metrics.meas_all( 1 : skip : end ) ), '-', 'linewidth', 2 )
-% 
-%     end
-% 
-%     plot( sim_ptycho2DTPA{ ii }.sol.it.mtot( 1 : skip : end ), meas_all_avg( 1 : skip : end ), '--', 'linewidth', 4, 'color', [ 0.0, 0.0, 0.0 ] )
-%        
+% %     name_data = num2str( [ metrics.rPIE_alpha( 1 ), metrics.rand_spos_subset_pct( 1 ) ], 'rPIE_alpha = %0.8f, MBpct = %0.4f');
+%      
 %     xlabel('Epoch')
 %     ylabel( { [ name_data, ',' ], 'Cost Function Value' }, 'Interpreter', 'none' )
 %     hold off
 %     title('$log_{10}\bigg[ \frac{1}{N_s} \sum_{s=1}^{N_s} \left \Vert \sqrt{W_s} -  \sqrt{ \sum_p \left\vert \mathcal{F}[ \phi_p \odot T_s ] \right\vert^2} \right\Vert^2_F \bigg]$', 'FontWeight','bold', 'FontSize', 14, 'Interpreter', 'latex' );
 %     grid on
 %     ylim( y_lim )
-%     legend( 'Location', 'southwest' ) 
+% %     legend( 'Location', 'northeast' ) 
+%     
+%     hold off
+    
+    %========
+
+    skip = 1;
+
+%     figure; 
+    h1 = figure();  
+    set( h1, 'Visible', 'on', 'Position',[ 1, 1, 1920, 1080 ] )
+        
+    hold on
+
+    for ii = 1 : N_trials
+
+        plot( sim_ptycho2DTPA{ ii }.sol.it.mtot( 1 : skip : end ), log10( sim_ptycho2DTPA{ ii }.sol.metrics.meas_all( 1 : skip : end ) ), '-', 'linewidth', 2 )
+
+    end
+
+    plot( sim_ptycho2DTPA{ ii }.sol.it.mtot( 1 : skip : end ), meas_all_avg( 1 : skip : end ), '--', 'linewidth', 4, 'color', [ 0.0, 0.0, 0.0 ] )
+       
+    xlabel('Epoch')
+    ylabel( { [ name_data, ',' ], 'Cost Function Value' }, 'Interpreter', 'none' )
+    hold off
+    title('$log_{10}\bigg[ \frac{1}{N_s} \sum_{s=1}^{N_s} \left \Vert \sqrt{W_s} -  \sqrt{ \sum_p \left\vert \mathcal{F}[ \phi_p \odot T_s ] \right\vert^2} \right\Vert^2_F \bigg]$', 'FontWeight','bold', 'FontSize', 14, 'Interpreter', 'latex' );
+    grid on
+    ylim( y_lim )
+    legend( 'Location', 'southwest' ) 
 
 
 end
+
+%}
 
 %====================================================================================================================================================
 

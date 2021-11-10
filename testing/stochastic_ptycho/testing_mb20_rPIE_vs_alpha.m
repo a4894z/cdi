@@ -1,6 +1,4 @@
 % 
-
-%
 %{
 
 clear; close all; testing_mb20_rPIE_vs_alpha
@@ -9,7 +7,7 @@ clear; close all; testing_mb20_rPIE_vs_alpha
 
 %====================================================================================================================================================
 
-addpath( '/net/s8iddata/export/8-id-ECA/Analysis/atripath/shadedErrorBar/' );  
+addpath( '/net/s8iddata/export/8-id-ECA/Analysis/atripath/cdi/misc/output/shadedErrorBar/' );  
 
 %====================================================================================================================================================
 
@@ -123,7 +121,7 @@ metrics_plot = [ 1, 12, 14, 16 ];
 % hold off
 
 %==========================
-% using "normal "error bars
+% using "normal" error bars
 %==========================
 
 tmp0 = {};
@@ -433,9 +431,9 @@ N_trials( end + 1 )  = 10;
 
 for jj = 1 : length( path_data )
     
-    metrics{ jj } = load_and_plot( path_data{ jj }, N_trials( jj ) );   %#ok<SAGROW>
+    metrics{ jj } = load_and_plot( path_data{ jj }, N_trials( jj ) );   
     
-    metrics{ jj }.rootpath_data = rootpath_data;                        %#ok<SAGROW>
+    metrics{ jj }.rootpath_data = rootpath_data;                        
 
 end
 
@@ -472,8 +470,6 @@ function metrics = load_and_plot( path_data, N_trials )
     log10_meas_all_min = transpose( min( log10_meas_all, [], 2 ));
     log10_meas_all_max = transpose( max( log10_meas_all, [], 2 ));  
 
-%     name_data = num2str( [ sim_ptycho2DTPA{ 1 }.sol.rPIE_alpha, sim_ptycho2DTPA{ 1 }.sol.spos.rand_spos_subset_pct ], 'rPIE_alpha = %0.8f, MBpct = %0.4f');
-
     %=================================================
     % create a struct from metrics data for future use
     %=================================================
@@ -502,47 +498,20 @@ function metrics = load_and_plot( path_data, N_trials )
     % create figures of the specified metrics over the trials run
     %============================================================
     
-    skip = 1;
-    
-    h1 = figure();  
-    set( h1, 'Visible', 'on', 'Position',[ 1, 1, 1920, 1080 ] )
-
-    x     = metrics.it( 1 ).mtot( 1 : skip : end );
-    xconf = [ x, x( end : -1 : 1) ]; 
-    yconf = [ log10_meas_all_max, fliplr( log10_meas_all_min ) ];
-    
-    p = fill( xconf, yconf, 'red' );
-    p.FaceColor = [ 1, 0.8, 0.8 ];      
-    p.EdgeColor = 'none';           
-
-    hold on
-
-    plot( metrics.it( 1 ).mtot( 1 : skip : end ), meas_all_avg( 1 : skip : end ), '--', 'linewidth', 4, 'color', [ 0.0, 0.0, 0.0 ] )
-
-    xlabel('Epoch')
-    ylabel( { [ name_data, ',' ], 'Cost Function Value' }, 'Interpreter', 'none' )
-    hold off
-    title('$log_{10}\bigg[ \frac{1}{N_s} \sum_{s=1}^{N_s} \left \Vert \sqrt{W_s} -  \sqrt{ \sum_p \left\vert \mathcal{F}[ \phi_p \odot T_s ] \right\vert^2} \right\Vert^2_F \bigg]$', 'FontWeight','bold', 'FontSize', 14, 'Interpreter', 'latex' );
-    grid on
-    ylim( y_lim )
-%     legend( 'Location', 'northeast' ) 
-    
-    hold off
-     
-    %========
-    
 %     skip = 1;
-% 
+%     
 %     h1 = figure();  
 %     set( h1, 'Visible', 'on', 'Position',[ 1, 1, 1920, 1080 ] )
 % 
+%     x     = metrics.it( 1 ).mtot( 1 : skip : end );
+%     xconf = [ x, x( end : -1 : 1) ]; 
+%     yconf = [ log10_meas_all_max, fliplr( log10_meas_all_min ) ];
+%     
+%     p = fill( xconf, yconf, 'red' );
+%     p.FaceColor = [ 1, 0.8, 0.8 ];      
+%     p.EdgeColor = 'none';           
+% 
 %     hold on
-% 
-%     for ii = 1 : N_trials
-% 
-%         plot( metrics.it( ii ).mtot( 1 : skip : end ), log10( metrics.meas_all( 1 : skip : end, ii )  ), '-', 'linewidth', 2 )
-% 
-%     end
 % 
 %     plot( metrics.it( 1 ).mtot( 1 : skip : end ), meas_all_avg( 1 : skip : end ), '--', 'linewidth', 4, 'color', [ 0.0, 0.0, 0.0 ] )
 % 
@@ -552,9 +521,36 @@ function metrics = load_and_plot( path_data, N_trials )
 %     title('$log_{10}\bigg[ \frac{1}{N_s} \sum_{s=1}^{N_s} \left \Vert \sqrt{W_s} -  \sqrt{ \sum_p \left\vert \mathcal{F}[ \phi_p \odot T_s ] \right\vert^2} \right\Vert^2_F \bigg]$', 'FontWeight','bold', 'FontSize', 14, 'Interpreter', 'latex' );
 %     grid on
 %     ylim( y_lim )
-%     legend( 'Location', 'northeast' ) 
+% %     legend( 'Location', 'northeast' ) 
 %     
 %     hold off
+     
+    %========
+    
+    skip = 1;
+
+    h1 = figure();  
+    set( h1, 'Visible', 'on', 'Position',[ 1, 1, 1920, 1080 ] )
+
+    hold on
+
+    for ii = 1 : N_trials
+
+        plot( metrics.it( ii ).mtot( 1 : skip : end ), log10( metrics.meas_all( 1 : skip : end, ii )  ), '-', 'linewidth', 2 )
+
+    end
+
+    plot( metrics.it( 1 ).mtot( 1 : skip : end ), meas_all_avg( 1 : skip : end ), '--', 'linewidth', 4, 'color', [ 0.0, 0.0, 0.0 ] )
+
+    xlabel('Epoch')
+    ylabel( { [ name_data, ',' ], 'Cost Function Value' }, 'Interpreter', 'none' )
+    hold off
+    title('$log_{10}\bigg[ \frac{1}{N_s} \sum_{s=1}^{N_s} \left \Vert \sqrt{W_s} -  \sqrt{ \sum_p \left\vert \mathcal{F}[ \phi_p \odot T_s ] \right\vert^2} \right\Vert^2_F \bigg]$', 'FontWeight','bold', 'FontSize', 14, 'Interpreter', 'latex' );
+    grid on
+    ylim( y_lim )
+    legend( 'Location', 'northeast' ) 
+    
+    hold off
 
 end
 

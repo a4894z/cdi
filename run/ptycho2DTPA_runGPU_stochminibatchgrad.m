@@ -269,7 +269,7 @@ function [ sol, expt ] = ptycho2DTPA_runGPU_stochminibatchgrad( sol, expt, N_epo
             %========================================================================================================================================
             %                                                       Exitwave Update
             %========================================================================================================================================
-%             
+            
 %             % Update exitwaves using recently updated sample transfer function
 %             start_exwv = tic;  
 % 
@@ -296,7 +296,9 @@ function [ sol, expt ] = ptycho2DTPA_runGPU_stochminibatchgrad( sol, expt, N_epo
                 %=====================================================================================================
                 % Vectorized ePIE probe update using new T^{(k+1)} for exitwave update, new T^{(k+1)} for probe update
                 %=====================================================================================================
-
+                
+                % !!!!!!!!!!!!!!!! CHECK THE DERIVATION ON THIS...WHAT WEIGHTING ARE WE USING FOR THE PROX TERM?
+            
 %                 T_view = reshape( sol.GPU.TFvec( sol.GPU.ind ), [ sol.GPU.sz, 1, sol.GPU.Nspos ]);
 %                 abs2_TFview = abs( T_view ) .^ 2;
 %                 sol.GPU.phi = sol.GPU.phi + sum( conj( T_view ) .* sol.GPU.psi - sol.GPU.phi .* abs2_TFview, 4 ) ./ sum( abs2_TFview, 4 );
@@ -305,7 +307,7 @@ function [ sol, expt ] = ptycho2DTPA_runGPU_stochminibatchgrad( sol, expt, N_epo
                 % Vectorized ePIE probe update using old T^{(k)} for exitwave update, old T^{(k)} for probe update
                 %=================================================================================================
                 
-                % CHECK THE DERIVATION ON THIS...WHAT WEIGHTING ARE WE USING FOR THE PROX TERM?
+                % !!!!!!!!!!!!!!!! CHECK THE DERIVATION ON THIS...WHAT WEIGHTING ARE WE USING FOR THE PROX TERM?
                 
                 T_view = reshape( sol.GPU.TFvec_old( sol.GPU.ind ), [ sol.GPU.sz, 1, sol.GPU.Nspos ]);
                 abs2_TFview = abs( T_view ) .^ 2;

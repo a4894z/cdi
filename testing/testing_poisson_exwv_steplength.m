@@ -2,8 +2,8 @@
 
 %{
 
-% codelocation = '/net/s8iddata/export/8-id-ECA/Analysis/atripath/cdi/'; 
-codelocation = '~/Documents/Science/Matlab/Code/cdi/'; 
+codelocation = '/net/s8iddata/export/8-id-ECA/Analysis/atripath/cdi/'; 
+% codelocation = '~/Documents/Science/Matlab/Code/cdi/'; 
 
 cd( codelocation ); 
 restoredefaultpath; 
@@ -19,11 +19,11 @@ clear; close all; testing_poisson_exwv_steplength
 
 %====================================================================================================================================================
 
-% load /net/s8iddata/export/8-id-ECA/Analysis/atripath/sim_ptycho2DTPA_poissonsteplength.mat
-load /home/ash/Documents/Science/Matlab/Code/cdi/sim_ptycho2DTPA.mat
+load /net/s8iddata/export/8-id-ECA/Analysis/atripath/sim_ptycho2DTPA_poissonsteplength.mat
+% load /home/ash/Documents/Science/Matlab/Code/cdi/sim_ptycho2DTPA.mat
 
 rng( 'shuffle' )
-reset( gpuDevice )
+reset( gpuDevice( 1 ) )
 
 sol.spos.rs = single( sol.spos.rs );
 
@@ -50,7 +50,7 @@ sol.sample.T = ( 1 - a ) * expt.sample.T + a * rand( expt.sample.sz.sz, 'single'
 
 %====================================================================================================================================================
 
-spos_N = single( round( 0.25 * sol.spos.N ));
+spos_N = single( round( 0.30 * sol.spos.N ));
 
 % spos_test = sort( single( randperm( sol.spos.N, spos_N )));
 spos_test = 1 : spos_N;
@@ -94,7 +94,7 @@ Nalpha = length( alpha_test );
 
 %====================================================================================================================================================
 
-use_GPU = logical( 0 );
+use_GPU = logical( 1 );
 
 if use_GPU == true
 
@@ -262,7 +262,7 @@ for aa = 1 : length( alpha_test_2 )
     % remove scan positions from the process since we've found a step length for them
     
     spos_test_2( found_a_step ) = [];
-    if isempty( spos_test_2 ), break; end
+    if isempty( spos_test_2 ), aa, break; end
     
     xi(               :, :, found_a_step ) = [];
     I_m(              :, :, found_a_step ) = [];
@@ -275,15 +275,17 @@ end
 toc
 
 tmp0 = squeeze( f_eq_0( :, pp, : ));
-
 [ ~, II ] = min( tmp0, [], 2 );
+
+max_alpha = max( alpha_test );
+max_alpha = 1.2 * gather( max_alpha );
 
 figure; 
 hold on
 plot( alpha_test( II ), 'linewidth', 3, 'color', [ 0.0, 0.0, 0.0 ] )
 plot( alpha_found, '-.', 'linewidth', 2, 'color', [ 0.0, 0.7, 0.0 ] )
 hold off
-ylim( [ 0.0, max( alpha_test ) ] )
+ylim( [ 0.0, max_alpha ] )
 grid on
 
 return

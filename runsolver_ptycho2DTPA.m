@@ -44,12 +44,17 @@ function [ sol, expt ] = runsolver_ptycho2DTPA
     clearvars -except expt sol
     
     %================================================================================================================================================
+    
+%     data_path = '/net/s8iddata/export/8-id-ECA/Analysis/atripath/rPIE_vs_MB_mat/noise/sim_ptycho2DTPA.mat';    % WITH    NOISE
+    data_path = '/net/s8iddata/export/8-id-ECA/Analysis/atripath/rPIE_vs_MB_mat/no_noise/sim_ptycho2DTPA.mat';   % WITHOUT NOISE
 
-    data_path = [ pwd, '/sim_ptycho2DTPA.mat' ];
+%     data_path = [ pwd, '/sim_ptycho2DTPA.mat' ];
 
+    %=========
+    
     load( data_path, 'sol', 'expt' );  
 
-    expt.paths.rsdata = data_path;
+    expt.paths.rsdata = [ pwd, '/sim_ptycho2DTPA.mat' ];
 
     clearvars -except expt sol
 
@@ -60,7 +65,7 @@ function [ sol, expt ] = runsolver_ptycho2DTPA
     
     %=========
     
-    sol.rPIE_alpha = single( 0.00001 );
+    sol.rPIE_alpha = single( 0.10 );
     
     %=========
     
@@ -81,7 +86,7 @@ function [ sol, expt ] = runsolver_ptycho2DTPA
     % Stochastic minibatch parameters
     %================================
 
-    sol.spos.rand_spos_subset_pct = 0.20;      
+    sol.spos.rand_spos_subset_pct = 0.10;      
     
     sol.spos.rand_spos_subset_pct = single( sol.spos.rand_spos_subset_pct );  
     if sol.spos.rand_spos_subset_pct > 1.00, sol.spos.rand_spos_subset_pct = single( 1.00 ); end

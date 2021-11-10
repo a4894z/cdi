@@ -1,6 +1,5 @@
 function [ probe, csys, sz ] = make_2Dprobemodes_goofy( expt )
 
-%==================================================================================================
 %
 % This is mostly just for quick and dirty algo testing purposes.
 %
@@ -20,7 +19,34 @@ function [ probe, csys, sz ] = make_2Dprobemodes_goofy( expt )
 %   sample      measurement
 %   plane       plane
 %
-%==================================================================================================
+
+%====================================================================================================================================================
+% -------------------------------------------------------- load previously defined SCPMs ------------------------------------------------------------
+%====================================================================================================================================================
+
+Z = load( '/net/s8iddata/export/8-id-ECA/Analysis/atripath/rPIE_vs_MB_mat/no_noise/sim_ptycho2DTPA_0.mat', 'expt' );
+
+csys  = Z.expt.csys;
+sz    = Z.expt.sz;
+probe = Z.expt.probe;
+
+probe.scpm.fro2TOT = 1 * probe.scpm.fro2TOT; 
+
+% orthogonalize the probe modes:
+[ probe.phi ] = orthog_modes_eigendecomp( probe.phi );
+
+% ensure modes have the desired occupancy:
+[ probe.phi, probe.scpm.fro2TOT, probe.scpm.occ ] = enforce_scpm_fro2TOT_photonocc( probe.phi, probe.scpm.fro2TOT, probe.scpm.occ );
+
+return
+
+%====================================================================================================================================================
+% ---------------------------------------------------------------- create SCPMs  --------------------------------------------------------------------
+%====================================================================================================================================================
+
+%===========================================
+% create coordinate system and problem sizes
+%===========================================
 
 csys.z23 = 5.00e-0;     % sample to detector ( in meters )
 
@@ -28,7 +54,7 @@ csys.z23 = 5.00e-0;     % sample to detector ( in meters )
 csys.z3.dLy = 55e-6 / 1;    
 csys.z3.dLx = 55e-6 / 1;
 
-%===============================
+%========
 
 sz.r = round( 256 + 0 ); 
 sz.c = round( 128 + 0 );
@@ -36,7 +62,7 @@ sz.sz = [ sz.r, sz.c ];
 sz.rc = sz.r * sz.c;
 sz.sqrt_rc = sqrt( sz.rc );
 
-%===============================
+%========
 
 % fov of sample plane z2 using measurement plane z3 parameters
 csys.z2.Ly = single( expt.lambda * csys.z23 / csys.z3.dLy ); 
@@ -44,74 +70,15 @@ csys.z2.Lx = single( expt.lambda * csys.z23 / csys.z3.dLx );
 csys.z2.dLy = csys.z2.Ly / sz.r;
 csys.z2.dLx = csys.z2.Lx / sz.c;
 
-%==================================================================================================
+%===============================================================================
+% fro^2 norm of all probe modes together, i.e. |P_1|^2 + |P_2|^2 + ... + |P_N|^2
+%===============================================================================
 
-% probe.scpm.occ = [ 1.0 ];
-% % probe.scpm.occ = [ 0.05, 0.1, 0.85 ];
-% 
-% % make sure the mode occupancy adds up to 1.0:
-% probe.scpm.occ = sort( probe.scpm.occ / norm( probe.scpm.occ, 1 ));
-% 
-% % get total number of scpm used to define simulated x-ray beam:
-% probe.scpm.N = length( probe.scpm.occ );
+probe.scpm.fro2TOT = 3000 ^ 2;  
 
-%==================================================================================================
-
-% % just make up some set of whatever shapes you like 
-% % to define the probe modes at the sample plane z2
-% 
-% mu = [ 0.5 * sz.r + 1, 0.5 * sz.c + 1 ];
-% stdev = [ 0.08 * sz.r, 0.01 * sz.c ];
-% [ V1 ] = make_gaussian( sz.sz, mu , stdev );
-% 
-% mu = [ 0.5 * sz.r + 1, 0.5 * sz.c + 1 ];
-% stdev = [ 0.5 * sz.r, 0.075 * sz.c ];
-% [ V2 ] = make_gaussian( sz.sz, mu , stdev );
-% 
-% diam = [ 0.95 * sz.c, 0.95 * sz.r ];
-% [ V3 ] = make_ellipsoid( sz.sz, diam );
-% stdev = [ 0.05 * sz.r, 0.05 * sz.c ];
-% [ V3 ] = lpf_gauss( V3, stdev );
-% 
-% tmp1 = V1 .* exp( 1 * 1i * 2 * pi * 0.1 * V1 );
-% tmp2 = V2 .* exp( 1 * 1i * 2 * pi * 0.2 * V2 );                 
-% tmp3 = V3 .* exp( 1 * 1i * 2 * pi * 0.0 * V3 );
-% 
-% tmp1 = tmp1 * 1e3 / norm( tmp1, 'fro' );
-% tmp2 = tmp2 * 1e4 / norm( tmp2, 'fro' );
-% tmp3 = tmp3 * 1e2 / norm( tmp3, 'fro' ); 
-% 
-% probep2 = tmp3 .* ( abs( tmp1 ) + abs( tmp2 )) .* exp( 1i * 2 * pi * 1.0 * angle( tmp1 )) .* exp( 1i * 2 * pi * 1.0 * angle( tmp2 ));
-% 
-% % figure; imagescHSV( log10( 1 + 10^0 * abs(probep2)) .* exp(1i * angle(probep2)) ); daspect([1 1 1])
-% % figure; imagescMagPhs( probep2 ); daspect([1 1 1]); 
-% % 5;
-
-%==================================================================================================
-
-
-
-
-
-% just make up some set of whatever shapes you like 
-% to define the probe modes at the sample plane z2
-
-% paths.probe = cell( 0 );
-% 
-% % paths.probe{ end + 1 } = [ expt.paths.rimgdata, '/probe/', 'PETN2.ppm' ];
-% % paths.probe{ end + 1 } = [ expt.paths.rimgdata, '/probe/', 'pinholeA.ppm' ];
-% % paths.probe{ end + 1 } = [ expt.paths.rimgdata, '/probe/', 'pinholeC.ppm' ];
-% % % paths.probe{ end + 1 } = [ expt.paths.rimgdata, '/probe/', 'zp6_512px.ppm' ];
-% % % paths.probe{ end + 1 } = [ expt.paths.rimgdata, '/probe/', 'spiral_zp.ppm' ];
-% % % paths.probe{ end + 1 } = [ expt.paths.rimgdata, '/probe/', 'zp6b_512px.ppm' ];
-% 
-% paths.probe{ end + 1 } = [ expt.paths.rimgdata, 'probe/', 'zp6b_512px.ppm' ];
-% paths.probe{ end + 1 } = [ expt.paths.rimgdata, 'probe/', 'PETN2.ppm' ];
-% paths.probe{ end + 1 } = [ expt.paths.rimgdata, 'probe/', 'pinholeEa.ppm' ];
-
-%================================================
-
-% (s)patially (c)oherent (p)robe (m)ode occupancies:
+%==========================================================
+% (s)patially (c)oherent (p)robe (m)ode = SCPM occupancies:
+%==========================================================
 
 % probe.scpm.occ = [ 1.0 ];
 
@@ -120,7 +87,7 @@ csys.z2.dLx = csys.z2.Lx / sz.c;
 % probe.scpm.occ = [ 0.32, 0.33, 0.35 ];
 % probe.scpm.occ = [ 0.05, 0.20, 0.75 ];
 % probe.scpm.occ = [ 0.05, 0.10, 0.85 ];
-probe.scpm.occ = [ 0.03, 0.07, 0.90 ];
+% probe.scpm.occ = [ 0.03, 0.07, 0.90 ];
 % probe.scpm.occ = [ 0.02, 0.03, 0.95 ];
 
 % probe.scpm.occ = [ 0.005, 0.015, 0.02, 0.03, 0.05, 0.08, 0.80 ];
@@ -133,7 +100,9 @@ probe.scpm.occ = [ 0.03, 0.07, 0.90 ];
 
 % probe.scpm.occ = random('unif', 0, 1, length( paths.probe ));
 
-% probe.scpm.occ = exp( -4 * linspace( 1, 0, 5 ));
+probe.scpm.occ = exp( -4 * linspace( 1, 0, 5 ));
+
+%========
 
 % make sure the mode occupancy adds up to 1.0:
 probe.scpm.occ = sort( probe.scpm.occ / norm( probe.scpm.occ, 1 ));
@@ -141,7 +110,9 @@ probe.scpm.occ = sort( probe.scpm.occ / norm( probe.scpm.occ, 1 ));
 % get total number of scpm used to define simulated x-ray beam:
 probe.scpm.N = length( probe.scpm.occ );
 
-%================================================
+%======================================================
+% create gaussian like probe modes (not orthogonal yet)
+%======================================================
 
 probep2 = zeros( [ sz.sz, probe.scpm.N ], 'single' );
 
@@ -174,15 +145,17 @@ for pp = 1 : probe.scpm.N
     
 end
 
-%==================================================================================================
 
-% fro^2 norm of all probe modes together, i.e. |P_1|^2 + |P_2|^2 + ... + |P_N|^2
-probe.scpm.fro2TOT = 3000 ^ 2;  
+
+
+
+
+%====================================================================================================================================================
 
 % ensure modes have the desired occupancy:
 [ probe.phi, probe.scpm.fro2TOT, probe.scpm.occ ] = enforce_scpm_fro2TOT_photonocc( probe.phi, probe.scpm.fro2TOT, probe.scpm.occ );
 
-%==================================================================================================
+%========
 
 % for pp = 1 : probe.scpm.N
 %    
@@ -193,36 +166,7 @@ probe.scpm.fro2TOT = 3000 ^ 2;
 % 
 % close all;
 
-%==================================================================================================
-
-% % real valued probe with no phase structure:
-% probep2 = abs( probep2 );
-
-% % probe with random phase structure:
-% tmp0 = rand( sz.r, sz.c );
-% tmp0 = lpf_gauss( tmp0, [ 0.1 * sz.r, 0.1 * sz.r ] );
-% tmp0 = tmp0 / max( abs( tmp0( : )));
-% probep2 = abs( probep2 ) .* exp( 2 * pi * 1i * 2 * tmp0 );
-
-%==================================================================================================
-
-% x2 = ( -0.5 * sz.c : 0.5 * sz.c - 1 ) .^ 2; 
-% y2 = transpose( ( -0.5 * sz.r : 0.5 * sz.r - 1 )).^2; 
-% 
-% % quadratic phase structure:
-% A = single( exp( y2 * 1i * 1.5e-2 ) * exp( x2 * 1i * 1.5e-2 ));
-% 
-% % % gaussian phase structure
-% % [ x, y ] = meshgrid( -sz(2)/2 : sz(2)/2 - 1, -sz(1)/2 : sz(1)/2 - 1 );
-% % A = single( exp( exp( ( -x.^2 * 2.5e-2 - y.^2 * 2.5e-2 )) * 1i * 2 * pi )); 
-% 
-% probep2 = abs( probep2 ) .* A;
-% 
-% % figure; imagescHSV( log10( 1 + 10^0 * abs(probep2)) .* exp(1i * angle(probep2)) ); daspect([1 1 1])
-% % figure; imagesc(abs(probep2)); daspect([1 1 1]); 
-% % 5;
-
-%==================================================================================================
+%====================================================================================================================================================
 
 % orthogonalize the probe modes:
 [ probe.phi ] = orthog_modes_eigendecomp( probep2 );
@@ -243,9 +187,13 @@ figure; imagesc( sum( abs( probe.phi ) .^ 2, 3 )); daspect([1 1 1]); colormap( e
 
 close all;
 
-%==================================================================================================
+%====================================================================================================================================================
 
 %{
+
+%====================
+% check orthogonality
+%====================
 
 tmp1 = reshape( probe.phi, [ sz.r * sz.c, probe.scpm.N ] );
 
@@ -262,32 +210,4 @@ figure; imagesc(sqrt(abs(tmp2)))
 
 %}
 
-
-
-
-
-%{
-
-
-        PMtot = 0;
-        PMnorm = zeros( probe.scpm.N, 1, 'single' );
-        PMocc = zeros( probe.scpm.N, 1, 'single' );
-        
-        for pp = 1 : probe.scpm.N
-            
-            PMnorm( pp ) = norm( probe.phi( :, :, pp ), 'fro' );
-            PMtot = PMtot + PMnorm( pp );
-            
-        end
-
-        for pp = 1 : probe.scpm.N
-
-            PMocc( pp ) = PMnorm( pp ) / PMtot;
-
-        end
-
-        PMocc = PMocc / norm( PMocc, 1 );
-
-
-%}
 

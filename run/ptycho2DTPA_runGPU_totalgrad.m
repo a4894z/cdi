@@ -158,20 +158,20 @@ function [ sol, expt ] = ptycho2DTPA_runGPU_totalgrad( sol, expt, N_epochs )
         %                                                       Exitwave Update
         %============================================================================================================================================
 
-        % Update exitwaves using recently updated sample transfer function  
-        start_exwv = tic;  
-        
-        sol.GPU.psi = exitwave_vectorized_update_2DTPA_meas_projection( sol.GPU.phi,       ...                      % ERvec
-                                                                        sol.GPU.TFvec,     ...
-                                                                        sol.GPU.ind,       ...
-                                                                        sol.GPU.sz,        ...
-                                                                        sol.GPU.Nspos,     ...
-                                                                        sol.GPU.sqrt_rc,   ...
-                                                                        sol.GPU.meas_D,    ...
-                                                                        sol.GPU.meas_Deq0, ...
-                                                                        sol.GPU.measLPF );
-                                          
-        sol.timings.exwv_update( sol.it.epoch ) = sol.timings.exwv_update( sol.it.epoch ) + toc( start_exwv );
+%         % Update exitwaves using recently updated sample transfer function  
+%         start_exwv = tic;  
+%         
+%         sol.GPU.psi = exitwave_vectorized_update_2DTPA_meas_projection( sol.GPU.phi,       ...                      % ERvec
+%                                                                         sol.GPU.TFvec,     ...
+%                                                                         sol.GPU.ind,       ...
+%                                                                         sol.GPU.sz,        ...
+%                                                                         sol.GPU.Nspos,     ...
+%                                                                         sol.GPU.sqrt_rc,   ...
+%                                                                         sol.GPU.meas_D,    ...
+%                                                                         sol.GPU.meas_Deq0, ...
+%                                                                         sol.GPU.measLPF );
+%                                           
+%         sol.timings.exwv_update( sol.it.epoch ) = sol.timings.exwv_update( sol.it.epoch ) + toc( start_exwv );
         
         %============================================================================================================================================
         %                                                       Probe Update
@@ -185,19 +185,21 @@ function [ sol, expt ] = ptycho2DTPA_runGPU_totalgrad( sol, expt, N_epochs )
             % Vectorized ePIE probe update using new T^{(k+1)} for exitwave update, new T^{(k+1)} for probe update
             %=====================================================================================================
             
-            TFview = reshape( sol.GPU.TFvec( sol.GPU.ind ), [ sol.GPU.sz, 1, sol.GPU.Nspos ]);
-            abs2_TFview = abs( TFview ) .^ 2;
-            sol.GPU.phi = sol.GPU.phi + sum( conj( TFview ) .* sol.GPU.psi - sol.GPU.phi .* abs2_TFview, 4 ) ./ sum( abs2_TFview, 4 );
+            % !!!!!!!!!!!!!!!! CHECK THE DERIVATION ON THIS...WHAT WEIGHTING ARE WE USING FOR THE PROX TERM?
+            
+%             TFview = reshape( sol.GPU.TFvec( sol.GPU.ind ), [ sol.GPU.sz, 1, sol.GPU.Nspos ]);
+%             abs2_TFview = abs( TFview ) .^ 2;
+%             sol.GPU.phi = sol.GPU.phi + sum( conj( TFview ) .* sol.GPU.psi - sol.GPU.phi .* abs2_TFview, 4 ) ./ sum( abs2_TFview, 4 );
 
             %===================================================================================================
             % Vectorized ePIE probe update using old T^{(k)} for exitwave update, old T^{(k+1)} for probe update
             %===================================================================================================
             
-            % CHECK THE DERIVATION ON THIS...WHAT WEIGHTING ARE WE USING FOR THE PROX TERM?
+            % !!!!!!!!!!!!!!!! CHECK THE DERIVATION ON THIS...WHAT WEIGHTING ARE WE USING FOR THE PROX TERM?
                             
-%             T_view = reshape( sol.GPU.TFvec_old( sol.GPU.ind ), [ sol.GPU.sz, 1, sol.GPU.Nspos ]);
-%             abs2_TFview = abs( T_view ) .^ 2;
-%             sol.GPU.phi = sol.GPU.phi + sum( conj( T_view ) .* sol.GPU.psi - sol.GPU.phi .* abs2_TFview, 4 ) ./ sum( abs2_TFview, 4 );
+            T_view = reshape( sol.GPU.TFvec_old( sol.GPU.ind ), [ sol.GPU.sz, 1, sol.GPU.Nspos ]);
+            abs2_TFview = abs( T_view ) .^ 2;
+            sol.GPU.phi = sol.GPU.phi + sum( conj( T_view ) .* sol.GPU.psi - sol.GPU.phi .* abs2_TFview, 4 ) ./ sum( abs2_TFview, 4 );
 
 %             sol.GPU.phi = sol.GPU.phi + sum( conj( T_view ) .* sol.GPU.psi - sol.GPU.phi .* abs2_TFview, 4 ) ./ ( aa * sum( abs2_TFview, 4 ) + ( 1 - aa ) * abs2_TFview );
 
