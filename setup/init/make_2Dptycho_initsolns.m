@@ -32,10 +32,10 @@ sol.sample.sz = expt.sample.sz;
 
 sol.probe.scpm = expt.probe.scpm;
 
-sol.probe.scpm.occ = [ 1 ];
+% sol.probe.scpm.occ = [ 1 ];
 % sol.probe.scpm.occ = [ 0.05, 0.1, 0.2, 0.4, 0.9 ];
 % sol.probe.scpm.occ = [ 0.2, 0.8 ];
-% sol.probe.scpm.occ = [ 0.01, 0.04, 0.95 ];
+sol.probe.scpm.occ = [ 0.05, 0.15, 0.80 ];
 % sol.probe.scpm.occ = [ 0.32, 0.33, 0.35 ];
 % sol.probe.scpm.occ = [ 0.2, 0.2, 0.2, 0.2, 0.2 ];
 % sol.probe.scpm.occ = exp( -7 * linspace( 1, 0, 8 ));
