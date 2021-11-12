@@ -430,7 +430,7 @@ N_trials( end + 1 )  = 10;
 
 for jj = 1 : length( path_data )
     
-    metrics{ jj } = load_and_plot( path_data{ jj }, N_trials( jj ) ); %#ok<SAGROW>
+    metrics{ jj } = load_and_plot( path_data{ jj }, N_trials( jj ) );   %#ok<SAGROW>
     
     metrics{ jj }.rootpath_data = rootpath_data;                        %#ok<SAGROW>
     
