@@ -299,7 +299,6 @@ meas.noisy = 1;
 
 if logical( meas.noisy ) == true
 
-
     % total number of exposures for sample in measurement:
     meas.NexposuresSI = 1;
 
@@ -336,7 +335,6 @@ if logical( meas.noisy ) == true
 
     meas_noisy = gather( csum / meas.NexposuresSI );
     
-
     %============================================
     
 %     Nchonk = gpuArray( floor( sz( 3 ) /  Nchunk ));
@@ -380,7 +378,10 @@ if logical( meas.noisy ) == true
     % Background removal
     %===================
     
-    bg_sub = 8.0;
+%     bg_sub = 1 * 4.0;                       % use 4.0 for x 10^-1 wrt orig
+    bg_sub = 0 * 8.0;                       % use 8.0 for x 10^+0 wrt orig
+%     bg_sub = 0 * 8.0;                       % use 8.0 for x 10^+1 wrt orig
+
     meas_noisy = meas_noisy - bg_sub;
     
     %==============

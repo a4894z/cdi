@@ -24,13 +24,13 @@ function [ probe, csys, sz ] = make_2Dprobemodes_goofy( expt )
 % -------------------------------------------------------- load previously defined SCPMs ------------------------------------------------------------
 %====================================================================================================================================================
 
-Z = load( '/net/s8iddata/export/8-id-ECA/Analysis/atripath/rPIE_vs_MB_mat/no_noise/sim_ptycho2DTPA_0.mat', 'expt' );
+Z = load( '/net/s8iddata/export/8-id-ECA/Analysis/atripath/rPIE_vs_MB_mat/no_noise/sim_ptycho2DTPA.mat', 'expt' );
 
 csys  = Z.expt.csys;
 sz    = Z.expt.sz;
 probe = Z.expt.probe;
 
-probe.scpm.fro2TOT = 1 * probe.scpm.fro2TOT; 
+probe.scpm.fro2TOT = ( 10 ^ ( +0 )) * probe.scpm.fro2TOT; 
 
 % orthogonalize the probe modes:
 [ probe.phi ] = orthog_modes_eigendecomp( probe.phi );

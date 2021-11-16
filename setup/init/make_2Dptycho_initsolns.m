@@ -1,5 +1,29 @@
 function [ sol ] = make_2Dptycho_initsolns( expt )
 
+%====================================================================================================================================================
+% -------------------------------------------- LOAD PREVIOUSLY DEFINED CANDIDATE SOLUTION PARAMETERS ------------------------------------------------
+%====================================================================================================================================================
+
+Z = load( '/net/s8iddata/export/8-id-ECA/Analysis/atripath/rPIE_vs_MB_mat/no_noise/sim_ptycho2DTPA.mat', 'sol' );
+
+sol = Z.sol;
+
+%========
+
+sol.probe.scpm.fro2TOT = expt.probe.scpm.fro2TOT;
+% sol.probe.scpm.fro2TOT = ( 0.2 * ( 2 * rand - 1 ) + 1.0 ) * expt.probe.scpm.fro2TOT;
+
+% ensure modes have the desired occupancy:
+[ sol.probe.phi, sol.probe.scpm.fro2TOT, sol.probe.scpm.occ ] = enforce_scpm_fro2TOT_photonocc( sol.probe.phi, sol.probe.scpm.fro2TOT, sol.probe.scpm.occ );
+
+%========
+
+return
+
+%====================================================================================================================================================
+% ---------------------------------------------------- DEFINE CANDIDATE SOLUTION PARAMETERS ---------------------------------------------------------
+%====================================================================================================================================================
+
 %=============================
 % misc experimental parameters
 %=============================

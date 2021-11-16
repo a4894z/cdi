@@ -22,43 +22,56 @@ path_data_fields = fieldnames( path_data );
 % load previously processed metrics variable, do some plotting
 %=============================================================
 
-load /net/s8iddata/export/8-id-ECA/Analysis/atripath/rPIE_vs_MB_mat/MB_vs_rPIEalpha_34567.mat;
-
-plot_data_IDs = { 'mb_0p05', ...
-                  'mb_0p10', ...
-                  'mb_0p20', ...
-                  'mb_0p33', ...
-                  'mb_0p50' };
-
-for jj = 1 : length( plot_data_IDs )
-                  
-    for kk = 1 : length( path_data.( plot_data_IDs{ jj } ) )
-
-        path_data.( plot_data_IDs{ jj } ){ kk }
-
-
-    end
-
-end
-
-
-
-
-
-
-
-
-return
+% load /net/s8iddata/export/8-id-ECA/Analysis/atripath/rPIE_vs_MB_mat/metrics_no_noise_MB_vs_rPIEalpha.mat;
+% 
+% %========
+% 
+% plot_data_IDs = { 'mb_0p05', ...
+%                   'mb_0p10', ...
+%                   'mb_0p20', ...
+%                   'mb_0p33', ...
+%                   'mb_0p50' };
+%               
+% plot_data_IDs = path_data_fields;
+%       
+% %========
+% 
+% N_alphatrials   = 10;
+% N_metricsepochs = 51;
+% 
+% metrics_plotting( length( plot_data_IDs ) ) = struct;
+% 
+% for jj = 1 : length( plot_data_IDs )                                    % loop over the minibatch tests
+%     
+%     metrics_plotting( jj ).data_id = ( plot_data_IDs{ jj } );
+% 
+%     for kk = 1 : length( path_data.( plot_data_IDs{ jj } ) )            % loop over the 10 trials
+%         
+%         metrics_plotting( jj ).rPIEalpha{ kk } = metrics.( plot_data_IDs{ jj } ){ kk }.rPIE_alpha( 1 );
+%     
+%         metrics_plotting( jj ).log10_meas_all_avg{ kk } = metrics.( plot_data_IDs{ jj } ){ kk }.log10_meas_all_avg;
+%         metrics_plotting( jj ).log10_meas_all_max{ kk } = metrics.( plot_data_IDs{ jj } ){ kk }.log10_meas_all_max;
+%         metrics_plotting( jj ).log10_meas_all_min{ kk } = metrics.( plot_data_IDs{ jj } ){ kk }.log10_meas_all_min;
+%         metrics_plotting( jj ).log10_meas_all_std{ kk } = std( metrics.( plot_data_IDs{ jj } ){ kk }.log10_meas_all, [], 2 );
+% 
+%     end
+% 
+% end
+% 
+% 
+% return
 
 %====================================================================
 % load and process the raw results, save to separate metrics variable
 %====================================================================
 
-for jj = [ 3, 4, 5, 6, 7 ] %1 : length( path_data_fields )
-        
+for jj = 1 : length( path_data_fields )
+ 
     for kk = 1 : length( path_data.( path_data_fields{ jj } ) )
         
-        metrics.( path_data_fields{ jj } ){ kk } = load_and_plot( path_data.( path_data_fields{ jj } ){ kk }, N_trials.( path_data_fields{ jj } )( kk ) );                       
+        metrics.( path_data_fields{ jj } ){ kk } = load_and_plot( path_data.( path_data_fields{ jj } ){ kk }, ...
+                                                                  N_trials.( path_data_fields{ jj } )( kk ),  ...
+                                                                  path_data_fields{ jj } );                       
     
     end
 
@@ -66,7 +79,7 @@ end
 
 %====================================================================================================================================================
 
-function metrics = load_and_plot( path_data, N_trials )
+function metrics = load_and_plot( path_data, N_trials, path_data_fields )
 
     y_lim = [-1, 6];
     
@@ -122,12 +135,14 @@ function metrics = load_and_plot( path_data, N_trials )
     
     if isfield( sim_ptycho2DTPA{ ii }.sol.spos, 'rand_spos_subset_pct' )
         
-        name_data = num2str( [ metrics.rPIE_alpha( 1 ), metrics.rand_spos_subset_pct( 1 ) ], 'rPIE_alpha = %0.8f, MBpct = %0.4f');
+        name_data = [ path_data_fields, num2str( [ metrics.rPIE_alpha( 1 ), metrics.rand_spos_subset_pct( 1 ) ], ', rPIE_alpha = %0.9f, MBpct = %0.4f') ];
+        save_data = [ path_data_fields, num2str( [ metrics.rPIE_alpha( 1 ), metrics.rand_spos_subset_pct( 1 ) ], '_rPIEalpha_%0.9f_MBpct_%0.4f'), '.jpg' ];
         
     else
         
-        name_data = num2str( sim_ptycho2DTPA{ii}.sol.rPIE_alpha, 'rPIE_alpha = %0.8f');
-
+        name_data = [ path_data_fields, num2str( sim_ptycho2DTPA{ii}.sol.rPIE_alpha, ', rPIE_alpha = %0.9f') ];
+        save_data = [ path_data_fields, num2str( sim_ptycho2DTPA{ii}.sol.rPIE_alpha, '_rPIEalpha_%0.9f'), '.jpg' ];
+        
     end
     
     %========
@@ -176,7 +191,7 @@ function metrics = load_and_plot( path_data, N_trials )
     skip = 1;
 
     h1 = figure();  
-    set( h1, 'Visible', 'on', 'Position',[ 1, 1, 1920, 1080 ] )
+    set( h1, 'Visible', 'off', 'Position',[ 1, 1, 1920, 1080 ] )
 
     hold on
 
@@ -198,11 +213,48 @@ function metrics = load_and_plot( path_data, N_trials )
     
     hold off
 
+    export_fig( save_data, '-r120.0' )
+    close all;
+
 end
 
 %====================================================================================================================================================
 
 function [ path_data, N_trials ] = define_paths( rootpath_data )
+
+%================
+% NO NOISE MB 10%
+%================
+
+path_data.mb_0p01 = {};
+N_trials.mb_0p01  = [];
+
+path_data.mb_0p01{ end + 1 } = [ rootpath_data, 'mb0p10/cdi_rPIE_mb0p10_alpha0p01_oldsample_for_probe_update/independenttrials_20Sep2021_t143405/' ];
+N_trials.mb_0p01( end + 1 )  = 10;
+
+path_data.mb_0p01{ end + 1 } = [ rootpath_data, 'mb0p10/cdi_rPIE_mb0p10_alpha0p001_oldsample_for_probe_update/independenttrials_20Sep2021_t144026/' ];
+N_trials.mb_0p01( end + 1 )  = 10;
+
+path_data.mb_0p01 = transpose( path_data.mb_0p01 );
+N_trials.mb_0p01  = transpose( N_trials.mb_0p01 );
+
+%=============
+% NOISY MB 10%
+%=============
+
+path_data.mb_0p01_noise = {};
+N_trials.mb_0p01_noise  = [];
+
+path_data.mb_0p01_noise{ end + 1 } = [ rootpath_data, 'mb0p10/cdi_rPIE_mb0p10_alpha0p01_noise/independenttrials_15Nov2021_t144212/' ];
+N_trials.mb_0p01_noise( end + 1 )  = 10;
+
+path_data.mb_0p01_noise{ end + 1 } = [ rootpath_data, 'mb0p10/cdi_rPIE_mb0p10_alpha0p001_noise/independenttrials_15Nov2021_t230419/' ];
+N_trials.mb_0p01_noise( end + 1 )  = 10;
+
+path_data.mb_0p01_noise = transpose( path_data.mb_0p01_noise );
+N_trials.mb_0p01_noise  = transpose( N_trials.mb_0p01_noise );
+
+return
 
 %===============
 % Stoch Block GD
@@ -220,28 +272,26 @@ N_trials.stoch_bgd( end + 1 )  = 10;
 path_data.stoch_bgd{ end + 1 } = [ rootpath_data, 'blind_block_stoch/cdi_rPIE_stochGD_alpha0p01_oldsample_for_probe_update/independenttrials_22Sep2021_t104744/' ];
 N_trials.stoch_bgd( end + 1 )  = 10;
 
-path_data.stoch_bgd{ end + 1 } = [ rootpath_data, ];
+path_data.stoch_bgd{ end + 1 } = [ rootpath_data, 'blind_block_stoch/cdi_rPIE_stochGD_alpha0p001_oldsample_for_probe_update/independenttrials_12Nov2021_t192759/' ];
 N_trials.stoch_bgd( end + 1 )  = 10;
 
-path_data.stoch_bgd{ end + 1 } = [ rootpath_data, ];
+path_data.stoch_bgd{ end + 1 } = [ rootpath_data, 'blind_block_stoch/cdi_rPIE_stochGD_alpha0p0001_oldsample_for_probe_update/independenttrials_13Nov2021_t113330/'];
 N_trials.stoch_bgd( end + 1 )  = 10;
 
-path_data.stoch_bgd{ end + 1 } = [ rootpath_data, ];
+path_data.stoch_bgd{ end + 1 } = [ rootpath_data, 'blind_block_stoch/cdi_rPIE_stochGD_alpha0p00001_oldsample_for_probe_update/independenttrials_13Nov2021_t182247/' ];
 N_trials.stoch_bgd( end + 1 )  = 10;
 
-path_data.stoch_bgd{ end + 1 } = [ rootpath_data, ];
+path_data.stoch_bgd{ end + 1 } = [ rootpath_data, 'blind_block_stoch/cdi_rPIE_stochGD_alpha0p000001_oldsample_for_probe_update/independenttrials_13Nov2021_t022040/' ];
 N_trials.stoch_bgd( end + 1 )  = 10;
 
-path_data.stoch_bgd{ end + 1 } = [ rootpath_data, ];
+path_data.stoch_bgd{ end + 1 } = [ rootpath_data, 'blind_block_stoch/cdi_rPIE_stochGD_alpha0p0000001_oldsample_for_probe_update/independenttrials_12Nov2021_t081029/'];
 N_trials.stoch_bgd( end + 1 )  = 10;
 
-path_data.stoch_bgd{ end + 1 } = [ rootpath_data, ];
+path_data.stoch_bgd{ end + 1 } = [ rootpath_data, 'blind_block_stoch/cdi_rPIE_stochGD_alpha0p00000001_oldsample_for_probe_update/independenttrials_11Nov2021_t112402/' ];
 N_trials.stoch_bgd( end + 1 )  = 10;
 
-path_data.stoch_bgd{ end + 1 } = [ rootpath_data, 'blind_block_stoch/cdi_rPIE_stochGD_alpha0p000000001_oldsample_for_probe_update/independenttrials_10Nov2021_t122727' ];
+path_data.stoch_bgd{ end + 1 } = [ rootpath_data, 'blind_block_stoch/cdi_rPIE_stochGD_alpha0p000000001_oldsample_for_probe_update/independenttrials_10Nov2021_t122727/' ];
 N_trials.stoch_bgd( end + 1 )  = 10;
-
-
 
 path_data.stoch_bgd = transpose( path_data.stoch_bgd );
 N_trials.stoch_bgd  = transpose( N_trials.stoch_bgd );
@@ -256,7 +306,7 @@ N_trials.mb_0p01  = [];
 path_data.mb_0p01{ end + 1 } = [ rootpath_data, 'mb0p01/cdi_rPIE_mb0p01_alpha1p00_oldsample_for_probe_update/independenttrials_05Nov2021_t143406/' ];
 N_trials.mb_0p01( end + 1 )  = 10;
 
-path_data.mb_0p01{ end + 1 } = [ rootpath_data, ];
+path_data.mb_0p01{ end + 1 } = [ rootpath_data, 'mb0p01/cdi_rPIE_mb0p01_alpha0p10_oldsample_for_probe_update/independenttrials_13Nov2021_t023404/' ];
 N_trials.mb_0p01( end + 1 )  = 10;
 
 path_data.mb_0p01{ end + 1 } = [ rootpath_data, 'mb0p01/cdi_rPIE_mb0p01_alpha0p01_oldsample_for_probe_update/independenttrials_01Oct2021_t161445/' ];
@@ -277,10 +327,10 @@ N_trials.mb_0p01( end + 1 )  = 10;
 path_data.mb_0p01{ end + 1 } = [ rootpath_data, 'mb0p01/cdi_rPIE_mb0p01_alpha0p0000001_oldsample_for_probe_update/independenttrials_08Nov2021_t230507/' ];
 N_trials.mb_0p01( end + 1 )  = 10;
 
-path_data.mb_0p01{ end + 1 } = [ rootpath_data, ];
+path_data.mb_0p01{ end + 1 } = [ rootpath_data, 'mb0p01/cdi_rPIE_mb0p01_alpha0p00000001_oldsample_for_probe_update/independenttrials_10Nov2021_t012243/' ];
 N_trials.mb_0p01( end + 1 )  = 10;
 
-path_data.mb_0p01{ end + 1 } = [ rootpath_data, ];
+path_data.mb_0p01{ end + 1 } = [ rootpath_data, 'mb0p01/cdi_rPIE_mb0p01_alpha0p000000001_oldsample_for_probe_update/independenttrials_11Nov2021_t213037/' ];
 N_trials.mb_0p01( end + 1 )  = 10;
 
 path_data.mb_0p01 = transpose( path_data.mb_0p01 );
@@ -511,13 +561,13 @@ N_trials.full_gd( end + 1 )  = 10;
 path_data.full_gd{ end + 1 } = [ rootpath_data, 'full/cdi_rPIE_full_alpha0p00001_randT_oldsample_for_probe_update/independenttrials_01Oct2021_t143516/' ];
 N_trials.full_gd( end + 1 )  = 10;
 
-path_data.full_gd{ end + 1 } = [ rootpath_data, ];
+path_data.full_gd{ end + 1 } = [ rootpath_data, 'full/cdi_rPIE_full_alpha0p000001_randT_oldsample_for_probe_update/independenttrials_11Nov2021_t080651/' ];
 N_trials.full_gd( end + 1 )  = 10;
 
 path_data.full_gd{ end + 1 } = [ rootpath_data, 'full/cdi_rPIE_full_alpha0p0000001_randT_oldsample_for_probe_update/independenttrials_30Sep2021_t215726/' ];
 N_trials.full_gd( end + 1 )  = 10;
 
-path_data.full_gd{ end + 1 } = [ rootpath_data, ];
+path_data.full_gd{ end + 1 } = [ rootpath_data, 'full/cdi_rPIE_full_alpha0p00000001_randT_oldsample_for_probe_update/independenttrials_12Nov2021_t023114/'];
 N_trials.full_gd( end + 1 )  = 10;
 
 path_data.full_gd{ end + 1 } = [ rootpath_data, 'full/cdi_rPIE_full_alpha0p000000001_randT_oldsample_for_probe_update/independenttrials_30Sep2021_t051649/' ];

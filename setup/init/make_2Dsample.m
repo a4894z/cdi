@@ -7,7 +7,7 @@ function [ sample ] = make_2Dsample( expt )
 % ----------------------------------------------- LOAD PREVIOUSLY DEFINED SAMPLE TRANSFER FUNCTION --------------------------------------------------
 %====================================================================================================================================================
 
-Z = load( '/net/s8iddata/export/8-id-ECA/Analysis/atripath/rPIE_vs_MB_mat/no_noise/sim_ptycho2DTPA_0.mat', 'expt' );
+Z = load( '/net/s8iddata/export/8-id-ECA/Analysis/atripath/rPIE_vs_MB_mat/no_noise/sim_ptycho2DTPA.mat', 'expt' );
 
 sample = Z.expt.sample;
 

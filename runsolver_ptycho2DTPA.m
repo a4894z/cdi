@@ -45,12 +45,22 @@ function [ sol, expt ] = runsolver_ptycho2DTPA
     
     %================================================================================================================================================
     
-%     data_path = '/net/s8iddata/export/8-id-ECA/Analysis/atripath/rPIE_vs_MB_mat/noise/sim_ptycho2DTPA.mat';    % WITH    NOISE
-    data_path = '/net/s8iddata/export/8-id-ECA/Analysis/atripath/rPIE_vs_MB_mat/no_noise/sim_ptycho2DTPA.mat';   % WITHOUT NOISE
-
-%     data_path = [ pwd, '/sim_ptycho2DTPA.mat' ];
+    data_path = '/net/s8iddata/export/8-id-ECA/Analysis/atripath/rPIE_vs_MB_mat/noise/sim_ptycho2DTPA.mat';    % WITH NOISE
 
     %=========
+
+%     data_path = '/net/s8iddata/export/8-id-ECA/Analysis/atripath/rPIE_vs_MB_mat/no_noise/sim_ptycho2DTPA.mat';   % WITHOUT NOISE
+
+%     data_path = '/net/s8iddata/export/8-id-ECA/Analysis/atripath/rPIE_vs_MB_mat/no_noise_probe_scaling/1e-1_wrt_orig/sim_ptycho2DTPA.mat';   % WITHOUT NOISE
+%     data_path = '/net/s8iddata/export/8-id-ECA/Analysis/atripath/rPIE_vs_MB_mat/no_noise_probe_scaling/1e+1_wrt_orig/sim_ptycho2DTPA.mat';   % WITHOUT NOISE
+%     data_path = '/net/s8iddata/export/8-id-ECA/Analysis/atripath/rPIE_vs_MB_mat/no_noise_probe_scaling/1e+2_wrt_orig/sim_ptycho2DTPA.mat';   % WITHOUT NOISE
+%     data_path = '/net/s8iddata/export/8-id-ECA/Analysis/atripath/rPIE_vs_MB_mat/no_noise_probe_scaling/1e+3_wrt_orig/sim_ptycho2DTPA.mat';   % WITHOUT NOISE
+    
+    %=========
+    
+%     data_path = [ pwd, '/sim_ptycho2DTPA.mat' ];
+
+    %================================================================================================================================================
     
     load( data_path, 'sol', 'expt' );  
 
@@ -65,7 +75,7 @@ function [ sol, expt ] = runsolver_ptycho2DTPA
     
     %=========
     
-    sol.rPIE_alpha = single( 0.10 );
+    sol.rPIE_alpha = single( 1.00 );
     
     %=========
     
@@ -78,7 +88,7 @@ function [ sol, expt ] = runsolver_ptycho2DTPA
     
     sol.use_gpu = true; 
 
-    sol.gpu_id = 1; 
+    sol.gpu_id = 4; 
  
     if sol.use_gpu == true, reset( gpuDevice( sol.gpu_id )); end
 
@@ -86,7 +96,7 @@ function [ sol, expt ] = runsolver_ptycho2DTPA
     % Stochastic minibatch parameters
     %================================
 
-    sol.spos.rand_spos_subset_pct = 0.10;      
+    sol.spos.rand_spos_subset_pct = 0.33333333;      
     
     sol.spos.rand_spos_subset_pct = single( sol.spos.rand_spos_subset_pct );  
     if sol.spos.rand_spos_subset_pct > 1.00, sol.spos.rand_spos_subset_pct = single( 1.00 ); end
