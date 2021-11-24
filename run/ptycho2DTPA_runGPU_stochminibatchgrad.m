@@ -306,12 +306,14 @@ function [ sol, expt ] = ptycho2DTPA_runGPU_stochminibatchgrad( sol, expt, N_epo
                 %=================================================================================================
                 % Vectorized ePIE probe update using old T^{(k)} for exitwave update, old T^{(k)} for probe update
                 %=================================================================================================
-                
-                % !!!!!!!!!!!!!!!! CHECK THE DERIVATION ON THIS...WHAT WEIGHTING ARE WE USING FOR THE PROX TERM?
-                
+ 
                 T_view = reshape( sol.GPU.TFvec_old( sol.GPU.ind ), [ sol.GPU.sz, 1, sol.GPU.Nspos ]);
                 abs2_TFview = abs( T_view ) .^ 2;
+                
                 sol.GPU.phi = sol.GPU.phi + sum( conj( T_view ) .* sol.GPU.psi - sol.GPU.phi .* abs2_TFview, 4 ) ./ sum( abs2_TFview, 4 );
+                
+%                 % !!!!!!!!!!!!!!!! CHECK THE DERIVATION ON THIS...WHAT WEIGHTING ARE WE USING FOR THE PROX TERM?
+%                 sol.GPU.phi = sol.GPU.phi + sum( conj( T_view ) .* sol.GPU.psi - sol.GPU.phi .* abs2_TFview, 4 ) ./ ( aa * sum( abs2_TFview, 4 ) + ( 1 - aa ) * abs2_TFview );
 
                 %==============
                 % Probe Support

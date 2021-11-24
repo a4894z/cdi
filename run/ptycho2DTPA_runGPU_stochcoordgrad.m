@@ -196,9 +196,9 @@ function [ sol, expt ] = ptycho2DTPA_runGPU_stochcoordgrad( sol, expt, N_epochs 
             % For stochastic gradient descent, scramble the sequential update order
             update_order = uint32( gpuArray.randperm( sol.GPU.Nspos ));
 
-            %======================================================================
-            % using old T^{(k)} for exitwave update, new T^{(k+1)} for probe update
-            %======================================================================
+            %=====================================================================================
+            % probe update using new T^{(k+1)} for exitwave update, new T^{(k+1)} for probe update      
+            %=====================================================================================
             
 %             sol.GPU.phi = rPIEupdate_blockstoch_2DTPA_SCPMprobes( sol.GPU.psi,  ...
 %                                                                   sol.GPU.phi,  ...
@@ -210,9 +210,9 @@ function [ sol, expt ] = ptycho2DTPA_runGPU_stochcoordgrad( sol, expt, N_epochs 
 %                                                                   single( 1.0 ),  ...
 %                                                                   'px' );
                                                        
-            %========================================================================
-            % using new T^{(k+1)} for exitwave update, old T^{(k+1)} for probe update
-            %========================================================================
+            %=================================================================================
+            % probe update using old T^{(k)} for exitwave update, old T^{(k)} for probe update
+            %=================================================================================
             
             sol.GPU.phi = rPIEupdate_blockstoch_2DTPA_SCPMprobes( sol.GPU.psi,    ...
                                                                   sol.GPU.phi,    ...
