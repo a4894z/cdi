@@ -37,6 +37,8 @@ function [ sol, expt ] = runsolver_ptycho2DTPA
 
     %================================================================================================================================================
     
+    %#ok<*LOGL>
+    
     rng( 'shuffle' )
     
     restoredefaultpath; 
@@ -45,7 +47,9 @@ function [ sol, expt ] = runsolver_ptycho2DTPA
     
     %================================================================================================================================================
     
-    data_path = '/net/s8iddata/export/8-id-ECA/Analysis/atripath/rPIE_vs_MB_mat/noise/sim_ptycho2DTPA.mat';    % WITH NOISE
+%     data_path = '/net/s8iddata/export/8-id-ECA/Analysis/atripath/rPIE_vs_MB_mat/noise/sim_ptycho2DTPA.mat';    % WITH NOISE, WITHOUT BG RM
+
+    data_path = '/net/s8iddata/export/8-id-ECA/Analysis/atripath/rPIE_vs_MB_mat/noise_rmbg/sim_ptycho2DTPA.mat';    % WITH NOISE, WITH BG RM
 
     %=========
 
@@ -75,7 +79,7 @@ function [ sol, expt ] = runsolver_ptycho2DTPA
     
     %=========
     
-    sol.rPIE_alpha = single( 1.00 );
+    sol.rPIE_alpha = single( 0.01 );
     
     %=========
     
@@ -88,7 +92,7 @@ function [ sol, expt ] = runsolver_ptycho2DTPA
     
     sol.use_gpu = true; 
 
-    sol.gpu_id = 4; 
+    sol.gpu_id = 1; 
  
     if sol.use_gpu == true, reset( gpuDevice( sol.gpu_id )); end
 
@@ -96,8 +100,9 @@ function [ sol, expt ] = runsolver_ptycho2DTPA
     % Stochastic minibatch parameters
     %================================
 
-    sol.spos.rand_spos_subset_pct = 0.33333333;      
+    sol.spos.rand_spos_subset_pct = 0.01;      
     
+    % book keeping and error checking
     sol.spos.rand_spos_subset_pct = single( sol.spos.rand_spos_subset_pct );  
     if sol.spos.rand_spos_subset_pct > 1.00, sol.spos.rand_spos_subset_pct = single( 1.00 ); end
 
@@ -106,42 +111,47 @@ function [ sol, expt ] = runsolver_ptycho2DTPA
     %======================================================
     
     N_pauseandsave              = single( 1 );
-    
     N_epochs                    = single( 5000 );
-
     sol.it.probe_orthog         = single( 25 );
-    
     sol.it.metrics_and_plotting = single( 100 );
-    sol.print_img               = logical( 0 );             %#ok<LOGL>
+    sol.print_img               = logical( 0 );              
 
     %============
     % CHEAT CODES
     %============
 
-    % sol.sample.T      = expt.sample.T;
-    % sol.probe.phi     = expt.probe.phi;
-    % sol.probe.scpm     = expt.phi.scpm;
-    % sol.probe.scpm.max = 1e3; 
-
+%     sol.sample.T   = expt.sample.T;
+%     sol.probe.phi  = expt.probe.phi;
+%     sol.probe.scpm = expt.probe.scpm;
+%     sol.spos.rs    = expt.spos.rs;
+%     sol.spos.indx  = expt.spos.indx;
+    
     %================================================================================================================================================
 
     for ii = 1 : N_pauseandsave
 
-        %==========
-        % minibatch
-        %==========
+        %=============
+        % minibatch GD
+        %=============
 
         [ sol, expt ] = ptycho2DTPA_runGPU_stochminibatchgrad( sol, expt, N_epochs );    
 
-        %==========
-        % fullbatch
-        %==========
+        %==============================
+        % fullbatch block stochastic GD
+        %==============================
 
-%         [ sol, expt ] = ptycho2DTPA_runGPU_stochcoordgrad( sol, expt, N_epochs );         
+%         [ sol, expt ] = ptycho2DTPA_runGPU_stochcoordgrad( sol, expt, N_epochs );  
+
+        %===================
+        % fullbatch total GD
+        %===================
+
 %         [ sol, expt ] = ptycho2DTPA_runGPU_totalgrad( sol, expt, N_epochs );     
 
-        %========
-
+        %==========================
+        % bookkeeping and logistics
+        %==========================
+        
         % Clean up   
         [ sol, expt ] = ptycho2DTPA_cleanup( sol, expt );     
 
@@ -159,7 +169,7 @@ end
 
 function [ sol, expt ] = runsolver_ptycho2DTPA_config( sol, expt )     
 
-    warning('off','MATLAB:prnRenderer:opengl');
+%     warning('off','MATLAB:prnRenderer:opengl');
     
     rng( 'shuffle' )
              
@@ -277,7 +287,7 @@ function [ sol, expt ] = runsolver_ptycho2DTPA_config( sol, expt )
     
     sol.probe.scpm.occ = sort( sol.probe.scpm.occ / norm( sol.probe.scpm.occ, 1 ));     % make sure the mode occupancy adds up to 1.0
       
-%     sol.probe.phi = orthog_modes_eigendecomp( sol.probe.phi );
+    sol.probe.phi = orthog_modes_eigendecomp( sol.probe.phi );
 
     %=========================
     % probe mode total scaling
