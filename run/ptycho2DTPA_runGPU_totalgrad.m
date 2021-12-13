@@ -488,7 +488,7 @@ function [ GPU ] = CPUmem( sol, expt )
     GPU.fro2TOT       = single( sol.probe.scpm.fro2TOT );
     GPU.scpmocc       = single( sol.probe.scpm.occ );
     GPU.probe_support = single( sol.probe.support );
-    GPU.scpmmax       = single( sol.probe.scpm.max );
+%     GPU.scpmmax       = single( sol.probe.scpm.max );
     
     %==============
     

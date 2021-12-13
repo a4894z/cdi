@@ -403,7 +403,7 @@ function [ GPU ] = CPUmem2GPUmem( sol, expt )
     GPU.fro2TOT       = gpuArray( sol.probe.scpm.fro2TOT );
     GPU.scpmocc       = gpuArray( sol.probe.scpm.occ );
     GPU.probe_support = gpuArray( sol.probe.support );
-    GPU.scpmmax       = gpuArray( sol.probe.scpm.max );
+%     GPU.scpmmax       = gpuArray( sol.probe.scpm.max );
     
     %========
     
