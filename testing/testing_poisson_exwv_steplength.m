@@ -16,7 +16,7 @@ clear; close all; testing_poisson_exwv_steplength
 %====================================================================================================================================================
 
 % load /net/s8iddata/export/8-id-ECA/Analysis/atripath/sim_ptycho2DTPA_poissonsteplength.mat
-load /home/ash/Documents/Science/Matlab/Code/cdi/sim_ptycho2DTPA.mat
+load /home/ash/Documents/Science/Matlab/Code/cdi/sim_ptycho2DTPA_noisy.mat
 
 rng( 'shuffle' )
 reset( gpuDevice )
