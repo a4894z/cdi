@@ -79,7 +79,7 @@ function [ sol, expt ] = runsolver_ptycho2DTPA
     
     %=========
     
-    sol.rPIE_alpha = single( 0.01 );
+    sol.rPIE_alpha = single( 0.100000000 );
     
     %=========
     
@@ -92,7 +92,7 @@ function [ sol, expt ] = runsolver_ptycho2DTPA
     
     sol.use_gpu = true; 
 
-    sol.gpu_id = 1; 
+    sol.gpu_id = 3; 
  
     if sol.use_gpu == true, reset( gpuDevice( sol.gpu_id )); end
 
@@ -125,7 +125,7 @@ function [ sol, expt ] = runsolver_ptycho2DTPA
 %     sol.probe.scpm = expt.probe.scpm;
 %     sol.spos.rs    = expt.spos.rs;
 %     sol.spos.indx  = expt.spos.indx;
-    
+
     %================================================================================================================================================
 
     for ii = 1 : N_pauseandsave
@@ -177,8 +177,8 @@ function [ sol, expt ] = runsolver_ptycho2DTPA_config( sol, expt )
     % projection algorithm parameter(s)
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     
-    sol.RAAR_beta  = single( 0.5 );
-    sol.rPIE_alpha = single( 0.05 );
+%     sol.RAAR_beta  = single( 0.5 );
+    sol.rPIE_alpha = single( 1e-3 );
 
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     % Gaussian LPF for reconstruction resolution 

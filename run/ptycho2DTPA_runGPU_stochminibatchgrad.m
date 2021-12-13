@@ -57,7 +57,7 @@ function [ sol, expt ] = ptycho2DTPA_runGPU_stochminibatchgrad( sol, expt, N_epo
     sol.GPU.fro2TOT       = gpuArray( sol.probe.scpm.fro2TOT );
     sol.GPU.scpmocc       = gpuArray( sol.probe.scpm.occ );
     sol.GPU.probe_support = gpuArray( sol.probe.support );
-    sol.GPU.scpmmax       = gpuArray( sol.probe.scpm.max );
+%     sol.GPU.scpmmax       = gpuArray( sol.probe.scpm.max );
 
     %==========
     % Main Loop
