@@ -4,8 +4,7 @@ function [ sol ] = ptycho2DTPA_collectmetrics( sol, expt )
     % get ready for array broadcasting
     %=================================
 
-    meas_D    = reshape( expt.meas.D, [ expt.sz.sz, 1, expt.spos.N ] );
-    meas_Deq0 = not( meas_D == 0 );
+    meas_D = reshape( expt.meas.D, [ expt.sz.sz, 1, expt.spos.N ] );
 
     %=========================================
     % compute exitwaves for all scan positions
@@ -19,14 +18,20 @@ function [ sol ] = ptycho2DTPA_collectmetrics( sol, expt )
 
     TFv  = sol.sample.T( : );
     TF   = reshape( TFv( spos.frameindx ), [ sol.sz.sz, 1, sol.spos.N ]);
+    
+    clear( 'TFv', 'spos' )
+    
     tmp0 = TF .* sol.probe.phi;
+    
+    clear( 'TF' )
+    
     tmp1 = fft( fft( fftshift( fftshift( tmp0, 1 ), 2 ), [], 1 ), [], 2 ) / sol.sz.sqrt_rc;
 
     %===========================================================================
     % standard Gaussian noise metric with constant (ignored) stdev at all pixels
     %===========================================================================
 
-    meas_residual = meas_Deq0 .* sqrt( sum( abs( tmp1 ) .^ 2, 3 )) - meas_D;
+    meas_residual = not( meas_D == 0 ) .* sqrt( sum( abs( tmp1 ) .^ 2, 3 )) - meas_D;
     meas_residual = squeeze( sum( sum( abs( meas_residual ) .^ 2, 1 ), 2 ));
 
     %================

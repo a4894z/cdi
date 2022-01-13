@@ -1,30 +1,26 @@
 function ptycho2DTPA_plotresults( sol, expt )
 
 if sol.print_img == false, return; end
-        
-
-
-
 
         %==============================
         % probe mode correlation matrix
         %==============================
 
-        P = reshape( sol.probe.phi, [ sol.sz.rc, sol.probe.scpm.N ] );
-
-        corr_matrix_scpm = ctranspose( P ) * P;
-        
-        h1 = figure();  
-        set( h1, 'Visible', 'off', 'Position',[ 1, 1, 1920, 1080 ] )
-    
-        imagesc( log10( 1 + abs( corr_matrix_scpm )))
-        axis square
-        colorbar
-        colormap( expt.cm.blj )
-        title('Probe Mode Correlation Matrix')
-        
-        export_fig( num2str( sol.it.epoch, 'corr_matrix_scpm_%d.jpg' ), '-r120.0' )
-        close all;
+%         P = reshape( sol.probe.phi, [ sol.sz.rc, sol.probe.scpm.N ] );
+% 
+%         corr_matrix_scpm = ctranspose( P ) * P;
+%         
+%         h1 = figure();  
+%         set( h1, 'Visible', 'off', 'Position',[ 1, 1, 1920, 1080 ] )
+%     
+%         imagesc( log10( 1 + abs( corr_matrix_scpm )))
+%         axis square
+%         colorbar
+%         colormap( expt.cm.blj )
+%         title('Probe Mode Correlation Matrix')
+%         
+%         export_fig( num2str( sol.it.epoch, 'corr_matrix_scpm_%d.jpg' ), '-r120.0' )
+%         close all;
         
         %================
         % sample plotting
@@ -48,8 +44,8 @@ if sol.print_img == false, return; end
         imagesc( pltopts.xaxis, pltopts.yaxis, abs( sol.sample.T )); 
 %         imagesc( pltopts.xaxis, pltopts.yaxis, abs( sol.sample.T ), [ 0, 1 ]); 
 %         imagesc( pltopts.xaxis, pltopts.yaxis,  log10(1 + abs(sol.sample.T))); 
-        %daspect([1 1 1]); 
-        axis square
+        daspect([1 1 1]); 
+%         axis square
         colorbar
         colormap( ax1, expt.cm.blj )
 %         colormap gray; 
@@ -61,8 +57,8 @@ if sol.print_img == false, return; end
         ax2 = subplot(132);
         imagesc( pltopts.xaxis, pltopts.yaxis, angle( sol.sample.T ), [ -pi, pi ] ); 
 %         imagesc( pltopts.xaxis, pltopts.yaxis, angle( sol.sample.T ), [ sol.sample.phsL, sol.sample.phsH ] ); 
-        %daspect([1 1 1]); 
-        axis square
+        daspect([1 1 1]); 
+%         axis square
         colorbar
 %         colormap( ax2, expt.cm.blj )
         colormap( ax2, expt.cm.hsvD )
@@ -76,14 +72,14 @@ if sol.print_img == false, return; end
         subplot(133)
         imagescHSV( sol.sample.T, pltopts  ); 
 %         imagescHSV( log10(1 + abs( sol.sample.T )) .* exp( 1i * angle( sol.sample.T )), pltopts );
-        %daspect([1 1 1]); 
-        axis square
+        daspect([1 1 1]); 
+%         axis square
         grid on;
         title('HSV ( V = mag, H = phs ) sample')
         
 %         set( gca, 'GridColor', [0.8, 0.0, 0.0], 'GridLineStyle', '--', 'GridAlpha', 1.0 )
 %         export_fig( num2str( sol.it.exwv, 'sample_%d.jpg' ), '-r120.0' )
-        export_fig( num2str( sol.it.epoch, 'sample_%d.jpg' ), '-r120.0' )
+        export_fig( num2str( sol.it.epoch, 'sample_%d.jpg' ), '-r240.0' )
         close all;
      
         %==============

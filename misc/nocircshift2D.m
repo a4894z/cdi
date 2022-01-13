@@ -3,8 +3,8 @@ function [ Xshift ] = nocircshift2D( X, shift_vec_rc )
 % non-circular shift an array:
 
 % Xs = zeropadarray( X, abs( shift_vec_rc ));
-
-Xs = padarray( X( :, :, 3 ), abs( shift_vec_rc ));
+% Xs = padarray( X( :, :, 3 ), abs( shift_vec_rc ));
+Xs = padarray( X, abs( shift_vec_rc ));
 
 Xs = circshift( Xs, shift_vec_rc );
 

@@ -9,7 +9,7 @@ function [ sol, expt ] = ptycho2DTPA_runGPU_stochminibatchgrad( sol, expt, N_epo
     % compute_exitwaves_minibatch( )
     
 %     sol.sample_sposview_indices = get_indices_2Dframes( sol.spos.rs, sol.sample.sz.sz, sol.sample.vs.r, sol.sample.vs.c );
-%             
+            
 %     sol.psi = sol.probe.phi .* reshape( sol.sample.T( sol.sample_sposview_indices ), [ sol.sz.sz, 1, size( sol.sample_sposview_indices, 2 ) ]);
     
     %================================================================
@@ -17,7 +17,7 @@ function [ sol, expt ] = ptycho2DTPA_runGPU_stochminibatchgrad( sol, expt, N_epo
     %================================================================
     
     sol.GPU.rPIE_alpha = gpuArray( sol.rPIE_alpha );
-    sol.GPU.RAAR_beta  = gpuArray( sol.RAAR_beta );
+%     sol.GPU.RAAR_beta  = gpuArray( sol.RAAR_beta );
 
     sol.GPU.sparseGPU.threshname          = sol.sparse.threshname;
     sol.GPU.sparseGPU.threshtype          = sol.sparse.threshtype;
@@ -53,11 +53,13 @@ function [ sol, expt ] = ptycho2DTPA_runGPU_stochminibatchgrad( sol, expt, N_epo
     
     sol.GPU.TFvec = gpuArray( sol.sample.T( : ));
     
+%     sol.GPU.psi           = gpuArray( sol.psi );
+    
     sol.GPU.phi           = gpuArray( sol.probe.phi );
     sol.GPU.fro2TOT       = gpuArray( sol.probe.scpm.fro2TOT );
     sol.GPU.scpmocc       = gpuArray( sol.probe.scpm.occ );
     sol.GPU.probe_support = gpuArray( sol.probe.support );
-%     sol.GPU.scpmmax       = gpuArray( sol.probe.scpm.max );
+    sol.GPU.scpmmax       = gpuArray( sol.probe.scpm.max );
 
     %==========
     % Main Loop
@@ -223,22 +225,24 @@ function [ sol, expt ] = ptycho2DTPA_runGPU_stochminibatchgrad( sol, expt, N_epo
 
                 end
 
-                %======================================================
-                % Sample inequality constraints (projection operations)
-                %======================================================
+                %========================================
+                % Sample mag/phase inequality constraints 
+                %========================================
 
-                if mod( sol.it.epoch, sol.it.sample_mag_phs_ineq ) == 0
+                if mod( sol.it.epoch, sol.it.sample_mag_ineq ) == 0
 
                     sol.GPU.TFvec = modulus_limits_project( sol.GPU.TFvec, sol.GPU.abs_TF_lim );
-
-        %             sol.GPU.TFvec = modulus_limits_project( sol.GPU.TFvec, [ 0, 1 ] );
         %             sol.GPU.TFvec = modulus_limits_scale( sol.GPU.TFvec, sol.GPU.abs_TF_lim );
 
-%                     sol.GPU.TFvec = phase_limits_project( sol.GPU.TFvec, sol.GPU.phs_TF_lim );
+                end
+                
+                if mod( sol.it.epoch, sol.it.sample_phs_ineq ) == 0
+                    
+                    sol.GPU.TFvec = phase_limits_project( sol.GPU.TFvec, sol.GPU.phs_TF_lim );
 %                     sol.GPU.TFvec = phase_limits_scale( sol.GPU.TFvec, sol.GPU.phs_TF_lim );
 
                 end
-
+                
                 %======================================================
                 % Sample mag and phase correlation ( weighted average )
                 %======================================================
@@ -297,8 +301,8 @@ function [ sol, expt ] = ptycho2DTPA_runGPU_stochminibatchgrad( sol, expt, N_epo
                 % Vectorized ePIE probe update using new T^{(k+1)} for exitwave update, new T^{(k+1)} for probe update
                 %=====================================================================================================
                 
-                % !!!!!!!!!!!!!!!! CHECK THE DERIVATION ON THIS...WHAT WEIGHTING ARE WE USING FOR THE PROX TERM?
-            
+%                 % !!!!!!!!!!!!!!!! CHECK THE DERIVATION ON THIS...WHAT WEIGHTING ARE WE USING FOR THE PROX TERM?
+%             
 %                 T_view = reshape( sol.GPU.TFvec( sol.GPU.ind ), [ sol.GPU.sz, 1, sol.GPU.Nspos ]);
 %                 abs2_TFview = abs( T_view ) .^ 2;
 %                 sol.GPU.phi = sol.GPU.phi + sum( conj( T_view ) .* sol.GPU.psi - sol.GPU.phi .* abs2_TFview, 4 ) ./ sum( abs2_TFview, 4 );
@@ -321,26 +325,26 @@ function [ sol, expt ] = ptycho2DTPA_runGPU_stochminibatchgrad( sol, expt, N_epo
 
                 if ( mod( sol.it.epoch, sol.it.probe_support ) == 0 ) 
 
-                    %=============================================
-                    % Shrinkwrap support from probe mode intensity
-                    %=============================================
-
-                    tmp0          = sum( abs( sol.GPU.phi ) .^ 2, 3 );
-                    [ ~, supp ]   = shrinkwrap( tmp0, sol.GPU.swparams ); 
-                    sol.GPU.phi   = sol.GPU.phi .* supp;
-
                     %=========================
                     % Fixed predefined support
                     %=========================
 
                     sol.GPU.phi = sol.GPU.phi .* sol.GPU.probe_support; 
+                    
+                    %=============================================
+                    % Shrinkwrap support from probe mode intensity
+                    %=============================================
+
+%                     tmp0          = sum( abs( sol.GPU.phi ) .^ 2, 3 );
+%                     [ ~, supp ]   = shrinkwrap( tmp0, sol.GPU.swparams ); 
+%                     sol.GPU.phi   = sol.GPU.phi .* supp;
 
                     %==================================
                     % Support using dominant probe mode
                     %==================================
 
-%                     [ sol.GPU.phi( :, :, 3 ), supp ] = shrinkwrap( sol.GPU.phi( :, :, 3 ), swparams ); 
-%                     sol.GPU.phi = sol.GPU.phi .* supp;
+                    [ sol.GPU.phi( :, :, end ), supp ] = shrinkwrap( sol.GPU.phi( :, :, end ), sol.GPU.swparams ); 
+                    sol.GPU.phi = sol.GPU.phi .* supp;
 
                 end
 
@@ -348,18 +352,18 @@ function [ sol, expt ] = ptycho2DTPA_runGPU_stochminibatchgrad( sol, expt, N_epo
                 % Max abs constraint
                 %===================
 
-%                 if 0 %( mod( sol.it.epoch, 1 ) == 0 ) && ~isempty( sol.GPU.scpmmax )
-%                     
-% %                     tmp2 = reshape( sol.GPU.scpmmax, [ 1, 1, sol.GPU.Nscpm ] );
-%                     tmp2 = sol.GPU.scpmmax;
-%                     tmp0 = ( abs( sol.GPU.phi ) > tmp2 );
-%                     tmp1 = not( tmp0 );
-%                         
-%                     sol.GPU.phi = sol.GPU.phi .* tmp1 + tmp2 .* exp( 1i * angle( sol.GPU.phi )) .* tmp0;
-%                     
-%                     clear( 'tmp0', 'tmp1' )
-%                     
-%                 end
+                if ( mod( sol.it.epoch, 1 ) == 0 ) && ~isempty( sol.GPU.scpmmax )
+                    
+%                     tmp2 = reshape( sol.GPU.scpmmax, [ 1, 1, sol.GPU.Nscpm ] );
+                    tmp2 = sol.GPU.scpmmax;
+                    tmp0 = ( abs( sol.GPU.phi ) > tmp2 );
+                    tmp1 = not( tmp0 );
+                        
+                    sol.GPU.phi = sol.GPU.phi .* tmp1 + tmp2 .* exp( 1i * angle( sol.GPU.phi )) .* tmp0;
+                    
+                    clear( 'tmp0', 'tmp1' )
+                    
+                end
 
                 %============================
                 % Probe Scaling ( # Photons )
@@ -380,11 +384,13 @@ function [ sol, expt ] = ptycho2DTPA_runGPU_stochminibatchgrad( sol, expt, N_epo
                     [ sol.GPU.phi ] = orthog_modes_eigendecomp( sol.GPU.phi ); 
 
                 end
+                
+                %========
+
+                sol.timings.probe_update( sol.it.epoch ) = toc( start_probe );
 
             end
-
-            sol.timings.probe_update( sol.it.epoch ) = toc( start_probe );
-
+            
         end
 
         %=============
@@ -402,7 +408,7 @@ function [ sol, expt ] = ptycho2DTPA_runGPU_stochminibatchgrad( sol, expt, N_epo
             sol.sample.T  = gather( reshape( sol.GPU.TFvec, [ sol.sample.sz.sz ]));
             sol.probe.phi = gather( sol.GPU.phi );
             
-            [ sol ] = ptycho2DTPA_collectmetrics( sol, expt );
+%             [ sol ] = ptycho2DTPA_collectmetrics( sol, expt );
             
             ptycho2DTPA_plotresults( sol, expt );
 
@@ -412,9 +418,21 @@ function [ sol, expt ] = ptycho2DTPA_runGPU_stochminibatchgrad( sol, expt, N_epo
         % Feedback for iteration counter
         %===============================
         
-        S2 = num2str( [ kk, N_epochs, sol.it.epoch, sol.spos.rand_spos_subset_pct, sol.timings.epoch( sol.it.epoch ) ], 'Local Epoch = %d / %d, Total Epochs = %d, minibatch pct = %0.4f, t_epoch = %e' );
+        S2 = num2str( [ kk, ...
+                        N_epochs, ...
+                        sol.it.epoch, ...
+                        sol.spos.rand_spos_subset_pct, ...
+                        sol.timings.epoch( sol.it.epoch ) ], ...
+                        'Local Epoch = %d / %d, Total Epochs = %d, minibatch pct = %0.4f, t_epoch = %e' );
 
         fprintf( [ S2, '\n'])
+        
+        if mod( kk, 10 ) == 0
+            
+            fprintf( [ '\n', expt.paths.data_mat_name, '\n\n' ])
+
+            
+        end
         
         %========================
         % Epoch iteration counter

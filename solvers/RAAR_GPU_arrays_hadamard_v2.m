@@ -65,6 +65,8 @@ function [ psi ] = RAAR_GPU_arrays_hadamard_v2( psi,        ...
     
     %========
     
+    RAAR_beta = 0.5;
+    
 %     psi = RAAR_beta * 0.5 * ( psi_RM_RS + psi ) + ( 1 - RAAR_beta ) * psi_PM_PS;
     psi = RAAR_beta * 0.5 * ( psi_RM_RS + psi_PS ) + ( 1 - RAAR_beta ) * psi_PM_PS;
 %     psi = RAAR_beta * 0.5 * ( psi_RM_RS + psi_PS ) + ( 1 - RAAR_beta ) * psi_PM;

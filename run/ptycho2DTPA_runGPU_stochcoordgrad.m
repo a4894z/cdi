@@ -123,21 +123,23 @@ function [ sol, expt ] = ptycho2DTPA_runGPU_stochcoordgrad( sol, expt, N_epochs 
 
             end
 
-            %======================================================
-            % Sample inequality constraints (projection operations)
-            %======================================================
+                %========================================
+                % Sample mag/phase inequality constraints 
+                %========================================
 
-            if mod( sol.it.epoch, sol.it.sample_mag_phs_ineq ) == 0
+                if mod( sol.it.epoch, sol.it.sample_mag_ineq ) == 0
 
-                sol.GPU.TF = modulus_limits_project( sol.GPU.TF, sol.GPU.abs_TF_lim );
+                    sol.GPU.TFvec = modulus_limits_project( sol.GPU.TF, sol.GPU.abs_TF_lim );
+        %             sol.GPU.TFvec = modulus_limits_scale( sol.GPU.TF, sol.GPU.abs_TF_lim );
 
-    %             sol.GPU.TF = modulus_limits_project( sol.GPU.TF, [ 0, 1 ] );
-    %             sol.GPU.TF = modulus_limits_scale( sol.GPU.TF, sol.GPU.abs_TF_lim );
+                end
+                
+                if mod( sol.it.epoch, sol.it.sample_phs_ineq ) == 0
+                    
+                    sol.GPU.TFvec = phase_limits_project( sol.GPU.TF, sol.GPU.phs_TF_lim );
+%                     sol.GPU.TFvec = phase_limits_scale( sol.GPU.TF, sol.GPU.phs_TF_lim );
 
-%                     sol.GPU.TF = phase_limits_project( sol.GPU.TF, sol.GPU.phs_TF_lim );
-%                     sol.GPU.TF = phase_limits_scale( sol.GPU.TF, sol.GPU.phs_TF_lim );
-
-            end
+                end
 
             %======================================================
             % Sample mag and phase correlation ( weighted average )

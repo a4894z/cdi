@@ -5,7 +5,7 @@ TFview = getview_2DsampleTF( TF, vs_r, vs_c, spos, shifttype );
 phi = P .* TFview;
 
 
-
+% getview_2DsampleTF( TF, vs_r, vs_c, spos, shifttype )
 
 
 

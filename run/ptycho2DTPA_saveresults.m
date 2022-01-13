@@ -41,9 +41,11 @@ function expt = ptycho2DTPA_saveresults( sol, expt, ii )
     B = num2str( sol.it.epoch, '_it%d.mat');
     
     expt.paths.most_recent_date_time_save{ ii } = [ expt.paths.rsdata( 1 : end - 4 ), A, B ];
-    
     save( expt.paths.most_recent_date_time_save{ ii }, 'probe', 'sample', 'spos', 'metrics', 'timings' );
 
+%     expt.paths.most_recent_date_time_save = [ expt.paths.rsdata( 1 : end - 4 ), A, B ];
+%     save( expt.paths.most_recent_date_time_save, 'probe', 'sample', 'spos', 'metrics', 'timings' );
+    
 %     try
 %         
 %         save( expt.paths.most_recent_date_time_save{ ii }, 'probe', 'sample', 'spos', 'metrics', 'timings' );
