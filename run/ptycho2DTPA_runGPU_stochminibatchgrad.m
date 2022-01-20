@@ -358,8 +358,8 @@ function [ sol, expt ] = ptycho2DTPA_runGPU_stochminibatchgrad( sol, expt, N_epo
 
                 if ( mod( sol.it.epoch, 1 ) == 0 ) && ~isempty( sol.GPU.scpmmax )
                     
-%                     tmp2 = reshape( sol.GPU.scpmmax, [ 1, 1, sol.GPU.Nscpm ] );
-                    tmp2 = sol.GPU.scpmmax;
+                    tmp2 = reshape( sol.GPU.scpmmax, [ 1, 1, sol.GPU.Nscpm ] );
+%                     tmp2 = sol.GPU.scpmmax;
                     tmp0 = ( abs( sol.GPU.phi ) > tmp2 );
                     tmp1 = not( tmp0 );
                         
@@ -412,7 +412,7 @@ function [ sol, expt ] = ptycho2DTPA_runGPU_stochminibatchgrad( sol, expt, N_epo
             sol.sample.T  = gather( reshape( sol.GPU.TFvec, [ sol.sample.sz.sz ]));
             sol.probe.phi = gather( sol.GPU.phi );
             
-%             [ sol ] = ptycho2DTPA_collectmetrics( sol, expt );
+            [ sol ] = ptycho2DTPA_collectmetrics( sol, expt );
             
             ptycho2DTPA_plotresults( sol, expt );
 
@@ -433,7 +433,7 @@ function [ sol, expt ] = ptycho2DTPA_runGPU_stochminibatchgrad( sol, expt, N_epo
         
         if mod( kk, 10 ) == 0
             
-            fprintf( [ '\n', expt.paths.data_mat_name, '\n\n' ])
+            fprintf( [ '\n', expt.paths.rsdata, '\n\n' ])
 
             
         end

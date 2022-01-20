@@ -61,9 +61,11 @@ function [ sol, expt ] = runsolver_ptycho2DTPA
 
     %=========
 
-%     data_path = '/net/s8iddata/export/8-id-ECA/Analysis/atripath/rPIE_vs_MB_mat/noise/sim_ptycho2DTPA.mat';           % WITH NOISE, WITHOUT BG RM
-    data_path = '/net/s8iddata/export/8-id-ECA/Analysis/atripath/rPIE_vs_MB_mat/noise_rmbg/sim_ptycho2DTPA.mat';      % WITH NOISE, WITH BG RM
+%     data_path = '/net/s8iddata/export/8-id-ECA/Analysis/atripath/rPIE_vs_MB_mat/noise/sim_ptycho2DTPA.mat';            % WITH NOISE, WITHOUT BG RM
+%     data_path = '/net/s8iddata/export/8-id-ECA/Analysis/atripath/rPIE_vs_MB_mat/noise_rmbg/sim_ptycho2DTPA.mat';       % WITH NOISE, WITH BG RM
 
+%     data_path = './sim_ptycho2DTPA.mat';  % WITH NOISE, WITH BG RM                 
+        
     %=========
 
 %     data_path = '/net/s8iddata/export/8-id-ECA/Analysis/atripath/rPIE_vs_MB_mat/no_noise/sim_ptycho2DTPA.mat';   % WITHOUT NOISE
@@ -75,7 +77,7 @@ function [ sol, expt ] = runsolver_ptycho2DTPA
     
     %=========
     
-%     data_path = [ pwd, '/sim_ptycho2DTPA.mat' ];
+    data_path = [ pwd, '/sim_ptycho2DTPA.mat' ];
 
     %================================================================================================================================================
     
@@ -110,7 +112,7 @@ function [ sol, expt ] = runsolver_ptycho2DTPA
     
     sol.use_gpu = true; 
 
-    sol.gpu_id = 3; 
+    sol.gpu_id = 2; 
  
     if sol.use_gpu == true, reset( gpuDevice( sol.gpu_id )); end
 
@@ -118,7 +120,7 @@ function [ sol, expt ] = runsolver_ptycho2DTPA
     % Stochastic minibatch parameters
     %================================
 
-    sol.spos.rand_spos_subset_pct = 0.05;      
+    sol.spos.rand_spos_subset_pct = 0.20;      
 
     sol.spos.rand_spos_subset_pct = single( sol.spos.rand_spos_subset_pct );    
     
@@ -157,7 +159,7 @@ function [ sol, expt ] = runsolver_ptycho2DTPA
     sol.it.sample_mag_ineq      = single( 1 ); 
     sol.it.sample_phs_ineq      = single( 1e99 ); 
     
-    sol.it.metrics_and_plotting = single( 5 );
+    sol.it.metrics_and_plotting = single( 100 );
     
     sol.print_img               = logical( 1 );              
 
@@ -165,15 +167,15 @@ function [ sol, expt ] = runsolver_ptycho2DTPA
     % CHEAT CODES
     %============
 
-    sol.sample.T = expt.sample.T;
-    
-    sol.probe.phi      = expt.probe.phi;
-    sol.probe.scpm.occ = expt.probe.scpm.occ;
-    sol.probe.scpm.N   = expt.probe.scpm.N;
-    sol.probe.scpm.max = max( reshape( abs( expt.probe.phi ), [ expt.sz.rc, expt.probe.scpm.N ] ), [], 1 );
-    
-    sol.spos.rs    = expt.spos.rs;
-    sol.spos.indx  = expt.spos.indx;
+%     sol.sample.T = expt.sample.T;
+%     
+%     sol.probe.phi      = expt.probe.phi;
+%     sol.probe.scpm.occ = expt.probe.scpm.occ;
+%     sol.probe.scpm.N   = expt.probe.scpm.N;
+%     sol.probe.scpm.max = max( reshape( abs( expt.probe.phi ), [ expt.sz.rc, expt.probe.scpm.N ] ), [], 1 );
+%     
+%     sol.spos.rs    = expt.spos.rs;
+%     sol.spos.indx  = expt.spos.indx;
     
     %================================================================================================================================================
 
@@ -233,10 +235,10 @@ function [ sol, expt ] = runsolver_ptycho2DTPA_config( sol, expt )
     % Gaussian LPF for reconstruction resolution 
     %===========================================
         
-    stdev = single( 0.50 * sol.sz.sz );
+    stdev = single( 0.90 * sol.sz.sz );
     tmp0  = make_2Dgaussian( sol.sz.sz, single( 0.50 * sol.sz.sz + 1 ), stdev );
     
-    sol.measLPF = single( 0 + 1 * fftshift( tmp0 ));
+    sol.measLPF = single( 1 + 0 * fftshift( tmp0 ));
     
     %==========================================
     % fliplr/flipud/rot90()/etc of measurements
@@ -363,9 +365,8 @@ function [ sol, expt ] = runsolver_ptycho2DTPA_config( sol, expt )
     %=========================
     
     sol.probe.scpm.fro2TOT = single( [] );
-    sol.probe.scpm.fro2TOT = single( 8.00 * mean( squeeze( sum( sum( expt.meas.D .^ 2, 1 ), 2 ))) );
-%     sol.probe.scpm.fro2TOT = single( 1.05 * ( 3e3 ^ 2 ));   
-%     sol.probe.scpm.fro2TOT = single( 1.10 * expt.phi.scpm.fro2TOT);   
+%     sol.probe.scpm.fro2TOT = single( 8.00 * mean( squeeze( sum( sum( expt.meas.D .^ 2, 1 ), 2 ))) );
+    sol.probe.scpm.fro2TOT = single( 1.75 * mean( squeeze( sum( sum( expt.meas.D .^ 2, 1 ), 2 ))) );
     
     sol.probe.phi = enforce_scpm_fro2TOT_photonocc( sol.probe.phi, sol.probe.scpm.fro2TOT, sol.probe.scpm.occ );
     
@@ -374,7 +375,7 @@ function [ sol, expt ] = runsolver_ptycho2DTPA_config( sol, expt )
     %====================
     
 %     sol.probe.support = make_rectangle( sol.sz.sz, [ 0.9 * sol.sz.r, 0.9 * sol.sz.c ]);
-    sol.probe.support = make_2Dellipsoid( sol.sz.sz, [ 0.7 * sol.sz.r, 0.8 * sol.sz.c ]);
+    sol.probe.support = make_2Dellipsoid( sol.sz.sz, [ 0.8 * sol.sz.r, 0.8 * sol.sz.c ]);
     
 %     sol.probe.support = lpf_gauss( sol.probe.support, 90.03 * sol.sz.sz );
     
@@ -395,9 +396,9 @@ function [ sol, expt ] = runsolver_ptycho2DTPA_config( sol, expt )
     % Shrinkwrap probe support 
     %=========================
     
-    sol.swparams.blurx     = single( 0.01 ); 
-    sol.swparams.blury     = single( 0.01 );
-    sol.swparams.sparselvl = single( 0.50 ); 
+    sol.swparams.blurx     = single( 0.02 ); 
+    sol.swparams.blury     = single( 0.02 );
+    sol.swparams.sparselvl = single( 0.60 ); 
                         
     %===========================
     % Center the probe intensity

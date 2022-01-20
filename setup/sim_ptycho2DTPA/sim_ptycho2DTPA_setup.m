@@ -47,11 +47,9 @@ figure; imagesc( max( abs( V(:) ).^2 ) - abs( V ).^2 )
 
 %}
 
-rng( 'shuffle' )
+%====================================================================================================================================================
 
-%==================================================================================================
-%---------------------------------------------- BEGIN ---------------------------------------------
-%==================================================================================================
+rng( 'shuffle' )
 
 fprintf('\n========================================================================================================'); 
 fprintf('\nCreating Simulated Phase Retreival Experiment, \n2D Transmission Geometry and Projection Approx Assumed...\n'); 
@@ -70,8 +68,10 @@ fprintf('=======================================================================
 % expt.paths.code     = '~/Documents/Science/Matlab/Code/cdi/';   
 % expt.paths.rimgdata = '/home/ash/Documents/Science/Matlab/Data/simulated/img/';   
 
-expt.paths.code     = '/net/s8iddata/export/8-id-ECA/Analysis/atripath/cdi/';   
-expt.paths.rimgdata = '/net/s8iddata/export/8-id-ECA/Analysis/atripath/data/simulated/img/';   
+expt.paths.code          = '/net/s8iddata/export/8-id-ECA/Analysis/atripath/cdi/';   
+expt.paths.rimgdata      = '/net/s8iddata/export/8-id-ECA/Analysis/atripath/data/simulated/img/';   
+expt.paths.data_mat_name = 'sim_ptycho2DTPA';
+expt.paths.save_mat_loc  = '/net/s8iddata/export/8-id-ECA/Analysis/atripath/rPIE_vs_MB_mat/noise_rmbg/';
 
 %================
 % load misc stuff 
@@ -277,25 +277,25 @@ sol.it.metr = 1;
 sol.it.exwv = 1;
 sol.it.epoch = 1;
 
-%==================================================================================================
-%--------------------------------------- final cleaning up ----------------------------------------
-%==================================================================================================
+%==================
+% final cleaning up 
+%==================
 
 clearvars -except expt sol
 expt = orderfields( expt );
 sol  = orderfields( sol );
 
-%==================================================================================================
-%-------------------------- create save file from quantities defined ------------------------------
-%==================================================================================================
+%=========================================
+% create save file from quantities defined 
+%=========================================
 
 % expt.paths.rsdata = [ expt.paths.code, '/run/misctesting2DTPA/', 'simPRexpt_2DTPA.mat' ]; % saved data path
-expt.paths.rsdata = [ expt.paths.code, 'sim_ptycho2DTPA.mat' ]; % saved data path
+expt.paths.rsdata = [ expt.paths.save_mat_loc, expt.paths.data_mat_name ,'.mat' ]; % saved data path
 
 fprintf('saving simulated expt ...'); 
 
 save( expt.paths.rsdata, '*'); 
-copyfile( expt.paths.rsdata, [ expt.paths.rsdata( 1 : end - 4 ), '_0' , '.mat'] );
+% copyfile( expt.paths.rsdata, [ expt.paths.rsdata( 1 : end - 4 ), '_0' , '.mat'] );
 
 fprintf(' done!\n\n');
 
