@@ -15,8 +15,9 @@ function [ sol, expt ] = ptycho2DTPA_runGPU_stochminibatchgrad( sol, expt, N_epo
     %================================================================
     % Send to GPU parameters that will remain constant for all epochs
     %================================================================
-    
-    sol.GPU.rPIE_alpha = gpuArray( sol.rPIE_alpha );
+
+    sol.GPU.rPIE_alpha_T   = gpuArray( sol.rPIE_alpha_T );
+    sol.GPU.rPIE_alpha_phi = gpuArray( sol.rPIE_alpha_phi );
 %     sol.GPU.RAAR_beta  = gpuArray( sol.RAAR_beta );
 
     sol.GPU.sparseGPU.threshname          = sol.sparse.threshname;
@@ -197,7 +198,7 @@ function [ sol, expt ] = ptycho2DTPA_runGPU_stochminibatchgrad( sol, expt, N_epo
                                                                    sol.GPU.ind_offset, ...
                                                                    sol.GPU.rc,         ...
                                                                    sol.GPU.Nspos,      ...
-                                                                   sol.GPU.rPIE_alpha );           
+                                                                   sol.GPU.rPIE_alpha_T );           
                                                               
                 %====================
                 % Sparse Sample Edges
@@ -307,18 +308,21 @@ function [ sol, expt ] = ptycho2DTPA_runGPU_stochminibatchgrad( sol, expt, N_epo
 %                 abs2_TFview = abs( T_view ) .^ 2;
 %                 sol.GPU.phi = sol.GPU.phi + sum( conj( T_view ) .* sol.GPU.psi - sol.GPU.phi .* abs2_TFview, 4 ) ./ sum( abs2_TFview, 4 );
 
-                %=================================================================================================
-                % Vectorized ePIE probe update using old T^{(k)} for exitwave update, old T^{(k)} for probe update
-                %=================================================================================================
- 
+                %================================================================
+                % Vectorized rPIE probe update using old T^{(k)} for probe update
+                %================================================================
+  
                 T_view = reshape( sol.GPU.TFvec_old( sol.GPU.ind ), [ sol.GPU.sz, 1, sol.GPU.Nspos ]);
-                abs2_TFview = abs( T_view ) .^ 2;
+     
+                z   = sum( abs( T_view ) .^ 2, 4 );
+                w_T = sol.GPU.rPIE_alpha_phi * ( max( z( : )) - z );
                 
-                sol.GPU.phi = sol.GPU.phi + sum( conj( T_view ) .* sol.GPU.psi - sol.GPU.phi .* abs2_TFview, 4 ) ./ sum( abs2_TFview, 4 );
+                sol.GPU.phi = ( sum( conj( T_view ) .* sol.GPU.psi, 4 ) + w_T .* sol.GPU.phi ) ./ ( z + w_T );
                 
-%                 % !!!!!!!!!!!!!!!! CHECK THE DERIVATION ON THIS...WHAT WEIGHTING ARE WE USING FOR THE PROX TERM?
-%                 sol.GPU.phi = sol.GPU.phi + sum( conj( T_view ) .* sol.GPU.psi - sol.GPU.phi .* abs2_TFview, 4 ) ./ ( aa * sum( abs2_TFview, 4 ) + ( 1 - aa ) * abs2_TFview );
-
+                %========
+         
+%                 sol.GPU.phi = sol.GPU.phi + sum( conj( T_view ) .* sol.GPU.psi - sol.GPU.phi .* abs2_TFview, 4 ) ./ sum( abs2_TFview, 4 );
+                
                 %==============
                 % Probe Support
                 %==============

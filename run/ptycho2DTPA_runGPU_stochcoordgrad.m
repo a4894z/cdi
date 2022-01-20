@@ -96,7 +96,7 @@ function [ sol, expt ] = ptycho2DTPA_runGPU_stochcoordgrad( sol, expt, N_epochs 
                                                              sol.GPU.vs_c,       ...
                                                              sol.GPU.rs,         ...
                                                              update_order,       ...  
-                                                             sol.GPU.rPIE_alpha, ...
+                                                             sol.GPU.rPIE_alpha_T, ...
                                                              'px' );       
 
             %====================
@@ -362,7 +362,7 @@ function [ GPU ] = CPUmem2GPUmem( sol, expt )
     
     %========
     
-    GPU.rPIE_alpha = gpuArray( sol.rPIE_alpha );
+    GPU.rPIE_alpha_T = gpuArray( sol.rPIE_alpha_T );
 %     
 %     GPU.RAAR_beta = gpuArray( sol.RAAR_beta );
 % 

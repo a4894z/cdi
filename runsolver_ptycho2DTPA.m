@@ -53,12 +53,16 @@ function [ sol, expt ] = runsolver_ptycho2DTPA
     %================================================================================================================================================
 
 %     data_path = './L0105_to_L0113_combined_512x512.mat';
-    data_path = './L0258_to_L0265_combined_512x512.mat';
+%     data_path = './L0258_to_L0265_combined_512x512.mat';
+%     data_path = './L0266_to_L0273_combined_512x512.mat';
+%     data_path = './L0274_to_L0280_combined_512x512.mat';
+%     data_path = './L0302_to_L0308_combined_512x512.mat';
+%     data_path = './L0333_to_L0337_combined_512x512.mat';
 
     %=========
 
 %     data_path = '/net/s8iddata/export/8-id-ECA/Analysis/atripath/rPIE_vs_MB_mat/noise/sim_ptycho2DTPA.mat';           % WITH NOISE, WITHOUT BG RM
-%     data_path = '/net/s8iddata/export/8-id-ECA/Analysis/atripath/rPIE_vs_MB_mat/noise_rmbg/sim_ptycho2DTPA.mat';      % WITH NOISE, WITH BG RM
+    data_path = '/net/s8iddata/export/8-id-ECA/Analysis/atripath/rPIE_vs_MB_mat/noise_rmbg/sim_ptycho2DTPA.mat';      % WITH NOISE, WITH BG RM
 
     %=========
 
@@ -90,7 +94,8 @@ function [ sol, expt ] = runsolver_ptycho2DTPA
     
     %================================================================================================================================================
     
-    sol.rPIE_alpha = single( 1e-0 );
+    sol.rPIE_alpha_T   = single( 1e-0 );
+    sol.rPIE_alpha_phi = single( 1e-0 );
     
     %=========
     
@@ -105,7 +110,7 @@ function [ sol, expt ] = runsolver_ptycho2DTPA
     
     sol.use_gpu = true; 
 
-    sol.gpu_id = 2; 
+    sol.gpu_id = 3; 
  
     if sol.use_gpu == true, reset( gpuDevice( sol.gpu_id )); end
 
@@ -113,7 +118,7 @@ function [ sol, expt ] = runsolver_ptycho2DTPA
     % Stochastic minibatch parameters
     %================================
 
-    sol.spos.rand_spos_subset_pct = 0.03;      
+    sol.spos.rand_spos_subset_pct = 0.05;      
 
     sol.spos.rand_spos_subset_pct = single( sol.spos.rand_spos_subset_pct );    
     
@@ -132,10 +137,10 @@ function [ sol, expt ] = runsolver_ptycho2DTPA
 %                                      'aniso_re_aniso_im', ...          % 7
 %                                      'iso_re_iso_im' };                % 8
 
-    sol.sparse.pct         = single( 0.20 );
+    sol.sparse.pct         = single( 0.50 );
     sol.sparse.lvl         = round( sol.sample.sz.rc * sol.sparse.pct );
     sol.sparse.threshtype  = 's';
-    sol.sparse.threshname  = sol.sparse.type_sparse2DFDxy{ 3 };
+    sol.sparse.threshname  = sol.sparse.type_sparse2DFDxy{ 1 };
                               
     %======================================================
     % epoch, iteration, and iteration repeat specifications
@@ -144,15 +149,15 @@ function [ sol, expt ] = runsolver_ptycho2DTPA
     N_pauseandsave              = single( 10 );
     N_epochs                    = single( 500 );
     
-    sol.it.probe_start          = single( 5 );  
+    sol.it.probe_start          = single( 1 );  
     sol.it.probe_update         = single( 1 );
     sol.it.probe_orthog         = single( 25 );  % 25 for rPIE paper
     
     sol.it.sample_sparsity      = single( 1 );
     sol.it.sample_mag_ineq      = single( 1 ); 
-    sol.it.sample_phs_ineq      = single( 1 ); 
+    sol.it.sample_phs_ineq      = single( 1e99 ); 
     
-    sol.it.metrics_and_plotting = single( 50 );
+    sol.it.metrics_and_plotting = single( 5 );
     
     sol.print_img               = logical( 1 );              
 
@@ -160,12 +165,16 @@ function [ sol, expt ] = runsolver_ptycho2DTPA
     % CHEAT CODES
     %============
 
-%     sol.sample.T   = expt.sample.T;
-%     sol.probe.phi  = expt.probe.phi;
-%     sol.probe.scpm = expt.probe.scpm;
-%     sol.spos.rs    = expt.spos.rs;
-%     sol.spos.indx  = expt.spos.indx;
-
+    sol.sample.T = expt.sample.T;
+    
+    sol.probe.phi      = expt.probe.phi;
+    sol.probe.scpm.occ = expt.probe.scpm.occ;
+    sol.probe.scpm.N   = expt.probe.scpm.N;
+    sol.probe.scpm.max = max( reshape( abs( expt.probe.phi ), [ expt.sz.rc, expt.probe.scpm.N ] ), [], 1 );
+    
+    sol.spos.rs    = expt.spos.rs;
+    sol.spos.indx  = expt.spos.indx;
+    
     %================================================================================================================================================
 
     for ii = 1 : N_pauseandsave
@@ -218,13 +227,13 @@ function [ sol, expt ] = runsolver_ptycho2DTPA_config( sol, expt )
     %==================================
     
 %     sol.RAAR_beta  = single( 0.1 );
-%     sol.rPIE_alpha = single( 1e-3 );
+%     sol.rPIE_alpha_T = single( 1e-3 );
 
     %===========================================
     % Gaussian LPF for reconstruction resolution 
     %===========================================
         
-    stdev = single( 0.70 * sol.sz.sz );
+    stdev = single( 0.50 * sol.sz.sz );
     tmp0  = make_2Dgaussian( sol.sz.sz, single( 0.50 * sol.sz.sz + 1 ), stdev );
     
     sol.measLPF = single( 0 + 1 * fftshift( tmp0 ));
@@ -267,24 +276,27 @@ function [ sol, expt ] = runsolver_ptycho2DTPA_config( sol, expt )
     sol.it.probe_maxvals   = single( 1 );
 
     %================================================================================================================================================
-    % PROBE INITIALIZATIONS 
+    %                                                        PROBE INITIALIZATIONS
+    
     %================================================
     % load previous sample/probe/spos here if desired
     %================================================
 
-    tmp99 = load( '/net/s8iddata/export/8-id-ECA/Analysis/atripath/data/zjiang202112/probes/L0105_to_L0113_combined_512x512_12Jan2022_t130245_it15001.mat' );
- 
-    sol.probe.phi = [];
-    
-    sol.probe.phi = tmp99.probe.phi;
-    
-%     sol.probe.phi( :, :, 5 ) = tmp99.probe.phi( :, :, 8 );
-%     sol.probe.phi( :, :, 4 ) = tmp99.probe.phi( :, :, 7 );
-%     sol.probe.phi( :, :, 3 ) = make_2Dgaussian( sol.sz.sz, 0.5 * sol.sz.sz + 1, 0.06 * sol.sz.sz );
+%     tmp99 = load( '/net/s8iddata/export/8-id-ECA/Analysis/atripath/data/zjiang202112/probes/L0105_to_L0113_combined_512x512_12Jan2022_t130245_it15001.mat' );
+% 
+% %     sol.probe.phi = tmp99.probe.phi;
+%     
+%     sol.probe.phi = [];
+%     
+%     sol.probe.phi( :, :, 4 ) = tmp99.probe.phi( :, :, 8 );
+%     sol.probe.phi( :, :, 3 ) = tmp99.probe.phi( :, :, 7 );
+%     sol.probe.phi( :, :, 2 ) = tmp99.probe.phi( :, :, 6 );
+%     sol.probe.phi( :, :, 1 ) = tmp99.probe.phi( :, :, 5 );
+%     
 %     sol.probe.phi( :, :, 2 ) = make_2Dgaussian( sol.sz.sz, 0.5 * sol.sz.sz + 1, 0.04 * sol.sz.sz );
 %     sol.probe.phi( :, :, 1 ) = make_2Dgaussian( sol.sz.sz, 0.5 * sol.sz.sz + 1, 0.02 * sol.sz.sz );
-    
-    sol.probe.scpm.N = size( sol.probe.phi, 3 );
+% 
+%     sol.probe.scpm.N = size( sol.probe.phi, 3 );
    
     %========
 
@@ -351,7 +363,7 @@ function [ sol, expt ] = runsolver_ptycho2DTPA_config( sol, expt )
     %=========================
     
     sol.probe.scpm.fro2TOT = single( [] );
-    sol.probe.scpm.fro2TOT = single( 7.50 * mean( squeeze( sum( sum( expt.meas.D .^ 2, 1 ), 2 ))) );
+    sol.probe.scpm.fro2TOT = single( 8.00 * mean( squeeze( sum( sum( expt.meas.D .^ 2, 1 ), 2 ))) );
 %     sol.probe.scpm.fro2TOT = single( 1.05 * ( 3e3 ^ 2 ));   
 %     sol.probe.scpm.fro2TOT = single( 1.10 * expt.phi.scpm.fro2TOT);   
     
@@ -362,7 +374,7 @@ function [ sol, expt ] = runsolver_ptycho2DTPA_config( sol, expt )
     %====================
     
 %     sol.probe.support = make_rectangle( sol.sz.sz, [ 0.9 * sol.sz.r, 0.9 * sol.sz.c ]);
-    sol.probe.support = make_2Dellipsoid( sol.sz.sz, [ 0.7 * sol.sz.r, 0.9 * sol.sz.c ]);
+    sol.probe.support = make_2Dellipsoid( sol.sz.sz, [ 0.7 * sol.sz.r, 0.8 * sol.sz.c ]);
     
 %     sol.probe.support = lpf_gauss( sol.probe.support, 90.03 * sol.sz.sz );
     
@@ -445,58 +457,59 @@ function [ sol, expt ] = runsolver_ptycho2DTPA_config( sol, expt )
     % Scan Position Shearing Transformation
     %======================================
     
-    rs = sol.spos.rs;
+%     rs = sol.spos.rs;
     
-    s_x = 1.1;
-    shear_x = [ 1, 0; s_x, 1 ];
-    
-    sol.spos.rs = transpose( shear_x * transpose( sol.spos.rs ));
-    
-    %========
+%     s_x = 0.9;
+%     sol.spos.shear_x = [ 1, 0; s_x, 1 ];
+%     
+%     sol.spos.rs = transpose( sol.spos.shear_x * transpose( sol.spos.rs ));
+%     
+%     %========
+% 
+%     sol.sample.T = padarray( sol.sample.T, [ 0, 500  ], 1, 'both' );
+%     
+%     sol.sample.sz.sz      = size( sol.sample.T );
+%     sol.sample.sz.r       = sol.sample.sz.sz( 1 );
+%     sol.sample.sz.c       = sol.sample.sz.sz( 2 );
+%     sol.sample.sz.rc      = sol.sample.sz.r * sol.sample.sz.c;
+%     sol.sample.sz.sqrt_rc = sqrt( sol.sample.sz.rc );
+%     
+%     % determine proper view region FOV ( based on probe size ) for when computing the exit wave views at a particular scan position
+%     sol.sample.vs.r = single( round( ( 0.5 * ( sol.sample.sz.r - sol.sz.r ) + 1 ) : ( 0.5 * ( sol.sample.sz.r + sol.sz.r ))));
+%     sol.sample.vs.c = single( round( ( 0.5 * ( sol.sample.sz.c - sol.sz.c ) + 1 ) : ( 0.5 * ( sol.sample.sz.c + sol.sz.c ))));
+% 
+% %     figure; 
+% %     plot_2Dscan_positions( rs, [], sol.spos.rs, [] )
+% %     set( gca, 'xdir', 'reverse' )
+% %     set( gca, 'ydir', 'normal' )
+% %     daspect([1 .1 1])
+% %     xlabel('xh, lab frame'); 
+% %     ylabel('yv, lab frame');
+% %     %title('positions for scanning the probe on the sample')
 
-    sol.sample.T = padarray( sol.sample.T, [ 0, 500  ], 'both' );
+    %================================================
+    % Gradient Descent Based Scan Position Correction
+    %================================================
     
-    sol.sample.sz.sz      = size( sol.sample.T );
-    sol.sample.sz.r       = sol.sample.sz.sz( 1 );
-    sol.sample.sz.c       = sol.sample.sz.sz( 2 );
-    sol.sample.sz.rc      = sol.sample.sz.r * sol.sample.sz.c;
-    sol.sample.sz.sqrt_rc = sqrt( sol.sample.sz.rc );
+%     sol.spos.update.dpx        = single( 1/4 );  % for computing finite differences wrt scan position
+%     sol.spos.update.maxpx      = single( 4 * sol.spos.update.dpx );
+%     sol.spos.update.linesearch = single( transpose( 0.0 : sol.spos.update.dpx : sol.spos.update.maxpx ));
+%     
+% %     sol.spos.update.shifttype = 'px';
+%     sol.spos.update.shifttype = 'subpx';
+% 
+% %     sol.spos.update.grad = 'all';
+%     sol.spos.update.grad = 'indiv';
+% 
+%     % for this data set, we use 0.5 um steps...only allow us to go so far from initial spos we start at
+%     sol.spos.update.maxcorrectr = single( 1.00e-6 / expt.csys.z2.dLy );
+%     sol.spos.update.maxcorrectc = single( 1.00e-6 / expt.csys.z2.dLx );
     
-    % determine proper view region FOV ( based on probe size ) for when computing the exit wave views at a particular scan position
-    sol.sample.vs.r = single( round( ( 0.5 * ( sol.sample.sz.r - sol.sz.r ) + 1 ) : ( 0.5 * ( sol.sample.sz.r + sol.sz.r ))));
-    sol.sample.vs.c = single( round( ( 0.5 * ( sol.sample.sz.c - sol.sz.c ) + 1 ) : ( 0.5 * ( sol.sample.sz.c + sol.sz.c ))));
+    %=================================================================================================
+    % When extracting part of the sample in the current scan position, use this type of pixel shifting  
+    %=================================================================================================
     
-
-    figure; 
-    plot_2Dscan_positions( rs, [], sol.spos.rs, [] )
-    set( gca, 'xdir', 'reverse' )
-    set( gca, 'ydir', 'normal' )
-    daspect([1 .1 1])
-    xlabel('xh, lab frame'); 
-    ylabel('yv, lab frame');
-    %title('positions for scanning the probe on the sample')
-
-    %=========================
-    % Scan Position Correction
-    %=========================
-    
-    sol.spos.update.dpx        = single( 1/4 );  % for computing finite differences wrt scan position
-    sol.spos.update.maxpx      = single( 4 * sol.spos.update.dpx );
-    sol.spos.update.linesearch = single( transpose( 0.0 : sol.spos.update.dpx : sol.spos.update.maxpx ));
-    
-%     sol.spos.update.shifttype = 'px';
-    sol.spos.update.shifttype = 'subpx';
-
-%     sol.spos.update.grad = 'all';
-    sol.spos.update.grad = 'indiv';
-
-    % for this data set, we use 0.5 um steps...only allow us to go so far from initial spos we start at
-    sol.spos.update.maxcorrectr = single( 1.00e-6 / expt.csys.z2.dLy );
-    sol.spos.update.maxcorrectc = single( 1.00e-6 / expt.csys.z2.dLx );
-    
-    expt.spos.indx = 1 : expt.spos.N;
-    sol.spos.indx = single( expt.spos.indx );       % the scan positions indices we update the exitwaves/sample/probes over
-    sol.spos.shifttype = 'px';                      % When extracting part of the sample in the current scan position, use this type of pixel shifting  
+    sol.spos.shifttype = 'px';   
 
     %================================
     % Sparsity constraints for sample 

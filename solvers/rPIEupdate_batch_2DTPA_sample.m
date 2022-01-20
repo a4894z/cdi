@@ -34,3 +34,4 @@ spos_abs_P_abs2 = sum( spos_abs_P_abs2, 2 );                                % su
 % T = T + spos_conjP_exwv / max( spos_abs_P_abs2 );   
 
 T = T + spos_conjP_exwv ./ ( rPIE_alpha * max( spos_abs_P_abs2 ) + ( 1 - rPIE_alpha ) * spos_abs_P_abs2 ); 
+
