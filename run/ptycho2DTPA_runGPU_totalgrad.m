@@ -1,5 +1,12 @@
 function [ sol, expt ] = ptycho2DTPA_runGPU_totalgrad( sol, expt, N_epochs )
 
+    %==========================================
+    % get name of current function being called
+    %==========================================
+    
+    st = dbstack;
+    namestr = st.name;
+    
     %=======================================================
     % form initial exitwaves from current sample/probe modes
     %=======================================================
@@ -35,45 +42,36 @@ function [ sol, expt ] = ptycho2DTPA_runGPU_totalgrad( sol, expt, N_epochs )
         
         start_epoch = tic;
         
-        %============================================================================================================================================
-        %                                                           Exitwave Update
-        %============================================================================================================================================
+        %========
+        
+        collect_metrics = (( mod( sol.it.epoch, sol.it.collect_metrics ) == 0 ) || ( sol.it.epoch == 1 ));
+               
+        %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+        %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% Exitwave Update %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+        %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         
         start_exwv = tic;
         
         %========
 
-        sol.GPU.psi = exitwave_vectorized_update_2DTPA_meas_projection( sol.GPU.phi,       ...                      % ERvec
-                                                                        sol.GPU.TFvec,     ...
-                                                                        sol.GPU.ind,       ...
-                                                                        sol.GPU.sz,        ...
-                                                                        sol.GPU.Nspos,     ...
-                                                                        sol.GPU.sqrt_rc,   ...
-                                                                        sol.GPU.meas_D,    ...
-                                                                        sol.GPU.meas_Deq0, ...
-                                                                        sol.GPU.measLPF );
+        [ sol.GPU.psi, meas_L2metric ] = exitwave_vectorized_update_2DTPA_meas_projection( sol.GPU.phi,       ...                      
+                                                                                           sol.GPU.TFvec,     ...
+                                                                                           sol.GPU.ind,       ...
+                                                                                           sol.GPU.sz,        ...
+                                                                                           sol.GPU.Nspos,     ...
+                                                                                           sol.GPU.sqrt_rc,   ...
+                                                                                           sol.GPU.meas_D,    ...
+                                                                                           sol.GPU.meas_Deq0, ...
+                                                                                           sol.GPU.measLPF,   ...
+                                                                                           collect_metrics );
 
         %========
         
-%         sol.GPU.psi = RAAR_GPU_arrays_hadamard_v2( sol.GPU.psi,         ...              % avgDMERvec
-%                                                    sol.GPU.phi,       ...  
-%                                                    sol.GPU.TFvec,         ...
-%                                                    sol.GPU.ind,         ...
-%                                                    sol.GPU.sz,          ...
-%                                                    sol.GPU.Nspos,       ...
-%                                                    sol.GPU.sqrt_rc,     ...
-%                                                    sol.GPU.meas_D,      ...
-%                                                    sol.GPU.meas_Deq0,   ...
-%                                                    sol.GPU.measLPF,     ...
-%                                                    sol.GPU.RAAR_beta );
-                                               
-        %=======
-        
         sol.timings.exwv_update( sol.it.epoch ) = toc( start_exwv );
         
-        %============================================================================================================================================
-        %                                                   Sample Update
-        %============================================================================================================================================
+        %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+        %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% Sample Update %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+        %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
         if mod( sol.it.epoch, sol.it.sample_update ) == 0
             
@@ -93,7 +91,7 @@ function [ sol, expt ] = ptycho2DTPA_runGPU_totalgrad( sol, expt, N_epochs )
                                                                sol.GPU.ind_offset,   ...
                                                                sol.GPU.rc,           ...
                                                                sol.GPU.Nspos,        ...
-                                                               sol.GPU.rPIE_alpha );                               
+                                                               sol.GPU.rPIE_alpha_T );                               
 
             %====================
             % Sparse Sample Edges
@@ -115,15 +113,30 @@ function [ sol, expt ] = ptycho2DTPA_runGPU_totalgrad( sol, expt, N_epochs )
             % Sample inequality constraints (projection operations)
             %======================================================
 
-            if mod( sol.it.epoch, sol.it.sample_mag_phs_ineq ) == 0
+%             if mod( sol.it.epoch, sol.it.sample_mag_phs_ineq ) == 0
+% 
+%                 sol.GPU.TFvec = modulus_limits_project( sol.GPU.TFvec, sol.GPU.abs_TF_lim );
+% 
+%     %             sol.GPU.TFvec = modulus_limits_project( sol.GPU.TFvec, [ 0, 1 ] );
+%     %             sol.GPU.TFvec = modulus_limits_scale( sol.GPU.TFvec, sol.GPU.abs_TF_lim );
+% 
+% %                     sol.GPU.TFvec = phase_limits_project( sol.GPU.TFvec, sol.GPU.phs_TF_lim );
+% %                     sol.GPU.TFvec = phase_limits_scale( sol.GPU.TFvec, sol.GPU.phs_TF_lim );
+% 
+%             end
+            
+            
+            if mod( sol.it.epoch, sol.it.sample_mag_ineq ) == 0
 
                 sol.GPU.TFvec = modulus_limits_project( sol.GPU.TFvec, sol.GPU.abs_TF_lim );
+%                 sol.GPU.TFvec = modulus_limits_scale( sol.GPU.TFvec, sol.GPU.abs_TF_lim );
 
-    %             sol.GPU.TFvec = modulus_limits_project( sol.GPU.TFvec, [ 0, 1 ] );
-    %             sol.GPU.TFvec = modulus_limits_scale( sol.GPU.TFvec, sol.GPU.abs_TF_lim );
+            end
 
-%                     sol.GPU.TFvec = phase_limits_project( sol.GPU.TFvec, sol.GPU.phs_TF_lim );
-%                     sol.GPU.TFvec = phase_limits_scale( sol.GPU.TFvec, sol.GPU.phs_TF_lim );
+            if mod( sol.it.epoch, sol.it.sample_phs_ineq ) == 0
+
+                sol.GPU.TFvec = phase_limits_project( sol.GPU.TFvec, sol.GPU.phs_TF_lim );
+%                 sol.GPU.TFvec = phase_limits_scale( sol.GPU.TFvec, sol.GPU.phs_TF_lim );
 
             end
 
@@ -154,60 +167,37 @@ function [ sol, expt ] = ptycho2DTPA_runGPU_totalgrad( sol, expt, N_epochs )
             
         end
        
-        %============================================================================================================================================
-        %                                                       Exitwave Update
-        %============================================================================================================================================
-
-%         % Update exitwaves using recently updated sample transfer function  
-%         start_exwv = tic;  
-%         
-%         sol.GPU.psi = exitwave_vectorized_update_2DTPA_meas_projection( sol.GPU.phi,       ...                      % ERvec
-%                                                                         sol.GPU.TFvec,     ...
-%                                                                         sol.GPU.ind,       ...
-%                                                                         sol.GPU.sz,        ...
-%                                                                         sol.GPU.Nspos,     ...
-%                                                                         sol.GPU.sqrt_rc,   ...
-%                                                                         sol.GPU.meas_D,    ...
-%                                                                         sol.GPU.meas_Deq0, ...
-%                                                                         sol.GPU.measLPF );
-%                                           
-%         sol.timings.exwv_update( sol.it.epoch ) = sol.timings.exwv_update( sol.it.epoch ) + toc( start_exwv );
-        
-        %============================================================================================================================================
-        %                                                       Probe Update
-        %============================================================================================================================================
+        %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+        %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% Probe Update %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+        %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
         if ( mod( sol.it.epoch, sol.it.probe_update ) == 0 ) && ( sol.it.epoch > sol.it.probe_start )
 
             start_probe = tic;
-        
-            %=====================================================================================================
-            % Vectorized ePIE probe update using new T^{(k+1)} for exitwave update, new T^{(k+1)} for probe update
-            %=====================================================================================================
-            
-            % !!!!!!!!!!!!!!!! CHECK THE DERIVATION ON THIS...WHAT WEIGHTING ARE WE USING FOR THE PROX TERM?
-            
-%             TFview = reshape( sol.GPU.TFvec( sol.GPU.ind ), [ sol.GPU.sz, 1, sol.GPU.Nspos ]);
-%             abs2_TFview = abs( TFview ) .^ 2;
-%             sol.GPU.phi = sol.GPU.phi + sum( conj( TFview ) .* sol.GPU.psi - sol.GPU.phi .* abs2_TFview, 4 ) ./ sum( abs2_TFview, 4 );
 
-            %===================================================================================================
-            % Vectorized ePIE probe update using old T^{(k)} for exitwave update, old T^{(k+1)} for probe update
-            %===================================================================================================
-                        
+            %=============================
+            % Vectorized rPIE probe update
+            %=============================
+ 
             T_view = reshape( sol.GPU.TFvec_old( sol.GPU.ind ), [ sol.GPU.sz, 1, sol.GPU.Nspos ]);
-            abs2_TFview = abs( T_view ) .^ 2;
-            sol.GPU.phi = sol.GPU.phi + sum( conj( T_view ) .* sol.GPU.psi - sol.GPU.phi .* abs2_TFview, 4 ) ./ sum( abs2_TFview, 4 );
-            
-            % !!!!!!!!!!!!!!!! CHECK THE DERIVATION ON THIS...WHAT WEIGHTING ARE WE USING FOR THE PROX TERM?
-%             sol.GPU.phi = sol.GPU.phi + sum( conj( T_view ) .* sol.GPU.psi - sol.GPU.phi .* abs2_TFview, 4 ) ./ ( aa * sum( abs2_TFview, 4 ) + ( 1 - aa ) * abs2_TFview );
 
+            z   = sum( abs( T_view ) .^ 2, 4 );
+            w_T = sol.GPU.rPIE_alpha_phi * ( max( z( : )) - z );
+
+            sol.GPU.phi = ( sum( conj( T_view ) .* sol.GPU.psi, 4 ) + w_T .* sol.GPU.phi ) ./ ( z + w_T );
+ 
             %==============
             % Probe Support
             %==============
 
             if ( mod( sol.it.epoch, sol.it.probe_support ) == 0 ) 
                 
+                %=========================
+                % Fixed predefined support
+                %=========================
+
+                sol.GPU.phi = sol.GPU.phi .* sol.GPU.probe_support; 
+
                %=============================================
                 % Shrinkwrap support from probe mode intensity
                 %=============================================
@@ -215,12 +205,6 @@ function [ sol, expt ] = ptycho2DTPA_runGPU_totalgrad( sol, expt, N_epochs )
                 tmp0        = sum( abs( sol.GPU.phi ) .^ 2, 3 );
                 [ ~, supp ] = shrinkwrap( tmp0, sol.GPU.swparams ); 
                 sol.GPU.phi = sol.GPU.phi .* supp;
-                
-                %=========================
-                % Fixed predefined support
-                %=========================
-
-                sol.GPU.phi = sol.GPU.phi .* sol.GPU.probe_support; 
 
                 %==================================
                 % Support using dominant probe mode
@@ -235,29 +219,19 @@ function [ sol, expt ] = ptycho2DTPA_runGPU_totalgrad( sol, expt, N_epochs )
             % Max abs constraint
             %===================
 
-%             if 0 %( mod( sol.it.epoch, 1 ) == 0 ) && ~isempty( sol.GPU.scpmmax )
-% 
-% %                     tmp2 = reshape( sol.GPU.scpmmax, [ 1, 1, sol.GPU.Nscpm ] );
-%                 tmp2 = sol.GPU.scpmmax;
-%                 tmp0 = ( abs( sol.GPU.phi ) > tmp2 );
-%                 tmp1 = not( tmp0 );
-% 
-%                 sol.GPU.phi = sol.GPU.phi .* tmp1 + tmp2 .* exp( 1i * angle( sol.GPU.phi )) .* tmp0;
-% 
-%                 clear( 'tmp0', 'tmp1' )
-% 
-%             end
+            if ( mod( sol.it.epoch, sol.it.probe_maxvals ) == 0 ) && ~isempty( sol.GPU.scpmmax )
 
-            %===========================================================
-            % Probe scaling ( # Photons ) and SCPM occupancy constraints
-            %===========================================================
+%                     tmp2 = reshape( sol.GPU.scpmmax, [ 1, 1, sol.GPU.Nscpm ] );
+                tmp2 = sol.GPU.scpmmax;
+                tmp0 = ( abs( sol.GPU.phi ) > tmp2 );
+                tmp1 = not( tmp0 );
 
-            if ( mod( sol.it.epoch, sol.it.probe_scaling ) == 0 ) || ( sol.it.epoch == 1 )
+                sol.GPU.phi = sol.GPU.phi .* tmp1 + tmp2 .* exp( 1i * angle( sol.GPU.phi )) .* tmp0;
 
-                [ sol.GPU.phi, ~, ~ ] = enforce_scpm_fro2TOT_photonocc( sol.GPU.phi, sol.GPU.fro2TOT, sol.GPU.scpmocc ); 
+                clear( 'tmp0', 'tmp1' )
 
             end
-            
+
 %             %===================================
 %             % Center SCPMs using probe intensity
 %             %===================================
@@ -278,6 +252,17 @@ function [ sol, expt ] = ptycho2DTPA_runGPU_totalgrad( sol, expt, N_epochs )
                 [ sol.GPU.phi ] = orthog_modes_eigendecomp( sol.GPU.phi ); 
 
             end
+            
+            %===========================================================
+            % Probe scaling ( # Photons ) and SCPM occupancy constraints
+            %===========================================================
+
+            if ( mod( sol.it.epoch, sol.it.probe_scaling ) == 0 ) || ( sol.it.epoch == 1 )
+
+                [ sol.GPU.phi, ~, ~ ] = enforce_scpm_fro2TOT_photonocc( sol.GPU.phi, sol.GPU.fro2TOT, sol.GPU.scpmocc ); 
+
+            end
+
         
             sol.timings.probe_update( sol.it.epoch ) = toc( start_probe );
 
@@ -289,20 +274,43 @@ function [ sol, expt ] = ptycho2DTPA_runGPU_totalgrad( sol, expt, N_epochs )
         
         sol.timings.epoch( sol.it.epoch ) = toc( start_epoch );
 
-        %============================================
-        % Collect cost function metrics, Plot results
-        %============================================
+        %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+        %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% Metrics and Misc %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+        %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         
-        if ( mod( sol.it.epoch, sol.it.metrics_and_plotting ) == 0 ) || ( sol.it.epoch == 1 )
+        if collect_metrics 
+            
+            sol.metrics.meas_all( sol.it.metr ) = gather( meas_L2metric ) / sol.spos.N;
+            sol.it.mtot( sol.it.metr )          = sol.it.epoch;   
+            sol.it.metr                         = sol.it.metr + 1;   
+            
+        end
 
+        if ( mod( sol.it.epoch, sol.it.mkimg_meas_metric ) == 0 ), ptycho2DTPA_mkimg_meas_metric( sol, expt ); end
+        
+        if ( mod( sol.it.epoch, sol.it.mkimg_sample_SCPM ) == 0 )
+            
             sol.sample.T  = gather( reshape( sol.GPU.TFvec, sol.sample.sz.sz ));
             sol.probe.phi = gather( sol.GPU.phi );
-            
-            [ sol ] = ptycho2DTPA_collectmetrics( sol, expt );
-            
-            ptycho2DTPA_plotresults( sol, expt );
 
+            ptycho2DTPA_mkimg_sample_SCPM( sol, expt ); 
+            
         end
+        
+%         if ( mod( sol.it.epoch, sol.it.collect_metrics ) == 0 ) || ( sol.it.epoch == 1 )
+% 
+%             sol.sample.T  = gather( reshape( sol.GPU.TFvec, sol.sample.sz.sz ));
+%             sol.probe.phi = gather( sol.GPU.phi );
+%             
+%             [ sol ] = ptycho2DTPA_collectmetrics( sol, expt );     
+%             
+%             if ( mod( sol.it.epoch, sol.it.sample_probe_img ) == 0 )
+%                 
+%                 ptycho2DTPA_plotresults( sol, expt );
+%             
+%             end
+% 
+%         end
         
         %===============================
         % Feedback for iteration counter
@@ -311,6 +319,12 @@ function [ sol, expt ] = ptycho2DTPA_runGPU_totalgrad( sol, expt, N_epochs )
         S2 = num2str( [ kk, N_epochs, sol.it.epoch, sol.timings.epoch( sol.it.epoch ) ], 'Local Epoch = %d / %d, Total Epochs = %d, t_epoch = %e' );
 
         fprintf( [ S2, '\n'])
+
+        if mod( kk, 10 ) == 0
+            
+            fprintf( [ '\n', namestr, '\n', pwd, '\n', 'Data mat name = ', expt.paths.rsdata, '\n\n' ])
+
+        end
         
         %========================
         % Epoch iteration counter
@@ -341,7 +355,8 @@ function [ GPU ] = CPUmem2GPUmem( sol, expt )
     
 %     GPU.RAAR_beta = gpuArray( single( sol.RAAR.beta ));
     
-    GPU.rPIE_alpha = gpuArray( sol.rPIE_alpha );
+    GPU.rPIE_alpha_T   = gpuArray( sol.rPIE_alpha_T );
+    GPU.rPIE_alpha_phi = gpuArray( sol.rPIE_alpha_phi );
     
     %========
     
@@ -530,345 +545,3 @@ function [ GPU ] = CPUmem( sol, expt )
     % ???
 
 end
-
-%====================================================================================================================================================
-
-% function [ sol ] = ptycho2DTPA_collectmetrics( sol, expt )
-% 
-%     %=================================
-%     % get ready for array broadcasting
-%     %=================================
-% 
-%     meas_D    = reshape( expt.meas.D, [ expt.sz.sz, 1, expt.spos.N ] );
-%     meas_Deq0 = not( meas_D == 0 );
-% 
-%     %=========================================
-%     % compute exitwaves for all scan positions
-%     %=========================================
-% 
-%     spos.batch_indxsubset = 1 : sol.spos.N;
-%     spos.batch_rs         = sol.spos.rs( spos.batch_indxsubset, : );
-%     spos.frameindx        = get_indices_2Dframes( spos.batch_rs, sol.sample.sz.sz, sol.sample.vs.r, sol.sample.vs.c );
-% 
-%     %========
-% 
-%     TFv  = sol.sample.T( : );
-%     TF   = reshape( TFv( spos.frameindx ), [ sol.sz.sz, 1, sol.spos.N ]);
-%     tmp0 = TF .* sol.probe.phi;
-%     tmp1 = fft( fft( fftshift( fftshift( tmp0, 1 ), 2 ), [], 1 ), [], 2 ) / sol.sz.sqrt_rc;
-% 
-%     %===========================================================================
-%     % standard Gaussian noise metric with constant (ignored) stdev at all pixels
-%     %===========================================================================
-% 
-%     meas_residual = meas_Deq0 .* sqrt( sum( abs( tmp1 ) .^ 2, 3 )) - meas_D;
-% %     meas_residual = squeeze( sqrt( sum( sum( abs( meas_residual ) .^ 2, 1 ), 2 )));
-%     meas_residual = squeeze( sum( sum( abs( meas_residual ) .^ 2, 1 ), 2 ));
-%     
-% %     clear( 'tmp1', 'TF' )
-% 
-% %     %============================
-% %     % RAAR exitwave change metric
-% %     %============================
-% % 
-% %     psi = RAAR_GPU_arrays_hadamard_v2(  tmp0,            ...
-% %                                         sol.probe.phi,     ...
-% %                                         TFv,             ...
-% %                                         spos.frameindx,  ...
-% %                                         sol.sz.sz,       ...
-% %                                         sol.spos.N,      ...
-% %                                         sol.sz.sqrt_rc,  ...
-% %                                         meas_D,          ...
-% %                                         meas_Deq0,       ...
-% %                                         sol.measLPF,     ...
-% %                                         sol.RAAR.beta );
-% % 
-% % 
-% %     raar_exwv_change = abs( psi - tmp0 ) .^ 2;
-% % 
-% %     clear( 'tmp0', 'TFv', 'meas_D', 'meas_Deq0', 'spos' )
-% 
-%     %================
-%     % collect metrics
-%     %================
-% 
-% %     raar_exwv_change_batch = raar_exwv_change( sol.spos.batch_indxsubset );
-% %     raar_exwv_change_batch = raar_exwv_change_batch( : );
-% 
-% %     sol.metrics.exwv_change( sol.it.metr ) = sum( raar_exwv_change_batch ) / length( raar_exwv_change_batch );
-%     sol.metrics.meas_all( sol.it.metr ) = sum( meas_residual ) / length( meas_residual );
-%     
-%     %========
-% 
-%     % fprintf( [ '\n\n', num2str( [ kk, Nit, sol.it.epoch, sol.metrics.meas( sol.it.metr ), sol.metrics.exwv_change( sol.it.metr )], ...
-%     %             'iteration = %d / %d, iter total = %d, meas metric = %.2f, exit wave sample probe difference = %.2f' ), '\n\n' ]);
-% 
-%     sol.it.mtot( sol.it.metr ) = sol.it.epoch;
-% 
-%     %========
-% 
-%     figure( 666 ); 
-%     set( gcf, 'Visible', 'off', 'Position',[ 1, 1, 1920, 1080 ] )     
-% 
-% %     subplot( 2, 1, 1 ); 
-% 
-%     hold on
-% 
-%     semilogy( sol.it.mtot, sol.metrics.meas_all, '--', 'Linewidth', 4, 'color', [ 0, 0, 0 ] )
-% 
-%     % semilogy( sol.it.mtot, sol.metrics.meas, '-o', 'Linewidth', 2, 'Color', [0.8, 0, 0 ] ); 
-%     % semilogy( sol.it.mtot, sol.metrics.meas_IN, '-o', 'Linewidth', 2, 'Color', [0.0, 0.8, 0 ] ); 
-%     % semilogy( sol.it.mtot, sol.metrics.meas_OUT, '-o', 'Linewidth', 2, 'Color', [0.0, 0.0, 0.8 ] ); 
-% 
-%     hold off
-%     grid on
-%     title('$ \frac{1}{N_s} \sum_s \left \Vert \sqrt{W_s} -  \sqrt{ \sum_p \left\vert \mathcal{F}[ \phi_p \odot T_s ] \right\vert^2} \right\Vert^2_F $', 'FontWeight','bold', 'FontSize', 14, 'Interpreter', 'latex' );
-%     
-%     %legend
-%     % legend({'total', 'IN random subset',  'OUT random subset'})
-% 
-% %     subplot( 2, 1, 2 ); 
-% %     hold on
-% % 
-% %     semilogy( sol.it.mtot, sol.metrics.exwv_change( : ) , '-o', 'Linewidth', 2 )
-% % 
-% % 
-% %     % semilogy( sol.it.mtot, sol.metrics.exwv_SP, '-o', 'Linewidth', 2, 'Color', [0.8, 0.0, 0.0 ] ); 
-% %     % semilogy( sol.it.mtot, sol.metrics.exwv_SP_IN, '-o', 'Linewidth', 2, 'Color', [0.0, 0.8, 0.0 ] ); 
-% %     % semilogy( sol.it.mtot, sol.metrics.exwv_SP_OUT, '-o', 'Linewidth', 2, 'Color', [0.0, 0.0, 0.8 ] ); 
-% % 
-% %     hold off
-% %     % title('$ \sum_s || \phi_s - P( \mathbf{r} )  T( \mathbf{r} - \mathbf{r}_s ) ||_F $','Interpreter','latex');
-% %     grid on
-% %     title('$ \frac{1}{N_p} \frac{1}{N_s} \sum_s \sum_p \left \Vert \psi_{sp} -  \phi_p \odot T_s \right\Vert^2_F $', 'FontWeight','bold', 'FontSize', 14, 'Interpreter', 'latex' );
-% %     % legend({'total', 'IN random subset',  'OUT random subset'})
-% 
-% 
-%     % export_fig( num2str( sol.it.exwv, 'meas_metric-%d.jpg' ), '-r90.0' )
-%     export_fig( 'meas_metric.jpg', '-r90.0' )
-% 
-%     close all;
-% 
-%     %======================
-%     % PROBE SCALING METRICS
-%     %======================
-%     
-% %     [ scpm ] = compute_scpm_photonocc( sol.probe.phi );
-% % 
-% %     sol.metrics.scpm_fro2TOT(      sol.it.metr ) = scpm.fro2TOT;
-% %     sol.metrics.scpm_fro2dominant( sol.it.metr ) = scpm.fro2( end );
-% %     sol.metrics.scpm_fro2others(   sol.it.metr ) = scpm.fro2TOT - scpm.fro2( end );
-% %     sol.metrics.scpmocc_dominant(  sol.it.metr ) = sol.metrics.scpm_fro2dominant( sol.it.metr ) / sol.metrics.scpm_fro2TOT( sol.it.metr );
-% %     sol.metrics.scpmocc_others(    sol.it.metr ) = sol.metrics.scpm_fro2others( sol.it.metr ) / sol.metrics.scpm_fro2TOT( sol.it.metr );
-% % 
-% %     figure( 666 ); 
-% %     set( gcf, 'Visible', 'off', 'Position',[ 1, 1, 1920, 1080 ] )  
-% %     subplot( 4, 1, 1 ); 
-% %     semilogy( sol.it.mtot, sol.metrics.scpm_fro2TOT, '-o', 'Linewidth', 2, 'Color', [0.0, 0.6, 0.0 ] ); 
-% %     grid on
-% %     title('Total Fro norm of probe modes');
-% %     subplot( 4, 1, 2 ); 
-% %     semilogy( sol.it.mtot, sol.metrics.scpm_fro2dominant, '-o', 'Linewidth', 2, 'Color', [0.8, 0.0, 0.0 ] ); 
-% %     grid on
-% %     title('Fro norm of dominant scpm');
-% %     subplot( 4, 1, 3 ); 
-% %     semilogy( sol.it.mtot, sol.metrics.scpm_fro2others, '-o', 'Linewidth', 2, 'Color', [0.0, 0.0, 0.8 ] ); 
-% %     grid on
-% %     title('Total Fro norm of other scpm');
-% %     subplot( 4, 1, 4 ); 
-% %     hold on
-% %     semilogy( sol.it.mtot, sol.metrics.scpmocc_dominant, '-o', 'Linewidth', 2, 'Color', [0.5, 0.0, 0.8 ] ); 
-% %     semilogy( sol.it.mtot, sol.metrics.scpmocc_others, '-o', 'Linewidth', 2, 'Color', [0.2, 0.6, 0.4 ] ); 
-% %     hold off
-% %     title('Occupancy of dominant vs others');
-% %     grid on
-% %     export_fig( 'metrics_probe_scaling.jpg', '-r90.0' )
-% % 
-% %     close all;
-% 
-%     %=====================================================================
-%     % update the counter that keeps track of metric computation occurances
-%     %=====================================================================
-%     
-%     sol.it.metr = sol.it.metr + 1;   
-% 
-% end
-
-%====================================================================================================================================================
-
-% function ptycho2DTPA_plotresults( sol, expt )
-% 
-%         %==============================
-%         % probe mode correlation matrix
-%         %==============================
-% 
-%         P = reshape( sol.probe.phi, [ sol.sz.rc, sol.probe.scpm.N ] );
-% 
-%         corr_matrix_scpm = ctranspose( P ) * P;
-%         
-%         h1 = figure();  
-%         set( h1, 'Visible', 'off', 'Position',[ 1, 1, 1920, 1080 ] )
-%     
-%         imagesc( log10( 1 + abs( corr_matrix_scpm )))
-%         axis square
-%         colorbar
-%         colormap( expt.cm.blj )
-%         title('Probe Mode Correlation Matrix')
-%         
-%         export_fig( num2str( sol.it.epoch, 'corr_matrix_scpm_%d.jpg' ), '-r120.0' )
-%         close all;
-%         
-%         %========
-% 
-%         close all;
-%     
-%         pltopts.xaxis = expt.csys.z2.dLx * (1 : sol.sample.sz.c);
-%         pltopts.xaxis = pltopts.xaxis - min( pltopts.xaxis );
-%         pltopts.xaxis = pltopts.xaxis - 0.5 * max( pltopts.xaxis );
-%         
-%         pltopts.yaxis = expt.csys.z2.dLy * (1 : sol.sample.sz.r);
-%         pltopts.yaxis = pltopts.yaxis - min( pltopts.yaxis );
-%         pltopts.yaxis = pltopts.yaxis - 0.5 * max( pltopts.yaxis );
-%         
-%         h1 = figure();  
-%         set( h1, 'Visible', 'off', 'Position',[ 1, 1, 1920, 1080 ] )
-%         
-% %         ax1 = subaxis(1,2,1,'MR',0.1, 'ML',0.1); 
-%         ax1 = subplot(131);
-%         imagesc( pltopts.xaxis, pltopts.yaxis, abs( sol.sample.T )); 
-% %         imagesc( pltopts.xaxis, pltopts.yaxis, abs( sol.sample.T ), [ 0, 1 ]); 
-% %         imagesc( pltopts.xaxis, pltopts.yaxis,  log10(1 + abs(sol.sample.T))); 
-%         %daspect([1 1 1]); 
-%         axis square
-%         colorbar
-%         colormap( ax1, expt.cm.blj )
-% %         colormap gray; 
-%         grid on; 
-% %         set( gca, 'GridColor', [0.8, 0.0, 0.0], 'GridLineStyle', '--', 'GridAlpha', 0.5 )
-%         title('abs sample')
-%         
-% %         ax2 = subaxis(1,2,2,'MR',0.1, 'ML',0.1); 
-%         ax2 = subplot(132);
-%         imagesc( pltopts.xaxis, pltopts.yaxis, angle( sol.sample.T ), [ -pi, pi ] ); 
-% %         imagesc( pltopts.xaxis, pltopts.yaxis, angle( sol.sample.T ), [ sol.sample.phsL, sol.sample.phsH ] ); 
-%         %daspect([1 1 1]); 
-%         axis square
-%         colorbar
-% %         colormap( ax2, expt.cm.blj )
-%         colormap( ax2, expt.cm.hsvD )
-% %         colormap hsv; 
-%         grid on; 
-% %         set( gca, 'GridColor', [0.8, 0.0, 0.0], 'GridLineStyle', '--', 'GridAlpha', 0.5 )
-%         title('phase sample')
-%         
-%         
-% %         subaxis(1,2,2,'MR',0.1, 'ML',0.1); 
-%         subplot(133)
-%         imagescHSV( sol.sample.T, pltopts  ); 
-% %         imagescHSV( log10(1 + abs( sol.sample.T )) .* exp( 1i * angle( sol.sample.T )), pltopts );
-%         %daspect([1 1 1]); 
-%         axis square
-%         grid on;
-%         title('HSV ( V = mag, H = phs ) sample')
-%         
-% %         set( gca, 'GridColor', [0.8, 0.0, 0.0], 'GridLineStyle', '--', 'GridAlpha', 1.0 )
-% %         export_fig( num2str( sol.it.exwv, 'sample_%d.jpg' ), '-r120.0' )
-%         export_fig( num2str( sol.it.epoch, 'sample_%d.jpg' ), '-r120.0' )
-%         close all;
-%      
-%         %==========================================================================================
-%         
-%         [ scpm ] = compute_scpm_photonocc( sol.probe.phi );
-% 
-%         close all;
-%         pltopts.xaxis = expt.csys.z2.dLx * (1 : sol.sz.c);
-%         pltopts.xaxis = pltopts.xaxis - min( pltopts.xaxis );
-%         pltopts.xaxis = pltopts.xaxis - 0.5 * max( pltopts.xaxis );
-%         
-%         pltopts.yaxis = expt.csys.z2.dLy * (1 : sol.sz.r);
-%         pltopts.yaxis = pltopts.yaxis - min( pltopts.yaxis );
-%         pltopts.yaxis = pltopts.yaxis - 0.5 * max( pltopts.yaxis );
-%         
-%         h1 = figure();        
-%         set( h1, 'Visible', 'off', 'Position', [ 1, 1, 1920, 1080 ] )
-%         
-%         for pp = 1 : sol.probe.scpm.N
-% 
-% %             subaxis(2,sol.probe.scpm.N,pp,'SpacingVert',0,'MR',0.01, 'ML',0.01,'MT',0.18, 'MB',0.18); 
-%             subplot( 2, double( sol.probe.scpm.N ), double( pp ) )   
-%             imagescHSV( sol.probe.phi( :, :, pp ), pltopts ); 
-% %             imagescHSV( log10( 1 + 15^-1 * abs( sol.probe.phi( :, :, pp ))) .* exp( 1i * angle( sol.probe.phi( :, :, pp ))), pltopts); 
-%             %axis square
-%             daspect([1 1 1]); 
-%             %axis off
-% %             title(num2str( [ sol.probe.scpm.occ( pp ), sol.probe.scpm.fro2TOT ], 'HSV ( V = mag, H = phs ), occupancy = %.4f, fro2TOT = %.4f'))
-%             title( { 'HSV ( V = mag, H = phs )', num2str(  scpm.occ( pp ), 'occupancy = %.4f' ), ...
-%                                                  num2str(  scpm.fro2TOT, 'fro2TOT = %.4f' ) })
-%             grid on;
-%             set( gca, 'GridColor', [0.8, 0.0, 0.0], 'GridLineStyle', '--', 'GridAlpha', 0.5 )
-%       
-%         end
-%         
-%         for pp = 1 : sol.probe.scpm.N
-% 
-% %             subaxis(2,sol.probe.scpm.N,sol.probe.scpm.N +pp,'SpacingVert',0,'MR',0.01, 'ML',0.01,'MT',0.18, 'MB',0.18); 
-%             ax( pp ) = subplot( 2, double( sol.probe.scpm.N ), double( sol.probe.scpm.N + pp ) );
-%             imagesc( pltopts.xaxis, pltopts.yaxis, abs( sol.probe.phi( :, :, pp ))); 
-% %             imagesc( pltopts.xaxis, pltopts.yaxis, log10( 1 + 15^-1 * abs( sol.probe.phi( :, :, pp ))) ); 
-%             %axis square
-%             daspect([1 1 1]);
-% %             colormap gray; 
-%             colormap( ax( pp ), expt.cm.blj )
-%             colorbar
-%             grid on;
-%             set( gca, 'GridColor', [0.8, 0.0, 0.0], 'GridLineStyle', '--', 'GridAlpha', 0.5 )
-%             title('abs probe')
-%         end
-% 
-% %         export_fig( num2str( sol.it.exwv, 'probe_%d.jpg' ), '-r90.0' )
-%         export_fig( num2str( sol.it.epoch, 'probe_%d.jpg' ), '-r90.0' )
-%         close all;
-% 
-%         
-%         
-% 
-%         absPmodes2 = sqrt( sum( abs( sol.probe.phi ) .^ 2, 3 ));
-%         
-%         [ phi, ~ ] = enforce_2DTPAsposview( sol.probe.phi, sol.sample.T, sol.sample.vs.r, sol.sample.vs.c, sol.spos.rs( round( 0.5 * expt.spos.N ), : ), sol.spos.shifttype );
-% %         phi = fftshift( fft2( fftshift( phi ))) / sqrt( numel( phi ));
-%         V = fft( fftshift( fft( fftshift( phi, 1 ), [], 1 ), 2 ), [], 2 ) / sqrt( numel( phi ));
-%         V = fftshift( sqrt( sum( abs( V ) .^ 2, 3 )));
-% 
-%         h1 = figure();        
-%         set( h1, 'Visible', 'off', 'Position',[ 1, 1, 1920, 1080 ] )
-%         
-%         a1 = subplot(121);
-%         imagesc( pltopts.xaxis, pltopts.yaxis, absPmodes2 ); 
-% %         imagesc( pltopts.xaxis, pltopts.yaxis, log10( 1 + 1e-0 * absPmodes2 )); 
-%         daspect([1 1 1]);
-%         colormap( a1, expt.cm.blj ); 
-%         colorbar
-%         grid on;
-%         set( gca, 'GridColor', [0.8, 0.0, 0.0], 'GridLineStyle', '--', 'GridAlpha', 0.5 )
-%         title('abs probe')
-% 
-%         a2 = subplot(122);
-%         imagesc( log10( 1 + abs( V )));
-% %         imagesc( pltopts.xaxis, pltopts.yaxis, log10( 1 + 1e-0 * absPmodes2 )); 
-%         daspect([1 1 1]);
-%         colormap( a2, expt.cm.blj ); 
-%         colorbar
-%         grid on;
-%         set( gca, 'GridColor', [0.8, 0.0, 0.0], 'GridLineStyle', '--', 'GridAlpha', 0.5 )
-%         title('abs^2 fft2 of typical exit wave')
-%         
-%         
-% %         export_fig( num2str( sol.it.exwv, 'absPmodes2_%d.jpg' ), '-r90.0' )
-%         export_fig( num2str( sol.it.epoch, 'absPmodes2_%d.jpg' ), '-r90.0' )
-%         close all;
-%         
-%         
-% end
-
-%====================================================================================================================================================
-

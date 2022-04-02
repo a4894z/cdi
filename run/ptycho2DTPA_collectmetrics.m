@@ -25,13 +25,13 @@ function [ sol ] = ptycho2DTPA_collectmetrics( sol, expt )
     
     clear( 'TF' )
     
-    tmp1 = fft( fft( fftshift( fftshift( tmp0, 1 ), 2 ), [], 1 ), [], 2 ) / sol.sz.sqrt_rc;
+    Psi = fft( fft( fftshift( fftshift( tmp0, 1 ), 2 ), [], 1 ), [], 2 ) / sol.sz.sqrt_rc;
 
     %===========================================================================
     % standard Gaussian noise metric with constant (ignored) stdev at all pixels
     %===========================================================================
 
-    meas_residual = not( meas_D == 0 ) .* sqrt( sum( abs( tmp1 ) .^ 2, 3 )) - meas_D;
+    meas_residual = not( meas_D == 0 ) .* sqrt( sum( abs( Psi ) .^ 2, 3 )) - meas_D;
     meas_residual = squeeze( sum( sum( abs( meas_residual ) .^ 2, 1 ), 2 ));
 
     %================
@@ -53,7 +53,7 @@ function [ sol ] = ptycho2DTPA_collectmetrics( sol, expt )
 
         hold on
 
-        semilogy( sol.it.mtot, sol.metrics.meas_all, '--', 'Linewidth', 4, 'color', [ 0, 0, 0 ] )
+        semilogy( sol.it.mtot, sol.metrics.meas_all, '-', 'Linewidth', 3, 'color', [ 0, 0, 0 ] )
 
         % semilogy( sol.it.mtot, sol.metrics.meas, '-o', 'Linewidth', 2, 'Color', [0.8, 0, 0 ] ); 
         % semilogy( sol.it.mtot, sol.metrics.meas_IN, '-o', 'Linewidth', 2, 'Color', [0.0, 0.8, 0 ] ); 

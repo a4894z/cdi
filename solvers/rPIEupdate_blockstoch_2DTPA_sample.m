@@ -8,12 +8,16 @@ function [ T ] = rPIEupdate_blockstoch_2DTPA_sample( psi,          ...
                                                      rPIE_alpha,   ...
                                                      shifttype )
 
+%========================================
+% update order ***DOES*** matter here !!!
+%========================================
+
 sum_abs_probe_abs2     = sum( abs( phi ) .^ 2, 3 );
 max_sum_abs_probe_abs2 = max( sum_abs_probe_abs2( : ));
 
 conj_probe = conj( phi );
 
-for ss = update_order      % order ***DOES*** matter here !!!
+for ss = update_order      
   
     rs = +rs_0( ss, : );                 
     
@@ -23,8 +27,7 @@ for ss = update_order      % order ***DOES*** matter here !!!
 
     update_term_T = update_term_T ./ ( rPIE_alpha * max_sum_abs_probe_abs2 + ( 1 - rPIE_alpha ) * sum_abs_probe_abs2 );
     
-    T( round( -1.0 * rs( 1 ) + vs_r ), ...
-       round( -1.0 * rs( 2 ) + vs_c ))     = TFview + update_term_T;
+    T( round( -1.0 * rs( 1 ) + vs_r ), round( -1.0 * rs( 2 ) + vs_c )) = TFview + update_term_T;
       
 end
 

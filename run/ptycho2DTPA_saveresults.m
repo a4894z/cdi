@@ -3,7 +3,7 @@ function expt = ptycho2DTPA_saveresults( sol, expt, ii )
     fprintf('\n========================================================================================================'); 
     fprintf('\nSAVING Simulated Phase Retreival Experiment, \n2D Transmission Geometry and Projection Approx Assumed...'); 
 
-    save( expt.paths.rsdata, '*' );
+    save( expt.paths.rsdata, 'sol', 'expt' );
 
     %========
     
@@ -38,7 +38,7 @@ function expt = ptycho2DTPA_saveresults( sol, expt, ii )
     %========
     
     A = sprintf('_%s', datestr( now, 'ddmmmyyyy_tHHMMSS' ));
-    B = num2str( sol.it.epoch, '_it%d.mat');
+    B = num2str( sol.it.epoch - 1, '_epoch%d.mat');
     
     expt.paths.most_recent_date_time_save{ ii } = [ expt.paths.rsdata( 1 : end - 4 ), A, B ];
     save( expt.paths.most_recent_date_time_save{ ii }, 'probe', 'sample', 'spos', 'metrics', 'timings' );

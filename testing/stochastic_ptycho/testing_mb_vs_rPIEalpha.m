@@ -177,10 +177,12 @@ return
 
 %====================================================================================================================================================
 
-% rootpath_data = '/net/s8iddata/export/8-id-ECA/Analysis/atripath/minibatch_vs_stoch_vs_full_rPIE_alpha/';
+rootpath_data = '/net/s8iddata/export/8-id-ECA/Analysis/atripath/minibatch_vs_stoch_vs_full_rPIE_alpha/';
 
-rootpath_data = '/net/s8iddata/export/8-id-ECA/Analysis/atripath/minibatch_vs_stoch_vs_full_rPIE_alpha/noise_study/bg_rm/';
+% rootpath_data = '/net/s8iddata/export/8-id-ECA/Analysis/atripath/minibatch_vs_stoch_vs_full_rPIE_alpha/noise_study/bg_rm/';
 % rootpath_data = '/net/s8iddata/export/8-id-ECA/Analysis/atripath/minibatch_vs_stoch_vs_full_rPIE_alpha/noise_study/no_bg_rm/';
+
+% rootpath_data = '/net/s8iddata/export/8-id-ECA/Analysis/atripath/minibatch_vs_stoch_vs_full_rPIE_alpha/proberPIEalpha_vs_samplerPIEalpha/';
 
 %=============================================
 % define the paths for the raw data to analyze
@@ -193,7 +195,6 @@ path_data_fields = fieldnames( path_data );
 probe_scaling = ones( N_data, 1, 'single');
 % probe_scaling = single( [ 1e-1, 1e0, 1e1, 1e2, 1e3 ] );
     
-
 %====================================================================
 % load and process the raw results, save to separate metrics variable
 %====================================================================
@@ -291,19 +292,19 @@ function metrics = load_and_plot( path_data, N_trials, path_data_fields, probe_s
         
         name_data = [ path_data_fields, num2str( [ metrics.rPIE_alpha( 1 ),             ...
                                                    metrics.rand_spos_subset_pct( 1 ) ,  ...
-                                                   round( metrics.probe_intensity( 1 )) ], ', rPIE_alpha = %0.9f, MBpct = %0.4f, probe photons = %0.3e') ];
+                                                   round( metrics.probe_intensity( 1 )) ], ', rPIE_alpha_T = %0.3e, MBpct = %0.4f, probe photons = %0.3e') ];
                                                
         save_data = [ path_data_fields, num2str( [ metrics.rPIE_alpha( 1 ),             ...
                                                    metrics.rand_spos_subset_pct( 1 ) ,  ...
-                                                   round( metrics.probe_intensity( 1 )) ], '_rPIEalpha_%0.9f_MBpct_%0.4f_photons_%0.3e'), '.jpg' ];
+                                                   round( metrics.probe_intensity( 1 )) ], '_rPIE_alpha_T_%0.3e_MBpct_%0.4f_photons_%0.3e_log10mean'), '.jpg' ];
         
     else
         
         name_data = [ path_data_fields, num2str( [ sim_ptycho2DTPA{ ii }.sol.rPIE_alpha, ...
-                                                   round( metrics.probe_intensity( 1 )) ], ', rPIE_alpha = %0.9f, probe photons = %0.3e') ];
+                                                   round( metrics.probe_intensity( 1 )) ], ', rPIE_alpha_T = %0.3e, probe photons = %0.3e') ];
                                                
         save_data = [ path_data_fields, num2str( [ sim_ptycho2DTPA{ ii }.sol.rPIE_alpha, ...
-                                                   round( metrics.probe_intensity( 1 )) ], '_rPIEalpha_%0.9f_photons_%0.3e'), '.jpg' ];
+                                                   round( metrics.probe_intensity( 1 )) ], '_rPIE_alpha_T_%0.3e_photons_%0.3e_log10mean'), '.jpg' ];
         
     end
     
@@ -382,7 +383,7 @@ function metrics = load_and_plot( path_data, N_trials, path_data_fields, probe_s
     skip = 1;
     
 %     y_lim = [ -2, 9 ];
-    y_lim = [ 3, 6 ];
+    y_lim = [ -1, 6 ];
 
     h1 = figure();  
     set( h1, 'Visible', 'off', 'Position',[ 1, 1, 1920, 1080 ] )
@@ -396,17 +397,40 @@ function metrics = load_and_plot( path_data, N_trials, path_data_fields, probe_s
     end
 
     plot( tmp2( 1 : skip : end ), tmp1( 1 : skip : end ), '--', 'linewidth', 4, 'color', [ 0.0, 0.0, 0.0 ] )
-
+    set( gca, 'fontweight', 'bold' )
     xlabel('Epoch')
     ylabel( { [ name_data, ',' ], 'Cost Function Value' }, 'Interpreter', 'none' )
     hold off
-    title('$log_{10}\bigg[ \frac{1}{N_s} \sum_{s=1}^{N_s} \left \Vert \sqrt{W_s} -  \sqrt{ \sum_p \left\vert \mathcal{F}[ \phi_p \odot T_s ] \right\vert^2} \right\Vert^2_F \bigg]$', 'FontWeight','bold', 'FontSize', 14, 'Interpreter', 'latex' );
+    title('$log_{10}\bigg[ \left\langle \frac{1}{N_s} \sum_{s=1}^{N_s} \left \Vert \sqrt{W_s} -  \sqrt{ \sum_p \left\vert \mathcal{F}[ \phi_p \odot T_s ] \right\vert^2} \right\Vert^2_F \right\rangle \bigg]$', 'FontWeight','bold', 'FontSize', 14, 'Interpreter', 'latex' );
     grid on
     ylim( y_lim )
     legend( 'Location', 'northeast' ) 
     
     hold off
 
+    export_fig( save_data, '-r120.0' )
+    close all;
+    
+    
+    %========================
+    % plot variance of trials
+    %========================
+    
+    stdev = log10( std( meas_all, [], 2 ));  
+    h1 = figure();  
+    set( h1, 'Visible', 'off', 'Position',[ 1, 1, 1920, 1080 ] )
+    
+    plot( tmp2, stdev, '-', 'linewidth', 2 )
+    set( gca, 'fontweight', 'bold' )
+    xlabel('Epoch')
+    ylabel( { [ name_data, ',' ], 'Variance of log10( Cost Function Value )' }, 'Interpreter', 'none' )
+    title('$ log_{10}\bigg[ Var\left( \frac{1}{N_s} \sum_{s=1}^{N_s} \left \Vert \sqrt{W_s} -  \sqrt{ \sum_p \left\vert \mathcal{F}[ \phi_p \odot T_s ] \right\vert^2} \right\Vert^2_F \right)\bigg]$', 'FontWeight','bold', 'FontSize', 14, 'Interpreter', 'latex' );
+    grid on
+    
+    
+    save_data = [ path_data_fields, num2str( [ sim_ptycho2DTPA{ ii }.sol.rPIE_alpha, ...
+                                               round( metrics.probe_intensity( 1 )) ], '_rPIE_alpha_T_%0.3e_photons_%0.3e_log10variance'), '.jpg' ];
+    
     export_fig( save_data, '-r120.0' )
     close all;
     
@@ -437,7 +461,7 @@ function metrics = load_and_plot( path_data, N_trials, path_data_fields, probe_s
     end
         
     save_data = [ path_data_fields,                                                                                                             ...
-                  num2str( [ sim_ptycho2DTPA{ ii }.sol.rPIE_alpha, round( metrics.probe_intensity( ii )) ], '_rPIEalpha_%0.9f_photons_%0.3e'),  ...
+                  num2str( [ sim_ptycho2DTPA{ ii }.sol.rPIE_alpha, round( metrics.probe_intensity( ii )) ], '_rPIE_alpha_T_%0.3e_photons_%0.3e'),  ...
                   '_probes.jpg' ];
     
     export_fig( save_data, '-r120.0' )
@@ -452,7 +476,7 @@ function metrics = load_and_plot( path_data, N_trials, path_data_fields, probe_s
     daspect( [ 1, 1, 1 ]); 
     
     save_data = [ path_data_fields,                                                                                                             ...
-                  num2str( [ sim_ptycho2DTPA{ ii }.sol.rPIE_alpha, round( metrics.probe_intensity( ii )) ], '_rPIEalpha_%0.9f_photons_%0.3e'),  ...
+                  num2str( [ sim_ptycho2DTPA{ ii }.sol.rPIE_alpha, round( metrics.probe_intensity( ii )) ], '_rPIE_alpha_T_%0.3e_photons_%0.3e'),  ...
                   '_sample.jpg' ];
     
     export_fig( save_data, '-r120.0' )
@@ -468,7 +492,68 @@ function [ path_data, N_trials, N_data ] = define_paths( rootpath_data )
 % initialization
 %===============
 
-N_data = 0;
+% N_data = 0;
+% 
+% N_data = 0;
+% 
+% path_data.mb20_noise_rmbg = {};
+% N_trials.mb20_noise_rmbg  = [];
+% 
+% path_data.mb20_noise_rmbg{ end + 1 } = [ rootpath_data, 'probe_mb20_rPIE_alpha_phi_1e0_rPIE_alpha_T_1e0/independenttrials_22Jan2022_t143721/' ];
+% N_trials.mb20_noise_rmbg( end + 1 )  = 10;
+% 
+% path_data.mb20_noise_rmbg{ end + 1 } = [ rootpath_data, 'probe_mb20_rPIE_alpha_phi_1e0_rPIE_alpha_T_1e-3/independenttrials_22Jan2022_t143747/' ];
+% N_trials.mb20_noise_rmbg( end + 1 )  = 10;
+% 
+% path_data.mb20_noise_rmbg{ end + 1 } = [ rootpath_data, 'probe_mb20_rPIE_alpha_phi_1e0_rPIE_alpha_T_1e-6/independenttrials_22Jan2022_t143827/' ];
+% N_trials.mb20_noise_rmbg( end + 1 )  = 10;
+% 
+% path_data.mb20_noise_rmbg{ end + 1 } = [ rootpath_data, 'probe_mb20_rPIE_alpha_phi_1e0_rPIE_alpha_T_1e-9/independenttrials_22Jan2022_t143856/' ];
+% N_trials.mb20_noise_rmbg( end + 1 )  = 10;
+% 
+% path_data.mb20_noise_rmbg{ end + 1 } = [ rootpath_data, 'probe_mb20_rPIE_alpha_phi_1e-3_rPIE_alpha_T_1e0/independenttrials_23Jan2022_t004333/' ];
+% N_trials.mb20_noise_rmbg( end + 1 )  = 10;
+% 
+% path_data.mb20_noise_rmbg{ end + 1 } = [ rootpath_data, 'probe_mb20_rPIE_alpha_phi_1e-3_rPIE_alpha_T_1e-3/independenttrials_23Jan2022_t003310/' ];
+% N_trials.mb20_noise_rmbg( end + 1 )  = 10;
+% 
+% path_data.mb20_noise_rmbg{ end + 1 } = [ rootpath_data, 'probe_mb20_rPIE_alpha_phi_1e-3_rPIE_alpha_T_1e-6/independenttrials_23Jan2022_t004452/' ];
+% N_trials.mb20_noise_rmbg( end + 1 )  = 10;
+% 
+% path_data.mb20_noise_rmbg{ end + 1 } = [ rootpath_data, 'probe_mb20_rPIE_alpha_phi_1e-3_rPIE_alpha_T_1e-9/independenttrials_23Jan2022_t003424/' ];
+% N_trials.mb20_noise_rmbg( end + 1 )  = 10;
+% 
+% path_data.mb20_noise_rmbg{ end + 1 } = [ rootpath_data, 'probe_mb20_rPIE_alpha_phi_1e-6_rPIE_alpha_T_1e0/independenttrials_23Jan2022_t111653/' ];
+% N_trials.mb20_noise_rmbg( end + 1 )  = 10;
+% 
+% path_data.mb20_noise_rmbg{ end + 1 } = [ rootpath_data, 'probe_mb20_rPIE_alpha_phi_1e-6_rPIE_alpha_T_1e-3/independenttrials_23Jan2022_t103318/' ];
+% N_trials.mb20_noise_rmbg( end + 1 )  = 10;
+% 
+% path_data.mb20_noise_rmbg{ end + 1 } = [ rootpath_data, 'probe_mb20_rPIE_alpha_phi_1e-6_rPIE_alpha_T_1e-6/independenttrials_23Jan2022_t110707/' ];
+% N_trials.mb20_noise_rmbg( end + 1 )  = 10;
+% 
+% path_data.mb20_noise_rmbg{ end + 1 } = [ rootpath_data, 'probe_mb20_rPIE_alpha_phi_1e-6_rPIE_alpha_T_1e-9/independenttrials_23Jan2022_t103248/' ];
+% N_trials.mb20_noise_rmbg( end + 1 )  = 10;
+% 
+% path_data.mb20_noise_rmbg{ end + 1 } = [ rootpath_data, 'probe_mb20_rPIE_alpha_phi_1e-9_rPIE_alpha_T_1e0/independenttrials_23Jan2022_t214839/' ];
+% N_trials.mb20_noise_rmbg( end + 1 )  = 10;
+% 
+% path_data.mb20_noise_rmbg{ end + 1 } = [ rootpath_data, 'probe_mb20_rPIE_alpha_phi_1e-9_rPIE_alpha_T_1e-3/independenttrials_23Jan2022_t203610/' ];
+% N_trials.mb20_noise_rmbg( end + 1 )  = 10;
+% 
+% path_data.mb20_noise_rmbg{ end + 1 } = [ rootpath_data, 'probe_mb20_rPIE_alpha_phi_1e-9_rPIE_alpha_T_1e-6/independenttrials_23Jan2022_t213219/' ];
+% N_trials.mb20_noise_rmbg( end + 1 )  = 10;
+% 
+% path_data.mb20_noise_rmbg{ end + 1 } = [ rootpath_data, 'probe_mb20_rPIE_alpha_phi_1e-9_rPIE_alpha_T_1e-9/independenttrials_23Jan2022_t203555/' ];
+% N_trials.mb20_noise_rmbg( end + 1 )  = 10;
+% 
+% path_data.mb20_noise_rmbg = transpose( path_data.mb20_noise_rmbg );
+% N_trials.mb20_noise_rmbg  = transpose( N_trials.mb20_noise_rmbg );
+% 
+% N_data = N_data + length( path_data.mb20_noise_rmbg );
+% 
+% 
+% return
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %                                                               Noisy vs Non-noisy measurements 
@@ -1098,63 +1183,63 @@ N_data = 0;
 % NOISY fullbatchGD
 %==================
 
-path_data.fullGD_noise_rmbg = {};
-N_trials.fullGD_noise_rmbg  = [];
-
-path_data.fullGD_noise_rmbg{ end + 1 } = [ rootpath_data, 'cdi_rPIE_full_alpha1p00_randT_noise_rmbg/independenttrials_23Nov2021_t160603/' ];
-N_trials.fullGD_noise_rmbg( end + 1 )  = 10;
-
-path_data.fullGD_noise_rmbg{ end + 1 } = [ rootpath_data, 'cdi_rPIE_full_alpha0p10_randT_noise_rmbg/independenttrials_24Nov2021_t091610/' ];
-N_trials.fullGD_noise_rmbg( end + 1 )  = 10;
-
-path_data.fullGD_noise_rmbg{ end + 1 } = [ rootpath_data, 'cdi_rPIE_full_alpha0p01_randT_noise_rmbg/independenttrials_25Nov2021_t023340/' ];
-N_trials.fullGD_noise_rmbg( end + 1 )  = 10;
-
-path_data.fullGD_noise_rmbg{ end + 1 } = [ rootpath_data, 'cdi_rPIE_full_alpha0p001_randT_noise_rmbg/independenttrials_25Nov2021_t195309/' ];
-N_trials.fullGD_noise_rmbg( end + 1 )  = 10;
-
-path_data.fullGD_noise_rmbg{ end + 1 } = [ rootpath_data, 'cdi_rPIE_full_alpha0p0001_randT_noise_rmbg/independenttrials_26Nov2021_t131152/' ];
-N_trials.fullGD_noise_rmbg( end + 1 )  = 10;
-
-path_data.fullGD_noise_rmbg{ end + 1 } = [ rootpath_data, 'cdi_rPIE_full_alpha0p00001_randT_noise_rmbg/independenttrials_27Nov2021_t063024/' ];
-N_trials.fullGD_noise_rmbg( end + 1 )  = 10;
-
-path_data.fullGD_noise_rmbg{ end + 1 } = [ rootpath_data, 'cdi_rPIE_full_alpha0p000001_randT_noise_rmbg/independenttrials_27Nov2021_t235023/' ];
-N_trials.fullGD_noise_rmbg( end + 1 )  = 10;
-
-path_data.fullGD_noise_rmbg{ end + 1 } = [ rootpath_data, 'cdi_rPIE_full_alpha0p0000001_randT_noise_rmbg/independenttrials_28Nov2021_t171116/' ];
-N_trials.fullGD_noise_rmbg( end + 1 )  = 10;
-
-path_data.fullGD_noise_rmbg{ end + 1 } = [ rootpath_data, 'cdi_rPIE_full_alpha0p00000001_randT_noise_rmbg/independenttrials_29Nov2021_t103218/' ];
-N_trials.fullGD_noise_rmbg( end + 1 )  = 10;
-
-path_data.fullGD_noise_rmbg{ end + 1 } = [ rootpath_data, 'cdi_rPIE_full_alpha0p000000001_randT_noise_rmbg/independenttrials_30Nov2021_t035342/' ];
-N_trials.fullGD_noise_rmbg( end + 1 )  = 10;
-
-path_data.fullGD_noise_rmbg = transpose( path_data.fullGD_noise_rmbg );
-N_trials.fullGD_noise_rmbg  = transpose( N_trials.fullGD_noise_rmbg );
-
-N_data = N_data + length( path_data.fullGD_noise_rmbg );
-
-%==================================================
-% NOISY fullbatchGD W/ GROUND TRUTH SOLUTION STARTS
-%==================================================
-
-path_data.fullGD_noise_rmbg_soln = {};
-N_trials.fullGD_noise_rmbg_soln  = [];
-
-path_data.fullGD_noise_rmbg_soln{ end + 1 } = [ rootpath_data, 'cdi_rPIE_full_alpha0p000000001_randT_noise_rmbg_SOLUTION/independenttrials_08Dec2021_t145919/' ];
-N_trials.fullGD_noise_rmbg_soln( end + 1 )  = 10;
-
-path_data.fullGD_noise_rmbg_soln{ end + 1 } = [ rootpath_data, 'cdi_rPIE_full_alpha1p00_randT_noise_rmbg_SOLUTION/independenttrials_09Dec2021_t051545/' ];
-N_trials.fullGD_noise_rmbg_soln( end + 1 )  = 10;
-
-path_data.fullGD_noise_rmbg_soln = transpose( path_data.fullGD_noise_rmbg_soln );
-N_trials.fullGD_noise_rmbg_soln  = transpose( N_trials.fullGD_noise_rmbg_soln );
-
-N_data = N_data + length( path_data.fullGD_noise_rmbg_soln );
-
-return
+% path_data.fullGD_noise_rmbg = {};
+% N_trials.fullGD_noise_rmbg  = [];
+% 
+% path_data.fullGD_noise_rmbg{ end + 1 } = [ rootpath_data, 'cdi_rPIE_full_alpha1p00_randT_noise_rmbg/independenttrials_23Nov2021_t160603/' ];
+% N_trials.fullGD_noise_rmbg( end + 1 )  = 10;
+% 
+% path_data.fullGD_noise_rmbg{ end + 1 } = [ rootpath_data, 'cdi_rPIE_full_alpha0p10_randT_noise_rmbg/independenttrials_24Nov2021_t091610/' ];
+% N_trials.fullGD_noise_rmbg( end + 1 )  = 10;
+% 
+% path_data.fullGD_noise_rmbg{ end + 1 } = [ rootpath_data, 'cdi_rPIE_full_alpha0p01_randT_noise_rmbg/independenttrials_25Nov2021_t023340/' ];
+% N_trials.fullGD_noise_rmbg( end + 1 )  = 10;
+% 
+% path_data.fullGD_noise_rmbg{ end + 1 } = [ rootpath_data, 'cdi_rPIE_full_alpha0p001_randT_noise_rmbg/independenttrials_25Nov2021_t195309/' ];
+% N_trials.fullGD_noise_rmbg( end + 1 )  = 10;
+% 
+% path_data.fullGD_noise_rmbg{ end + 1 } = [ rootpath_data, 'cdi_rPIE_full_alpha0p0001_randT_noise_rmbg/independenttrials_26Nov2021_t131152/' ];
+% N_trials.fullGD_noise_rmbg( end + 1 )  = 10;
+% 
+% path_data.fullGD_noise_rmbg{ end + 1 } = [ rootpath_data, 'cdi_rPIE_full_alpha0p00001_randT_noise_rmbg/independenttrials_27Nov2021_t063024/' ];
+% N_trials.fullGD_noise_rmbg( end + 1 )  = 10;
+% 
+% path_data.fullGD_noise_rmbg{ end + 1 } = [ rootpath_data, 'cdi_rPIE_full_alpha0p000001_randT_noise_rmbg/independenttrials_27Nov2021_t235023/' ];
+% N_trials.fullGD_noise_rmbg( end + 1 )  = 10;
+% 
+% path_data.fullGD_noise_rmbg{ end + 1 } = [ rootpath_data, 'cdi_rPIE_full_alpha0p0000001_randT_noise_rmbg/independenttrials_28Nov2021_t171116/' ];
+% N_trials.fullGD_noise_rmbg( end + 1 )  = 10;
+% 
+% path_data.fullGD_noise_rmbg{ end + 1 } = [ rootpath_data, 'cdi_rPIE_full_alpha0p00000001_randT_noise_rmbg/independenttrials_29Nov2021_t103218/' ];
+% N_trials.fullGD_noise_rmbg( end + 1 )  = 10;
+% 
+% path_data.fullGD_noise_rmbg{ end + 1 } = [ rootpath_data, 'cdi_rPIE_full_alpha0p000000001_randT_noise_rmbg/independenttrials_30Nov2021_t035342/' ];
+% N_trials.fullGD_noise_rmbg( end + 1 )  = 10;
+% 
+% path_data.fullGD_noise_rmbg = transpose( path_data.fullGD_noise_rmbg );
+% N_trials.fullGD_noise_rmbg  = transpose( N_trials.fullGD_noise_rmbg );
+% 
+% N_data = N_data + length( path_data.fullGD_noise_rmbg );
+% 
+% %==================================================
+% % NOISY fullbatchGD W/ GROUND TRUTH SOLUTION STARTS
+% %==================================================
+% 
+% path_data.fullGD_noise_rmbg_soln = {};
+% N_trials.fullGD_noise_rmbg_soln  = [];
+% 
+% path_data.fullGD_noise_rmbg_soln{ end + 1 } = [ rootpath_data, 'cdi_rPIE_full_alpha0p000000001_randT_noise_rmbg_SOLUTION/independenttrials_08Dec2021_t145919/' ];
+% N_trials.fullGD_noise_rmbg_soln( end + 1 )  = 10;
+% 
+% path_data.fullGD_noise_rmbg_soln{ end + 1 } = [ rootpath_data, 'cdi_rPIE_full_alpha1p00_randT_noise_rmbg_SOLUTION/independenttrials_09Dec2021_t051545/' ];
+% N_trials.fullGD_noise_rmbg_soln( end + 1 )  = 10;
+% 
+% path_data.fullGD_noise_rmbg_soln = transpose( path_data.fullGD_noise_rmbg_soln );
+% N_trials.fullGD_noise_rmbg_soln  = transpose( N_trials.fullGD_noise_rmbg_soln );
+% 
+% N_data = N_data + length( path_data.fullGD_noise_rmbg_soln );
+% 
+% return
 
 
 %==================================================================================================
@@ -1196,173 +1281,175 @@ return
 % Stoch Block GD
 %===============
 
-path_data.stoch_bgd = {};
-N_trials.stoch_bgd  = [];
-
-path_data.stoch_bgd{ end + 1 } = [ rootpath_data, 'blind_block_stoch/cdi_rPIE_stochGD_alpha1p00_oldsample_for_probe_update/independenttrials_10Oct2021_t140518/' ];
-N_trials.stoch_bgd( end + 1 )  = 10;
-
-path_data.stoch_bgd{ end + 1 } = [ rootpath_data, 'blind_block_stoch/cdi_rPIE_stochGD_alpha0p10_oldsample_for_probe_update/independenttrials_03Oct2021_t161143/' ];
-N_trials.stoch_bgd( end + 1 )  = 10;
-
-path_data.stoch_bgd{ end + 1 } = [ rootpath_data, 'blind_block_stoch/cdi_rPIE_stochGD_alpha0p01_oldsample_for_probe_update/independenttrials_22Sep2021_t104744/' ];
-N_trials.stoch_bgd( end + 1 )  = 10;
-
-path_data.stoch_bgd{ end + 1 } = [ rootpath_data, 'blind_block_stoch/cdi_rPIE_stochGD_alpha0p001_oldsample_for_probe_update/independenttrials_12Nov2021_t192759/' ];
-N_trials.stoch_bgd( end + 1 )  = 10;
-
-path_data.stoch_bgd{ end + 1 } = [ rootpath_data, 'blind_block_stoch/cdi_rPIE_stochGD_alpha0p0001_oldsample_for_probe_update/independenttrials_13Nov2021_t113330/'];
-N_trials.stoch_bgd( end + 1 )  = 10;
-
-path_data.stoch_bgd{ end + 1 } = [ rootpath_data, 'blind_block_stoch/cdi_rPIE_stochGD_alpha0p00001_oldsample_for_probe_update/independenttrials_13Nov2021_t182247/' ];
-N_trials.stoch_bgd( end + 1 )  = 10;
-
-path_data.stoch_bgd{ end + 1 } = [ rootpath_data, 'blind_block_stoch/cdi_rPIE_stochGD_alpha0p000001_oldsample_for_probe_update/independenttrials_13Nov2021_t022040/' ];
-N_trials.stoch_bgd( end + 1 )  = 10;
-
-path_data.stoch_bgd{ end + 1 } = [ rootpath_data, 'blind_block_stoch/cdi_rPIE_stochGD_alpha0p0000001_oldsample_for_probe_update/independenttrials_12Nov2021_t081029/'];
-N_trials.stoch_bgd( end + 1 )  = 10;
-
-path_data.stoch_bgd{ end + 1 } = [ rootpath_data, 'blind_block_stoch/cdi_rPIE_stochGD_alpha0p00000001_oldsample_for_probe_update/independenttrials_11Nov2021_t112402/' ];
-N_trials.stoch_bgd( end + 1 )  = 10;
-
-path_data.stoch_bgd{ end + 1 } = [ rootpath_data, 'blind_block_stoch/cdi_rPIE_stochGD_alpha0p000000001_oldsample_for_probe_update/independenttrials_10Nov2021_t122727/' ];
-N_trials.stoch_bgd( end + 1 )  = 10;
-
-path_data.stoch_bgd = transpose( path_data.stoch_bgd );
-N_trials.stoch_bgd  = transpose( N_trials.stoch_bgd );
-
-N_data = length( path_data.stoch_bgd ) + N_data;
+% path_data.stoch_bgd = {};
+% N_trials.stoch_bgd  = [];
+% 
+% path_data.stoch_bgd{ end + 1 } = [ rootpath_data, 'blind_block_stoch/cdi_rPIE_stochGD_alpha1p00_oldsample_for_probe_update/independenttrials_10Oct2021_t140518/' ];
+% N_trials.stoch_bgd( end + 1 )  = 10;
+% 
+% path_data.stoch_bgd{ end + 1 } = [ rootpath_data, 'blind_block_stoch/cdi_rPIE_stochGD_alpha0p10_oldsample_for_probe_update/independenttrials_03Oct2021_t161143/' ];
+% N_trials.stoch_bgd( end + 1 )  = 10;
+% 
+% path_data.stoch_bgd{ end + 1 } = [ rootpath_data, 'blind_block_stoch/cdi_rPIE_stochGD_alpha0p01_oldsample_for_probe_update/independenttrials_22Sep2021_t104744/' ];
+% N_trials.stoch_bgd( end + 1 )  = 10;
+% 
+% path_data.stoch_bgd{ end + 1 } = [ rootpath_data, 'blind_block_stoch/cdi_rPIE_stochGD_alpha0p001_oldsample_for_probe_update/independenttrials_12Nov2021_t192759/' ];
+% N_trials.stoch_bgd( end + 1 )  = 10;
+% 
+% path_data.stoch_bgd{ end + 1 } = [ rootpath_data, 'blind_block_stoch/cdi_rPIE_stochGD_alpha0p0001_oldsample_for_probe_update/independenttrials_13Nov2021_t113330/'];
+% N_trials.stoch_bgd( end + 1 )  = 10;
+% 
+% path_data.stoch_bgd{ end + 1 } = [ rootpath_data, 'blind_block_stoch/cdi_rPIE_stochGD_alpha0p00001_oldsample_for_probe_update/independenttrials_13Nov2021_t182247/' ];
+% N_trials.stoch_bgd( end + 1 )  = 10;
+% 
+% path_data.stoch_bgd{ end + 1 } = [ rootpath_data, 'blind_block_stoch/cdi_rPIE_stochGD_alpha0p000001_oldsample_for_probe_update/independenttrials_13Nov2021_t022040/' ];
+% N_trials.stoch_bgd( end + 1 )  = 10;
+% 
+% path_data.stoch_bgd{ end + 1 } = [ rootpath_data, 'blind_block_stoch/cdi_rPIE_stochGD_alpha0p0000001_oldsample_for_probe_update/independenttrials_12Nov2021_t081029/'];
+% N_trials.stoch_bgd( end + 1 )  = 10;
+% 
+% path_data.stoch_bgd{ end + 1 } = [ rootpath_data, 'blind_block_stoch/cdi_rPIE_stochGD_alpha0p00000001_oldsample_for_probe_update/independenttrials_11Nov2021_t112402/' ];
+% N_trials.stoch_bgd( end + 1 )  = 10;
+% 
+% path_data.stoch_bgd{ end + 1 } = [ rootpath_data, 'blind_block_stoch/cdi_rPIE_stochGD_alpha0p000000001_oldsample_for_probe_update/independenttrials_10Nov2021_t122727/' ];
+% N_trials.stoch_bgd( end + 1 )  = 10;
+% 
+% path_data.stoch_bgd = transpose( path_data.stoch_bgd );
+% N_trials.stoch_bgd  = transpose( N_trials.stoch_bgd );
+% 
+% N_data = length( path_data.stoch_bgd ) + N_data;
 
 %=============
 % 1% Minibatch
 %=============
 
-path_data.mb_0p01 = {};
-N_trials.mb_0p01  = [];
-
-path_data.mb_0p01{ end + 1 } = [ rootpath_data, 'mb0p01/cdi_rPIE_mb0p01_alpha1p00_oldsample_for_probe_update/independenttrials_05Nov2021_t143406/' ];
-N_trials.mb_0p01( end + 1 )  = 10;
-
-path_data.mb_0p01{ end + 1 } = [ rootpath_data, 'mb0p01/cdi_rPIE_mb0p01_alpha0p10_oldsample_for_probe_update/independenttrials_13Nov2021_t023404/' ];
-N_trials.mb_0p01( end + 1 )  = 10;
-
-path_data.mb_0p01{ end + 1 } = [ rootpath_data, 'mb0p01/cdi_rPIE_mb0p01_alpha0p01_oldsample_for_probe_update/independenttrials_01Oct2021_t161445/' ];
-N_trials.mb_0p01( end + 1 )  = 10;
-
-path_data.mb_0p01{ end + 1 } = [ rootpath_data, 'mb0p01/cdi_rPIE_mb0p01_alpha0p001_oldsample_for_probe_update/independenttrials_05Nov2021_t143333/' ];
-N_trials.mb_0p01( end + 1 )  = 10;
-
-path_data.mb_0p01{ end + 1 } = [ rootpath_data, 'mb0p01/cdi_rPIE_mb0p01_alpha0p0001_oldsample_for_probe_update/independenttrials_06Nov2021_t105931/' ];
-N_trials.mb_0p01( end + 1 )  = 10;
-
-path_data.mb_0p01{ end + 1 } = [ rootpath_data, 'mb0p01/cdi_rPIE_mb0p01_alpha0p00001_oldsample_for_probe_update/independenttrials_07Nov2021_t062512/' ];
-N_trials.mb_0p01( end + 1 )  = 10;
-
-path_data.mb_0p01{ end + 1 } = [ rootpath_data, 'mb0p01/cdi_rPIE_mb0p01_alpha0p000001_oldsample_for_probe_update/independenttrials_08Nov2021_t024900/' ];
-N_trials.mb_0p01( end + 1 )  = 10;
-
-path_data.mb_0p01{ end + 1 } = [ rootpath_data, 'mb0p01/cdi_rPIE_mb0p01_alpha0p0000001_oldsample_for_probe_update/independenttrials_08Nov2021_t230507/' ];
-N_trials.mb_0p01( end + 1 )  = 10;
-
-path_data.mb_0p01{ end + 1 } = [ rootpath_data, 'mb0p01/cdi_rPIE_mb0p01_alpha0p00000001_oldsample_for_probe_update/independenttrials_10Nov2021_t012243/' ];
-N_trials.mb_0p01( end + 1 )  = 10;
-
-path_data.mb_0p01{ end + 1 } = [ rootpath_data, 'mb0p01/cdi_rPIE_mb0p01_alpha0p000000001_oldsample_for_probe_update/independenttrials_11Nov2021_t213037/' ];
-N_trials.mb_0p01( end + 1 )  = 10;
-
-path_data.mb_0p01 = transpose( path_data.mb_0p01 );
-N_trials.mb_0p01  = transpose( N_trials.mb_0p01 );
-
-N_data = length( path_data.mb_0p01 ) + N_data;
+% path_data.mb_0p01 = {};
+% N_trials.mb_0p01  = [];
+% 
+% path_data.mb_0p01{ end + 1 } = [ rootpath_data, 'mb0p01/cdi_rPIE_mb0p01_alpha1p00_oldsample_for_probe_update/independenttrials_05Nov2021_t143406/' ];
+% N_trials.mb_0p01( end + 1 )  = 10;
+% 
+% path_data.mb_0p01{ end + 1 } = [ rootpath_data, 'mb0p01/cdi_rPIE_mb0p01_alpha0p10_oldsample_for_probe_update/independenttrials_13Nov2021_t023404/' ];
+% N_trials.mb_0p01( end + 1 )  = 10;
+% 
+% path_data.mb_0p01{ end + 1 } = [ rootpath_data, 'mb0p01/cdi_rPIE_mb0p01_alpha0p01_oldsample_for_probe_update/independenttrials_01Oct2021_t161445/' ];
+% N_trials.mb_0p01( end + 1 )  = 10;
+% 
+% path_data.mb_0p01{ end + 1 } = [ rootpath_data, 'mb0p01/cdi_rPIE_mb0p01_alpha0p001_oldsample_for_probe_update/independenttrials_05Nov2021_t143333/' ];
+% N_trials.mb_0p01( end + 1 )  = 10;
+% 
+% path_data.mb_0p01{ end + 1 } = [ rootpath_data, 'mb0p01/cdi_rPIE_mb0p01_alpha0p0001_oldsample_for_probe_update/independenttrials_06Nov2021_t105931/' ];
+% N_trials.mb_0p01( end + 1 )  = 10;
+% 
+% path_data.mb_0p01{ end + 1 } = [ rootpath_data, 'mb0p01/cdi_rPIE_mb0p01_alpha0p00001_oldsample_for_probe_update/independenttrials_07Nov2021_t062512/' ];
+% N_trials.mb_0p01( end + 1 )  = 10;
+% 
+% path_data.mb_0p01{ end + 1 } = [ rootpath_data, 'mb0p01/cdi_rPIE_mb0p01_alpha0p000001_oldsample_for_probe_update/independenttrials_08Nov2021_t024900/' ];
+% N_trials.mb_0p01( end + 1 )  = 10;
+% 
+% path_data.mb_0p01{ end + 1 } = [ rootpath_data, 'mb0p01/cdi_rPIE_mb0p01_alpha0p0000001_oldsample_for_probe_update/independenttrials_08Nov2021_t230507/' ];
+% N_trials.mb_0p01( end + 1 )  = 10;
+% 
+% path_data.mb_0p01{ end + 1 } = [ rootpath_data, 'mb0p01/cdi_rPIE_mb0p01_alpha0p00000001_oldsample_for_probe_update/independenttrials_10Nov2021_t012243/' ];
+% N_trials.mb_0p01( end + 1 )  = 10;
+% 
+% path_data.mb_0p01{ end + 1 } = [ rootpath_data, 'mb0p01/cdi_rPIE_mb0p01_alpha0p000000001_oldsample_for_probe_update/independenttrials_11Nov2021_t213037/' ];
+% N_trials.mb_0p01( end + 1 )  = 10;
+% 
+% path_data.mb_0p01 = transpose( path_data.mb_0p01 );
+% N_trials.mb_0p01  = transpose( N_trials.mb_0p01 );
+% 
+% N_data = length( path_data.mb_0p01 ) + N_data;
 
 %=============
 % 5% Minibatch
 %=============
 
-path_data.mb_0p05 = {};
-N_trials.mb_0p05  = [];
-
-path_data.mb_0p05{ end + 1 } = [ rootpath_data, 'mb0p05/cdi_rPIE_mb0p05_alpha1p00_oldsample_for_probe_update/independenttrials_30Oct2021_t051441/' ];
-N_trials.mb_0p05( end + 1 )  = 10;
-
-path_data.mb_0p05{ end + 1 } = [ rootpath_data, 'mb0p05/cdi_rPIE_mb0p05_alpha0p10_oldsample_for_probe_update/independenttrials_23Oct2021_t210230/' ];
-N_trials.mb_0p05( end + 1 )  = 10;
-
-path_data.mb_0p05{ end + 1 } = [ rootpath_data, 'mb0p05/cdi_rPIE_mb0p05_alpha0p01_oldsample_for_probe_update/independenttrials_24Sep2021_t123331/' ];
-N_trials.mb_0p05( end + 1 )  = 10;
-
-path_data.mb_0p05{ end + 1 } = [ rootpath_data, 'mb0p05/cdi_rPIE_mb0p05_alpha0p001_oldsample_for_probe_update/independenttrials_04Nov2021_t042443/' ];
-N_trials.mb_0p05( end + 1 )  = 10;
-
-path_data.mb_0p05{ end + 1 } = [ rootpath_data, 'mb0p05/cdi_rPIE_mb0p05_alpha0p0001_oldsample_for_probe_update/independenttrials_06Nov2021_t105744/' ];
-N_trials.mb_0p05( end + 1 )  = 10;
-
-path_data.mb_0p05{ end + 1 } = [ rootpath_data, 'mb0p05/cdi_rPIE_mb0p05_alpha0p00001_oldsample_for_probe_update/independenttrials_06Nov2021_t215004/' ];
-N_trials.mb_0p05( end + 1 )  = 10;
-
-path_data.mb_0p05{ end + 1 } = [ rootpath_data, 'mb0p05/cdi_rPIE_mb0p05_alpha0p000001_oldsample_for_probe_update/independenttrials_07Nov2021_t073855/' ];
-N_trials.mb_0p05( end + 1 )  = 10;
-
-path_data.mb_0p05{ end + 1 } = [ rootpath_data, 'mb0p05/cdi_rPIE_mb0p05_alpha0p0000001_oldsample_for_probe_update/independenttrials_07Nov2021_t182814/' ];
-N_trials.mb_0p05( end + 1 )  = 10;
-
-path_data.mb_0p05{ end + 1 } = [ rootpath_data, 'mb0p05/cdi_rPIE_mb0p05_alpha0p00000001_oldsample_for_probe_update/independenttrials_08Nov2021_t052208/' ];
-N_trials.mb_0p05( end + 1 )  = 10;
-
-path_data.mb_0p05{ end + 1 } = [ rootpath_data, 'mb0p05/cdi_rPIE_mb0p05_alpha0p000000001_oldsample_for_probe_update/independenttrials_08Nov2021_t161250/' ];
-N_trials.mb_0p05( end + 1 )  = 10;
-
-path_data.mb_0p05 = transpose( path_data.mb_0p05 );
-N_trials.mb_0p05  = transpose( N_trials.mb_0p05 );
-
-N_data = length( path_data.mb_0p05 ) + N_data;
+% path_data.mb_0p05 = {};
+% N_trials.mb_0p05  = [];
+% 
+% path_data.mb_0p05{ end + 1 } = [ rootpath_data, 'mb0p05/cdi_rPIE_mb0p05_alpha1p00_oldsample_for_probe_update/independenttrials_30Oct2021_t051441/' ];
+% N_trials.mb_0p05( end + 1 )  = 10;
+% 
+% path_data.mb_0p05{ end + 1 } = [ rootpath_data, 'mb0p05/cdi_rPIE_mb0p05_alpha0p10_oldsample_for_probe_update/independenttrials_23Oct2021_t210230/' ];
+% N_trials.mb_0p05( end + 1 )  = 10;
+% 
+% path_data.mb_0p05{ end + 1 } = [ rootpath_data, 'mb0p05/cdi_rPIE_mb0p05_alpha0p01_oldsample_for_probe_update/independenttrials_24Sep2021_t123331/' ];
+% N_trials.mb_0p05( end + 1 )  = 10;
+% 
+% path_data.mb_0p05{ end + 1 } = [ rootpath_data, 'mb0p05/cdi_rPIE_mb0p05_alpha0p001_oldsample_for_probe_update/independenttrials_04Nov2021_t042443/' ];
+% N_trials.mb_0p05( end + 1 )  = 10;
+% 
+% path_data.mb_0p05{ end + 1 } = [ rootpath_data, 'mb0p05/cdi_rPIE_mb0p05_alpha0p0001_oldsample_for_probe_update/independenttrials_06Nov2021_t105744/' ];
+% N_trials.mb_0p05( end + 1 )  = 10;
+% 
+% path_data.mb_0p05{ end + 1 } = [ rootpath_data, 'mb0p05/cdi_rPIE_mb0p05_alpha0p00001_oldsample_for_probe_update/independenttrials_06Nov2021_t215004/' ];
+% N_trials.mb_0p05( end + 1 )  = 10;
+% 
+% path_data.mb_0p05{ end + 1 } = [ rootpath_data, 'mb0p05/cdi_rPIE_mb0p05_alpha0p000001_oldsample_for_probe_update/independenttrials_07Nov2021_t073855/' ];
+% N_trials.mb_0p05( end + 1 )  = 10;
+% 
+% path_data.mb_0p05{ end + 1 } = [ rootpath_data, 'mb0p05/cdi_rPIE_mb0p05_alpha0p0000001_oldsample_for_probe_update/independenttrials_07Nov2021_t182814/' ];
+% N_trials.mb_0p05( end + 1 )  = 10;
+% 
+% path_data.mb_0p05{ end + 1 } = [ rootpath_data, 'mb0p05/cdi_rPIE_mb0p05_alpha0p00000001_oldsample_for_probe_update/independenttrials_08Nov2021_t052208/' ];
+% N_trials.mb_0p05( end + 1 )  = 10;
+% 
+% path_data.mb_0p05{ end + 1 } = [ rootpath_data, 'mb0p05/cdi_rPIE_mb0p05_alpha0p000000001_oldsample_for_probe_update/independenttrials_08Nov2021_t161250/' ];
+% N_trials.mb_0p05( end + 1 )  = 10;
+% 
+% path_data.mb_0p05 = transpose( path_data.mb_0p05 );
+% N_trials.mb_0p05  = transpose( N_trials.mb_0p05 );
+% 
+% N_data = length( path_data.mb_0p05 ) + N_data;
 
 %==============
 % 10% Minibatch
 %==============
 
-path_data.mb_0p10 = {};
-N_trials.mb_0p10  = [];
-
-path_data.mb_0p10{ end + 1 } = [ rootpath_data, 'mb0p10/cdi_rPIE_mb0p10_alpha1p00_oldsample_for_probe_update/independenttrials_23Oct2021_t190740/' ];
-N_trials.mb_0p10( end + 1 )  = 10;
-
-path_data.mb_0p10{ end + 1 } = [ rootpath_data, 'mb0p10/cdi_rPIE_mb0p10_alpha0p10_oldsample_for_probe_update/independenttrials_10Nov2021_t140344/'];
-N_trials.mb_0p10( end + 1 )  = 10;
-
-path_data.mb_0p10{ end + 1 } = [ rootpath_data, 'mb0p10/cdi_rPIE_mb0p10_alpha0p01_oldsample_for_probe_update/independenttrials_20Sep2021_t143405/' ];
-N_trials.mb_0p10( end + 1 )  = 10;
-
-path_data.mb_0p10{ end + 1 } = [ rootpath_data, 'mb0p10/cdi_rPIE_mb0p10_alpha0p001_oldsample_for_probe_update/independenttrials_20Sep2021_t144026/' ];
-N_trials.mb_0p10( end + 1 )  = 10;
-
-path_data.mb_0p10{ end + 1 } = [ rootpath_data, 'mb0p10/cdi_rPIE_mb0p10_alpha0p0001_oldsample_for_probe_update/independenttrials_01Nov2021_t113502/' ];
-N_trials.mb_0p10( end + 1 )  = 10;
-
-path_data.mb_0p10{ end + 1 } = [ rootpath_data, 'mb0p10/cdi_rPIE_mb0p10_alpha0p00001_oldsample_for_probe_update/independenttrials_01Nov2021_t212739/' ];
-N_trials.mb_0p10( end + 1 )  = 10;
-
-path_data.mb_0p10{ end + 1 } = [ rootpath_data, 'mb0p10/cdi_rPIE_mb0p10_alpha0p000001_oldsample_for_probe_update/independenttrials_02Nov2021_t071445/' ];
-N_trials.mb_0p10( end + 1 )  = 10;
-
-path_data.mb_0p10{ end + 1 } = [ rootpath_data, 'mb0p10/cdi_rPIE_mb0p10_alpha0p0000001_oldsample_for_probe_update/independenttrials_02Nov2021_t175702/' ];
-N_trials.mb_0p10( end + 1 )  = 10;
-
-path_data.mb_0p10{ end + 1 } = [ rootpath_data, 'mb0p10/cdi_rPIE_mb0p10_alpha0p00000001_oldsample_for_probe_update/independenttrials_03Nov2021_t045630/' ];
-N_trials.mb_0p10( end + 1 )  = 10;
-
-path_data.mb_0p10{ end + 1 } = [ rootpath_data, 'mb0p10/cdi_rPIE_mb0p10_alpha0p000000001_oldsample_for_probe_update/independenttrials_03Nov2021_t155907/' ];
-N_trials.mb_0p10( end + 1 )  = 10;
-
-path_data.mb_0p10 = transpose( path_data.mb_0p10 );
-N_trials.mb_0p10  = transpose( N_trials.mb_0p10 );
-
-N_data = length( path_data.mb_0p10 ) + N_data;
+% path_data.mb_0p10 = {};
+% N_trials.mb_0p10  = [];
+% 
+% path_data.mb_0p10{ end + 1 } = [ rootpath_data, 'mb0p10/cdi_rPIE_mb0p10_alpha1p00_oldsample_for_probe_update/independenttrials_23Oct2021_t190740/' ];
+% N_trials.mb_0p10( end + 1 )  = 10;
+% 
+% path_data.mb_0p10{ end + 1 } = [ rootpath_data, 'mb0p10/cdi_rPIE_mb0p10_alpha0p10_oldsample_for_probe_update/independenttrials_10Nov2021_t140344/'];
+% N_trials.mb_0p10( end + 1 )  = 10;
+% 
+% path_data.mb_0p10{ end + 1 } = [ rootpath_data, 'mb0p10/cdi_rPIE_mb0p10_alpha0p01_oldsample_for_probe_update/independenttrials_20Sep2021_t143405/' ];
+% N_trials.mb_0p10( end + 1 )  = 10;
+% 
+% path_data.mb_0p10{ end + 1 } = [ rootpath_data, 'mb0p10/cdi_rPIE_mb0p10_alpha0p001_oldsample_for_probe_update/independenttrials_20Sep2021_t144026/' ];
+% N_trials.mb_0p10( end + 1 )  = 10;
+% 
+% path_data.mb_0p10{ end + 1 } = [ rootpath_data, 'mb0p10/cdi_rPIE_mb0p10_alpha0p0001_oldsample_for_probe_update/independenttrials_01Nov2021_t113502/' ];
+% N_trials.mb_0p10( end + 1 )  = 10;
+% 
+% path_data.mb_0p10{ end + 1 } = [ rootpath_data, 'mb0p10/cdi_rPIE_mb0p10_alpha0p00001_oldsample_for_probe_update/independenttrials_01Nov2021_t212739/' ];
+% N_trials.mb_0p10( end + 1 )  = 10;
+% 
+% path_data.mb_0p10{ end + 1 } = [ rootpath_data, 'mb0p10/cdi_rPIE_mb0p10_alpha0p000001_oldsample_for_probe_update/independenttrials_02Nov2021_t071445/' ];
+% N_trials.mb_0p10( end + 1 )  = 10;
+% 
+% path_data.mb_0p10{ end + 1 } = [ rootpath_data, 'mb0p10/cdi_rPIE_mb0p10_alpha0p0000001_oldsample_for_probe_update/independenttrials_02Nov2021_t175702/' ];
+% N_trials.mb_0p10( end + 1 )  = 10;
+% 
+% path_data.mb_0p10{ end + 1 } = [ rootpath_data, 'mb0p10/cdi_rPIE_mb0p10_alpha0p00000001_oldsample_for_probe_update/independenttrials_03Nov2021_t045630/' ];
+% N_trials.mb_0p10( end + 1 )  = 10;
+% 
+% path_data.mb_0p10{ end + 1 } = [ rootpath_data, 'mb0p10/cdi_rPIE_mb0p10_alpha0p000000001_oldsample_for_probe_update/independenttrials_03Nov2021_t155907/' ];
+% N_trials.mb_0p10( end + 1 )  = 10;
+% 
+% path_data.mb_0p10 = transpose( path_data.mb_0p10 );
+% N_trials.mb_0p10  = transpose( N_trials.mb_0p10 );
+% 
+% N_data = length( path_data.mb_0p10 ) + N_data;
 
 %==============
 % 20% Minibatch
 %==============
+
+N_data = 0;
 
 path_data.mb_0p20 = {};
 N_trials.mb_0p20  = [];
@@ -1401,6 +1488,8 @@ path_data.mb_0p20 = transpose( path_data.mb_0p20 );
 N_trials.mb_0p20  = transpose( N_trials.mb_0p20 );
 
 N_data = length( path_data.mb_0p20 ) + N_data;
+
+return
 
 %==============
 % 33% Minibatch

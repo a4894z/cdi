@@ -8,18 +8,17 @@ function [ phi ] = rPIEupdate_blockstoch_2DTPA_SCPMprobes( psi,          ...
                                                            rPIE_alpha,   ...
                                                            shifttype )
                                       
-% rPIEupdate_blockstoch_2DTPA_SCPMprobes                          
+%========================================
+% update order ***DOES*** matter here !!!
+%========================================
 
-max_abs_sample_abs2 = max( abs( T( : )) .^ 2 );
-
-for ss = update_order     % order * DOES * matter here !!!
+for ss = update_order                   
 
     TFview = getview_2DsampleTF( T, vs_r, vs_c, rs( ss, : ), shifttype );
     
-    % ePIE
-    phi = phi + conj( TFview ) .* ( psi( :, :, :, ss ) - phi .* TFview ) / max_abs_sample_abs2;
-    
-%     % rPIE
-%     phi = phi + conj( TFview ) .* ( psi( :, :, :, ss ) - phi .* TFview ) ./ ( rPIE_alpha * max_abs_sample_abs2 + ( 1 - rPIE_alpha ) * abs( TFview ) .^ 2 );
+    abs2_sample = abs( TFview ) .^ 2;
+    max_abs2_sample = max( abs2_sample( : ));
+
+    phi = phi + conj( TFview ) .* ( psi( :, :, :, ss ) - phi .* TFview ) ./ ( rPIE_alpha * max_abs2_sample + ( 1 - rPIE_alpha ) * abs2_sample );
    
 end

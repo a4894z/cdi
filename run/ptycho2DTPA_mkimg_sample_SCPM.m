@@ -1,62 +1,6 @@
-function ptycho2DTPA_plotresults( sol, expt )
-
-    if sol.print_img == false, return; end
-
-    
-    
-    
-        %========================
-        % measurement cost metric 
-        %========================
-
-        figure( 666 ); 
-        set( gcf, 'Visible', 'off', 'Position',[ 1, 1, 1920, 1080 ] )     
-
-    %     subplot( 2, 1, 1 ); 
-
-        hold on
-
-        semilogy( sol.it.mtot, sol.metrics.meas_all, '-', 'Linewidth', 3, 'color', [ 0, 0, 0 ] )
-
-        % semilogy( sol.it.mtot, sol.metrics.meas, '-o', 'Linewidth', 2, 'Color', [0.8, 0, 0 ] ); 
-        % semilogy( sol.it.mtot, sol.metrics.meas_IN, '-o', 'Linewidth', 2, 'Color', [0.0, 0.8, 0 ] ); 
-        % semilogy( sol.it.mtot, sol.metrics.meas_OUT, '-o', 'Linewidth', 2, 'Color', [0.0, 0.0, 0.8 ] ); 
-
-        hold off
-        grid on
-        title('$ \frac{1}{N_s} \sum_s \left \Vert \sqrt{W_s} -  \sqrt{ \sum_p \left\vert \mathcal{F}[ \phi_p \odot T_s ] \right\vert^2} \right\Vert^2_F $', 'FontWeight','bold', 'FontSize', 14, 'Interpreter', 'latex' );
-
-        %legend
-        % legend({'total', 'IN random subset',  'OUT random subset'})
-
-    %     subplot( 2, 1, 2 ); 
-    %     hold on
-    % 
-    %     semilogy( sol.it.mtot, sol.metrics.exwv_change( : ) , '-o', 'Linewidth', 2 )
-    % 
-    % 
-    %     % semilogy( sol.it.mtot, sol.metrics.exwv_SP, '-o', 'Linewidth', 2, 'Color', [0.8, 0.0, 0.0 ] ); 
-    %     % semilogy( sol.it.mtot, sol.metrics.exwv_SP_IN, '-o', 'Linewidth', 2, 'Color', [0.0, 0.8, 0.0 ] ); 
-    %     % semilogy( sol.it.mtot, sol.metrics.exwv_SP_OUT, '-o', 'Linewidth', 2, 'Color', [0.0, 0.0, 0.8 ] ); 
-    % 
-    %     hold off
-    %     % title('$ \sum_s || \phi_s - P( \mathbf{r} )  T( \mathbf{r} - \mathbf{r}_s ) ||_F $','Interpreter','latex');
-    %     grid on
-    %     title('$ \frac{1}{N_p} \frac{1}{N_s} \sum_s \sum_p \left \Vert \psi_{sp} -  \phi_p \odot T_s \right\Vert^2_F $', 'FontWeight','bold', 'FontSize', 14, 'Interpreter', 'latex' );
-    %     % legend({'total', 'IN random subset',  'OUT random subset'})
+function ptycho2DTPA_mkimg_sample_SCPM( sol, expt )
 
 
-        % export_fig( num2str( sol.it.exwv, 'meas_metric-%d.jpg' ), '-r90.0' )
-        export_fig( 'meas_metric.jpg', '-r90.0' )
-
-        close all;
-        
-        
-        
-        
-        
-        
-        
         
         
     
@@ -233,5 +177,6 @@ function ptycho2DTPA_plotresults( sol, expt )
         export_fig( num2str( sol.it.epoch, 'absPmodes2_%d.jpg' ), '-r90.0' )
         close all;
         
-        
+
 end
+
