@@ -6,43 +6,58 @@ function [ sol, expt ] = ptycho2DTPA_runGPU_stochminibatchgrad( sol, expt, N_epo
     
     st = dbstack;
     namestr = st.name;
-    
-    %=================================================
-    % Compute initial exitwaves for all scan positions   % NO!!!! CAN'T DO THIS IF 10^6 SPOS, IS MAIN MEMORY LIMITED
-    %=================================================
 
-    % !!!! COMPUTE THIS IN BATCHES
-    
-    % compute_exitwaves_minibatch( )
-    
-%     sol.sample_sposview_indices = get_indices_2Dframes( sol.spos.rs, sol.sample.sz.sz, sol.sample.vs.r, sol.sample.vs.c );
-            
-%     sol.psi = sol.probe.phi .* reshape( sol.sample.T( sol.sample_sposview_indices ), [ sol.sz.sz, 1, size( sol.sample_sposview_indices, 2 ) ]);
-    
     %================================================================
     % Send to GPU parameters that will remain constant for all epochs
     %================================================================
 
     sol.GPU.rPIE_alpha_T   = gpuArray( sol.rPIE_alpha_T );
     sol.GPU.rPIE_alpha_phi = gpuArray( sol.rPIE_alpha_phi );
-%     sol.GPU.RAAR_beta  = gpuArray( sol.RAAR_beta );
 
-    sol.GPU.sparseGPU.threshname          = sol.sparse.threshname;
-    sol.GPU.sparseGPU.threshtype          = sol.sparse.threshtype;
-    sol.GPU.sparseGPU.lvl                 = gpuArray( sol.sparse.lvl );
-    sol.GPU.sparseGPU.support             = gpuArray( sol.sparse.support ); 
-    sol.GPU.sparseGPU.s2DFDxy.fft_scaling = gpuArray( sol.sparse.s2DFDxy.fft_scaling );
-    sol.GPU.sparseGPU.s2DFDxy.qLPF        = gpuArray( sol.sparse.s2DFDxy.qLPF );
-    sol.GPU.sparseGPU.s2DFDxy.Dx_fft      = gpuArray( sol.sparse.s2DFDxy.Dx_fft );
-    sol.GPU.sparseGPU.s2DFDxy.Dy_fft      = gpuArray( sol.sparse.s2DFDxy.Dy_fft );
-    sol.GPU.sparseGPU.s2DFDxy.Dx_fft_conj = gpuArray( sol.sparse.s2DFDxy.Dx_fft_conj );
-    sol.GPU.sparseGPU.s2DFDxy.Dy_fft_conj = gpuArray( sol.sparse.s2DFDxy.Dy_fft_conj );
-    sol.GPU.sparseGPU.s2DFDxy.sqrt_rc     = gpuArray( sol.sparse.s2DFDxy.sqrt_rc );    
+    %========
+
+    sol.GPU.sample_sparse.threshname          = sol.sample.sparse.threshname;
+    sol.GPU.sample_sparse.threshtype          = sol.sample.sparse.threshtype;
+    sol.GPU.sample_sparse.lvl                 = gpuArray( sol.sample.sparse.lvl );
+    sol.GPU.sample_sparse.support             = gpuArray( sol.sample.sparse.support ); 
+    sol.GPU.sample_sparse.s2DFDxy.fft_scaling = gpuArray( sol.sample.sparse.s2DFDxy.fft_scaling );
+    sol.GPU.sample_sparse.s2DFDxy.qLPF        = gpuArray( sol.sample.sparse.s2DFDxy.qLPF );
+    sol.GPU.sample_sparse.s2DFDxy.Dx_fft      = gpuArray( sol.sample.sparse.s2DFDxy.Dx_fft );
+    sol.GPU.sample_sparse.s2DFDxy.Dy_fft      = gpuArray( sol.sample.sparse.s2DFDxy.Dy_fft );
+    sol.GPU.sample_sparse.s2DFDxy.Dx_fft_conj = gpuArray( sol.sample.sparse.s2DFDxy.Dx_fft_conj );
+    sol.GPU.sample_sparse.s2DFDxy.Dy_fft_conj = gpuArray( sol.sample.sparse.s2DFDxy.Dy_fft_conj );
+    sol.GPU.sample_sparse.s2DFDxy.sqrt_rc     = gpuArray( sol.sample.sparse.s2DFDxy.sqrt_rc );    
         
+    %========
+
+    sol.GPU.probe_sparse.threshtype = sol.probe.sparse.threshtype;
+    sol.GPU.probe_sparse.threshname = sol.probe.sparse.threshname;
+    
+%     sol.GPU.probe_sparse.pct_x = gpuArray( sol.probe.sparse.pct_x );
+%     sol.GPU.probe_sparse.pct_y = gpuArray( sol.probe.sparse.pct_y );
+    sol.GPU.probe_sparse.lvl_x = gpuArray( sol.probe.sparse.lvl_x );
+    sol.GPU.probe_sparse.lvl_y = gpuArray( sol.probe.sparse.lvl_y );
+    
+    sol.GPU.probe_sparse.support = gpuArray( sol.probe.sparse.support );
+    
+    sol.GPU.probe_sparse.s2DFDxy.fft_scaling = gpuArray( sol.probe.sparse.s2DFDxy.fft_scaling );
+    sol.GPU.probe_sparse.s2DFDxy.qLPF        = gpuArray( sol.probe.sparse.s2DFDxy.qLPF );
+    sol.GPU.probe_sparse.s2DFDxy.Dx_fft      = gpuArray( sol.probe.sparse.s2DFDxy.Dx_fft );
+    sol.GPU.probe_sparse.s2DFDxy.Dy_fft      = gpuArray( sol.probe.sparse.s2DFDxy.Dy_fft );
+    sol.GPU.probe_sparse.s2DFDxy.Dx_fft_conj = gpuArray( sol.probe.sparse.s2DFDxy.Dx_fft_conj );
+    sol.GPU.probe_sparse.s2DFDxy.Dy_fft_conj = gpuArray( sol.probe.sparse.s2DFDxy.Dy_fft_conj );
+    sol.GPU.probe_sparse.s2DFDxy.sqrt_rc     = gpuArray( sol.probe.sparse.s2DFDxy.sqrt_rc );
+
+    %=================
+    % probe shrinkwrap
+    %=================
+    
     sol.GPU.swparams.blurx     = gpuArray( sol.swparams.blurx ); 
     sol.GPU.swparams.blury     = gpuArray( sol.swparams.blury );
     sol.GPU.swparams.sparselvl = gpuArray( sol.swparams.sparselvl ); 
     
+    %========    
+     
     sol.GPU.sz      = gpuArray( sol.sz.sz );
     sol.GPU.rc      = gpuArray( sol.sz.rc );
     sol.GPU.sqrt_rc = gpuArray( sol.sz.sqrt_rc );
@@ -63,13 +78,14 @@ function [ sol, expt ] = ptycho2DTPA_runGPU_stochminibatchgrad( sol, expt, N_epo
     
 %     sol.GPU.psi           = gpuArray( sol.psi );
     
-    sol.GPU.phi           = gpuArray( sol.probe.phi );
-    sol.GPU.fro2TOT       = gpuArray( sol.probe.scpm.fro2TOT );
-    sol.GPU.scpmocc       = gpuArray( sol.probe.scpm.occ );
-    sol.GPU.probe_support = gpuArray( sol.probe.support );
-    sol.GPU.scpmmax       = gpuArray( sol.probe.scpm.max );
-    sol.GPU.Nscpm         = gpuArray( sol.probe.scpm.N );
-        
+    sol.GPU.phi                = gpuArray( sol.probe.phi );
+    sol.GPU.fro2TOT            = gpuArray( sol.probe.scpm.fro2TOT );
+    sol.GPU.scpmocc            = gpuArray( sol.probe.scpm.occ );
+    sol.GPU.probe_support      = gpuArray( sol.probe.support );
+    sol.GPU.scpmmax            = gpuArray( sol.probe.scpm.max );
+    sol.GPU.Nscpm              = gpuArray( sol.probe.scpm.N );
+    sol.GPU.probe_gaussian_lpf = gpuArray( sol.probe.gaussian_lpf );
+     
     %=================================================
     % step length parameters for Poisson cost function 
     %=================================================
@@ -171,6 +187,10 @@ function [ sol, expt ] = ptycho2DTPA_runGPU_stochminibatchgrad( sol, expt, N_epo
         meas_gauss_magnitude = 0;
         meas_poiss           = 0;
         
+        grad_meas_gauss_intensity = 0;
+        grad_meas_gauss_magnitude = 0;
+        grad_meas_poiss           = 0;
+        
         collect_metrics = (( mod( sol.it.epoch, sol.it.collect_metrics ) == 0 ) || ( sol.it.epoch == 1 ));
         
         for uu = 1 : sol.spos.batch_N_iteration
@@ -201,16 +221,16 @@ function [ sol, expt ] = ptycho2DTPA_runGPU_stochminibatchgrad( sol, expt, N_epo
 
             if strcmp( sol.exwv_noisemodel, 'gaussian' )
             
-                [ sol.GPU.psi, meas_metrics ] = exitwave_vectorized_update_2DTPA_meas_projection( sol.GPU.phi,       ...            
-                                                                                                  sol.GPU.TFvec,     ...
-                                                                                                  sol.GPU.ind,       ...
-                                                                                                  sol.GPU.sz,        ...
-                                                                                                  sol.GPU.Nspos,     ...
-                                                                                                  sol.GPU.sqrt_rc,   ...
-                                                                                                  sol.GPU.meas_D,    ...
-                                                                                                  sol.GPU.meas_Deq0, ...
-                                                                                                  sol.GPU.measLPF,   ...
-                                                                                                  collect_metrics );
+                [ sol.GPU.psi, meas_metrics ] = exitwave_update_2DTPA_gaussian( sol.GPU.phi,       ...            
+                                                                                sol.GPU.TFvec,     ...
+                                                                                sol.GPU.ind,       ...
+                                                                                sol.GPU.sz,        ...
+                                                                                sol.GPU.Nspos,     ...
+                                                                                sol.GPU.sqrt_rc,   ...
+                                                                                sol.GPU.meas_D,    ...
+                                                                                sol.GPU.meas_Deq0, ...
+                                                                                sol.GPU.measLPF,   ...
+                                                                                collect_metrics );
                                                                                                  
             elseif strcmp( sol.exwv_noisemodel, 'poisson' )
             
@@ -273,6 +293,10 @@ function [ sol, expt ] = ptycho2DTPA_runGPU_stochminibatchgrad( sol, expt, N_epo
                 meas_gauss_magnitude = meas_gauss_magnitude + meas_metrics.gauss_magnitude; 
                 meas_poiss           = meas_poiss           + meas_metrics.poiss; 
                 
+                grad_meas_gauss_intensity = grad_meas_gauss_intensity + meas_metrics.grad_gauss_intensity; 
+                grad_meas_gauss_magnitude = grad_meas_gauss_magnitude + meas_metrics.grad_gauss_magnitude; 
+                grad_meas_poiss           = grad_meas_poiss           + meas_metrics.grad_poiss; 
+                
             end
    
             texwv = texwv + toc( start_exwv );
@@ -315,7 +339,7 @@ function [ sol, expt ] = ptycho2DTPA_runGPU_stochminibatchgrad( sol, expt, N_epo
 
         %             TF  = reshape( sol.GPU.TFvec, sol.GPU.samsz );
         %             TF  = lpf_gauss( TF, 0.70 * sol.GPU.samsz );
-        %             TF  = sparseFDxy_update_2Dsample( TF, sol.GPU.sparseGPU );      
+        %             TF  = sparseFDxy_update_2Dsample( TF, sol.GPU.sample_sparse );      
         %             sol.GPU.TFvec = TF( : );   
         %             clear( 'TF' )
 
@@ -323,7 +347,7 @@ function [ sol, expt ] = ptycho2DTPA_runGPU_stochminibatchgrad( sol, expt, N_epo
                     % Sample analysis sparsity on reduced dimensionality representations
                     %===================================================================
 
-                    [ sol.GPU.TFvec ] = sparseFDxy_update_2Dsample( reshape( sol.GPU.TFvec, sol.GPU.samsz ), sol.GPU.sparseGPU );
+                    [ sol.GPU.TFvec ] = sparseFDxy_update_2Dsample( reshape( sol.GPU.TFvec, sol.GPU.samsz ), sol.GPU.sample_sparse );
 
                     sol.GPU.TFvec = sol.GPU.TFvec( : );
 
@@ -393,6 +417,22 @@ function [ sol, expt ] = ptycho2DTPA_runGPU_stochminibatchgrad( sol, expt, N_epo
                 
                 sol.GPU.phi = ( sum( conj( T_view ) .* sol.GPU.psi, 4 ) + w_T .* sol.GPU.phi ) ./ ( z + w_T );
 
+                %======================
+                % Blur/smooth the SCPMs
+                %======================
+                
+                if ( mod( sol.it.epoch, sol.it.probe_smoothing ) == 0 ) 
+                    
+                    tmp0 = fftshift( fftshift( sol.GPU.phi, 1 ), 2 );
+
+                    tmp0 = fft( fft( tmp0, [], 1 ), [], 2 )   / sol.GPU.sqrt_rc;
+                    tmp0 = tmp0 .* sol.GPU.probe_gaussian_lpf;
+                    tmp0 = ifft( ifft( tmp0, [], 1 ), [], 2 ) * sol.GPU.sqrt_rc;
+
+                    sol.GPU.phi = fftshift( fftshift( tmp0, 1 ), 2 );
+
+                end
+                
                 %==========================================================================
                 % Center the probe to middle of its array; shift sample as well accordingly
                 %==========================================================================
@@ -409,7 +449,7 @@ function [ sol, expt ] = ptycho2DTPA_runGPU_stochminibatchgrad( sol, expt, N_epo
                     
                     if sum( shift_px ) ~= 0
 
-                        for pp = 1 : sol.probe.scpm.N
+                        for pp = 1 : sol.GPU.Nscpm
 
                             sol.GPU.phi( :, :, pp ) = nocircshift2D( sol.GPU.phi( :, :, pp ), shift_px );
 
@@ -418,6 +458,8 @@ function [ sol, expt ] = ptycho2DTPA_runGPU_stochminibatchgrad( sol, expt, N_epo
                         sol.GPU.TFvec = nocircshift2D( reshape( sol.GPU.TFvec, sol.GPU.samsz ), shift_px );
                         sol.GPU.TFvec = sol.GPU.TFvec( : );
 
+                        sol.GPU.TFvec( sol.GPU.TFvec == 0 ) = 1;
+                        
                     end
                     
                 end
@@ -454,9 +496,7 @@ function [ sol, expt ] = ptycho2DTPA_runGPU_stochminibatchgrad( sol, expt, N_epo
                 %===================
                 % Max abs constraint
                 %===================
-                
-                %%{
-                
+
                 if ( mod( sol.it.epoch, sol.it.probe_maxvals ) == 0 ) && ~isempty( sol.GPU.scpmmax )
                     
                     tmp2 = reshape( sol.GPU.scpmmax, [ 1, 1, sol.GPU.Nscpm ] );
@@ -469,8 +509,6 @@ function [ sol, expt ] = ptycho2DTPA_runGPU_stochminibatchgrad( sol, expt, N_epo
                     clear( 'tmp0', 'tmp1' )
                     
                 end
-                
-                %}
 
                 %===========================================================
                 % Probe Scaling ( # Photons ) and SCPM occupancy constraints
@@ -482,8 +520,42 @@ function [ sol, expt ] = ptycho2DTPA_runGPU_stochminibatchgrad( sol, expt, N_epo
 
                 end
 
-                %========
+                %==================================
+                % TESTING: probe phase ramp removal
+                %==================================
+                
+                if ( mod( sol.it.epoch, sol.it.probe_phase_sparse ) == 0 ) 
+                    
+                    for pp = 1 : sol.GPU.Nscpm
+                        
+                        phase_phi = angle( sol.GPU.phi( :, :, pp ) );
 
+                        [ edges_phase_phi ] = edgedetect_FDxy( phase_phi, sol.GPU.probe_sparse.s2DFDxy );
+
+                        abs_edges_phase_phi.y = abs( edges_phase_phi.y );
+                        abs_edges_phase_phi.x = abs( edges_phase_phi.x );
+
+                        lamr = find_thresh_from_sparsitylevel( abs_edges_phase_phi.y, sol.GPU.probe_sparse.lvl_y );
+                        lamc = find_thresh_from_sparsitylevel( abs_edges_phase_phi.x, sol.GPU.probe_sparse.lvl_x );
+
+                        [ edges_phase_phi.y, Wr ] = soft_shrinkage( edges_phase_phi.y, abs_edges_phase_phi.y, lamr );
+                        [ edges_phase_phi.x, Wc ] = soft_shrinkage( edges_phase_phi.x, abs_edges_phase_phi.x, lamc );     
+
+                        [ phase_phi ] = iedgedetect_FDxy( edges_phase_phi, sol.GPU.probe_sparse.s2DFDxy );
+
+                        sol.GPU.phi( :, :, pp ) = abs( sol.GPU.phi( :, :, pp ) ) .* exp( 1i * real( phase_phi ));     
+                    
+                    end
+                    
+                    
+%                     % TESTING: REAL VALUED PROBE
+%                     sol.GPU.phi = abs( sol.GPU.phi );
+
+                end
+                
+
+                %========
+                
                 tSCPM = tSCPM + toc( start_probe );
    
             end
@@ -539,7 +611,11 @@ function [ sol, expt ] = ptycho2DTPA_runGPU_stochminibatchgrad( sol, expt, N_epo
             
             sol.metrics.meas_gauss_intensity( sol.it.metr ) = gather( meas_gauss_intensity ) / sol.spos.N;
             sol.metrics.meas_gauss_magnitude( sol.it.metr ) = gather( meas_gauss_magnitude ) / sol.spos.N;
-            sol.metrics.meas_poiss( sol.it.metr )           = gather( meas_poiss )           / sol.spos.N;
+            sol.metrics.meas_poiss(           sol.it.metr ) = gather( meas_poiss )           / sol.spos.N;
+            
+            sol.metrics.grad_meas_gauss_intensity( sol.it.metr ) = gather( grad_meas_gauss_intensity ) / ( sol.probe.scpm.N * sol.spos.N );
+            sol.metrics.grad_meas_gauss_magnitude( sol.it.metr ) = gather( grad_meas_gauss_magnitude ) / ( sol.probe.scpm.N * sol.spos.N );
+            sol.metrics.grad_meas_poiss(           sol.it.metr ) = gather( grad_meas_poiss )           / ( sol.probe.scpm.N * sol.spos.N );
             
             sol.it.mtot( sol.it.metr ) = sol.it.epoch;   
             sol.it.metr                = sol.it.metr + 1;   

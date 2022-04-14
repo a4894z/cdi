@@ -32,10 +32,10 @@ duchii_plots_min_max( metrics.mb01_noise_rmbg, log10_sigma_optim, '-', [ 0.0, 0.
 
 %========
 
-load /net/s8iddata/export/8-id-ECA/Analysis/atripath/minibatch_vs_stoch_vs_full_rPIE_alpha/proberPIEalpha_vs_samplerPIEalpha/metrics_mb05_rPIE_alpha_T_vs_alpha_phi.mat
-thetitle = 'mb05';
-
-duchii_plots_min_max( metrics.mb05_noise_rmbg, log10_sigma_optim, '-', [ 0.0, 0.0, 0.0 ], thetitle );
+% load /net/s8iddata/export/8-id-ECA/Analysis/atripath/minibatch_vs_stoch_vs_full_rPIE_alpha/proberPIEalpha_vs_samplerPIEalpha/metrics_mb05_rPIE_alpha_T_vs_alpha_phi_NEW.mat
+% thetitle = 'mb05';
+% 
+% duchii_plots_min_max( metrics.mb05_noise_rmbg, log10_sigma_optim, '-', [ 0.0, 0.0, 0.0 ], thetitle );
 
 %========
 
@@ -100,7 +100,8 @@ return
 
 %========
 
-rootpath_data = '/net/s8iddata/export/8-id-ECA/Analysis/atripath/poisson_update_bench/31Mar2022/';
+% rootpath_data = '/net/s8iddata/export/8-id-ECA/Analysis/atripath/poisson_update_bench/31Mar2022/';
+rootpath_data = '/net/s8iddata/export/8-id-ECA/Analysis/atripath/poisson_update_bench/02Apr2022/';
 
 %========
 
@@ -125,10 +126,21 @@ for jj = 1 : length( path_data_fields )
  
     for kk = 1 : length( path_data.( path_data_fields{ jj } ))
         
+        %========
+
+%         metrics.( path_data_fields{ jj } ){ kk } = load_and_plot_OLD( path_data.( path_data_fields{ jj } ){ kk }, ...
+%                                                                       N_trials.( path_data_fields{ jj } )( kk ),  ...
+%                                                                       path_data_fields{ jj },                     ... 
+%                                                                       probe_scaling( kk )                           );           
+                                                              
+        %========
+        
         metrics.( path_data_fields{ jj } ){ kk } = load_and_plot( path_data.( path_data_fields{ jj } ){ kk }, ...
                                                                   N_trials.( path_data_fields{ jj } )( kk ),  ...
                                                                   path_data_fields{ jj },                     ... 
-                                                                  probe_scaling( kk )                           );                     
+                                                                  probe_scaling( kk )                           );           
+        
+        
     
     end
 
@@ -139,6 +151,667 @@ return
 %====================================================================================================================================================
 
 function metrics = load_and_plot( path_data, N_trials, path_data_fields, probe_scaling )
+    
+    metrics = {};
+    
+    Nspos = 699;
+
+    %========
+    
+    sim_ptycho2DTPA = cell( N_trials, 1 );
+    
+    for ii = 1 : N_trials
+
+        sim_ptycho2DTPA{ ii } = load( [ path_data, num2str( ii, 'trial_%d/sim_ptycho2DTPA.mat') ] );
+
+    end
+    
+    Nmetrics_epoch = length( sim_ptycho2DTPA{ 1 }.sol.metrics.meas_gauss_intensity );
+
+    %========
+
+    meas_gauss_intensity = zeros( Nmetrics_epoch, N_trials, 'single' );
+    meas_gauss_magnitude = zeros( Nmetrics_epoch, N_trials, 'single' );
+    meas_poisson         = zeros( Nmetrics_epoch, N_trials, 'single' );
+    
+    for ii = 1 : N_trials
+        
+        meas_gauss_intensity( :, ii ) = sim_ptycho2DTPA{ ii }.sol.metrics.meas_gauss_intensity / probe_scaling;     
+        meas_gauss_magnitude( :, ii ) = sim_ptycho2DTPA{ ii }.sol.metrics.meas_gauss_magnitude / probe_scaling;    
+        meas_poisson( :, ii )         = sim_ptycho2DTPA{ ii }.sol.metrics.meas_poiss           / probe_scaling;    
+   
+    end
+    
+%     std(meas_gauss_intensity, [], 1)
+%     std(meas_gauss_magnitude, [], 1)
+%     std(meas_poisson, [], 1)
+    
+    %=============================================================
+    % shift/scale all the metrics so that they're between [ 0, 1 ]
+    %=============================================================
+
+    I_m = sim_ptycho2DTPA{ 1 }.expt.meas.D .^ 2;
+    log_I_m = log( I_m );
+    log_I_m( isinf( log_I_m )) = 0;
+    
+    
+    meas_poisson_offset =  ( I_m - I_m .* log_I_m );
+    meas_poisson_offset = sum( meas_poisson_offset(:) ) / Nspos;
+    
+%     figure; 
+%     hold on
+%     semilogy( 10 * (1 : length( meas_poisson )), meas_poisson, 'Linewidth', 3  ); 
+%     semilogy(  10 * (1 : length( meas_poisson )), 0 * meas_poisson + meas_poisson_offset, '--', 'linewidth', 2, 'color', [ 0, 0, 0 ] ); 
+%     hold off
+%     set( gca, 'fontweight', 'bold' )
+%     grid on
+%     xlim( [ 0, 5001 ] )
+
+
+    
+    
+    
+    
+%     figure; 
+%     
+%     subplot(131)
+%     semilogy( meas_gauss_intensity, 'Linewidth', 3 ); 
+%     set( gca, 'fontweight', 'bold' )
+%     grid on
+%     
+%     subplot(132)
+%     semilogy( meas_gauss_magnitude, 'Linewidth', 3 ); 
+%     set( gca, 'fontweight', 'bold' )
+%     grid on
+%     
+%     subplot(133)
+%     semilogy( meas_poisson, 'Linewidth', 3 ); 
+%     set( gca, 'fontweight', 'bold' )
+%     grid on
+    
+    
+    
+    %%{
+    
+    meas_poisson = meas_poisson - meas_poisson_offset;
+    
+% %     meas_gauss_intensity = meas_gauss_intensity - min( meas_gauss_intensity(:) );
+% %     meas_gauss_magnitude = meas_gauss_magnitude - min( meas_gauss_magnitude(:) );
+% %     meas_poisson         = meas_poisson         - min( meas_poisson(:) );
+%     
+%     meas_gauss_intensity = meas_gauss_intensity / max( meas_gauss_intensity(:) );
+%     meas_gauss_magnitude = meas_gauss_magnitude / max( meas_gauss_magnitude(:) );
+%     meas_poisson         = meas_poisson         / max( meas_poisson(:) );
+
+%     figure; 
+%     plot( log10( 1 + meas_gauss_intensity )); 
+%     ylim([0, 1])
+%     
+%     figure; 
+%     plot( log10( 1 + meas_gauss_magnitude )); 
+%     ylim([0, 1])
+%     
+%     figure; 
+%     plot( log10( 1 + meas_poisson )); 
+%     ylim([0, 1])
+% 
+
+
+
+  
+%     y_lim = [10^-4, 1];
+    
+    figure; 
+    
+    subplot(131)
+    semilogy( 10 * (1 : length(meas_gauss_intensity)), meas_gauss_intensity, 'Linewidth', 3 ); 
+%     ylim( y_lim )
+    set( gca, 'fontweight', 'bold' )
+    grid on
+    legend( 'Location', 'northeast' ) 
+    xlim([ 0, 5000 ])
+    title( '$ \frac{1}{N_s} \sum_s \sum_{\mathbf{q}} \vert I^m_{ \mathbf{q}, s } -  I^e_{ \mathbf{q}, s } \vert^2 $', ...
+           'FontWeight', 'bold', ...
+           'FontSize', 16,       ...
+           'Interpreter', 'latex' );
+       
+      
+    subplot(132)
+    semilogy( 10 * (1 : length(meas_gauss_intensity)), meas_gauss_magnitude, 'Linewidth', 3 ); 
+%     ylim( y_lim )
+    set( gca, 'fontweight', 'bold' )
+    grid on
+    legend( 'Location', 'northeast' ) 
+    xlim([ 0, 5000 ])
+    title( '$ \frac{1}{N_s} \sum_s \sum_{\mathbf{q}} \big\vert \sqrt{I^m_{ \mathbf{q}, s }} -  \sqrt{I^e_{ \mathbf{q}, s }} \big\vert^2 $', ...
+           'FontWeight', 'bold', ...
+           'FontSize', 16,       ...
+           'Interpreter', 'latex' );
+      
+    subplot(133)
+    semilogy( 10 * (1 : length(meas_gauss_intensity)), meas_poisson, 'Linewidth', 3 ); 
+%     ylim( y_lim )
+    set( gca, 'fontweight', 'bold' )
+    grid on
+    legend( 'Location', 'northeast' ) 
+    xlim([ 0, 5000 ])
+    title( '$ \frac{1}{N_s} \sum_s \sum_{\mathbf{q}} I^e_{ \mathbf{q}, s } - I^m_{ \mathbf{q}, s } log( I^e_{ \mathbf{q}, s } ) + C_0 $', ...
+           'FontWeight', 'bold', ...
+           'FontSize', 16,       ...
+           'Interpreter', 'latex' );
+       %}
+       
+   %================================
+   % plot derivatives of the metrics
+   %================================
+   
+   y_lim = [10^-1, 10^11];
+   
+[~, ii ] = min( meas_gauss_intensity( end, : ), [], 2 );
+diff_meas_gauss_intensity = diff( meas_gauss_intensity( :, ii ));
+
+[~, ii ] = min( meas_gauss_magnitude( end, : ), [], 2 );
+diff_meas_gauss_magnitude = diff( meas_gauss_magnitude( :, ii ) );
+
+[~, ii ] = min( meas_poisson( end, : ), [], 2 );
+diff_meas_poisson         = diff( meas_poisson( :, ii ) );
+    
+
+
+   
+% 
+% diff_meas_gauss_intensity = diff( meas_gauss_intensity );
+% 
+% diff_meas_gauss_magnitude = diff( meas_gauss_magnitude );
+% 
+% diff_meas_poisson         = diff( meas_poisson );
+%     
+
+
+
+    figure; 
+    
+    subplot(131)
+    semilogy( 10 * (1 : length(diff_meas_gauss_intensity)), abs( diff_meas_gauss_intensity ), 'Linewidth', 2 ); 
+    ylim( y_lim )
+    set( gca, 'fontweight', 'bold' )
+    grid on
+    legend( 'Location', 'northeast' ) 
+    xlim([ 0, 5000 ])
+    xlabel('Epoch')
+    title( '$  \frac{d}{d~Epoch}  \Big( \left[ \frac{1}{N_s} \sum_s \sum_{\mathbf{q}} \vert I^m_{ \mathbf{q}, s } -  I^e_{ \mathbf{q}, s } \vert^2 \right] \left( Epoch \right) \Big) $', ...
+           'FontWeight', 'bold', ...
+           'FontSize', 16,       ...
+           'Interpreter', 'latex' );
+       
+      
+    subplot(132)
+    semilogy( 10 * (1 : length(diff_meas_gauss_magnitude)),  abs( diff_meas_gauss_magnitude ), 'Linewidth', 2 ); 
+    ylim( y_lim )
+    set( gca, 'fontweight', 'bold' )
+    grid on
+    legend( 'Location', 'northeast' ) 
+    xlim([ 0, 5000 ])
+    xlabel('Epoch')
+    title( '$ \frac{d}{d~Epoch}  \Big( \left[ \frac{1}{N_s} \sum_s \sum_{\mathbf{q}} \big\vert \sqrt{I^m_{ \mathbf{q}, s }} -  \sqrt{I^e_{ \mathbf{q}, s }} \big\vert^2 \right] \left( Epoch \right) \Big) $', ...
+           'FontWeight', 'bold', ...
+           'FontSize', 16,       ...
+           'Interpreter', 'latex' );
+      
+    subplot(133)
+    semilogy( 10 * (1 : length(diff_meas_poisson)), abs( diff_meas_poisson ), 'Linewidth', 2 ); 
+    ylim( y_lim )
+    set( gca, 'fontweight', 'bold' )
+    grid on
+    legend( 'Location', 'northeast' ) 
+    xlim([ 0, 5000 ])
+    xlabel('Epoch')
+    title( '$  \frac{d}{d~Epoch}  \Big( \left[ \frac{1}{N_s} \sum_s \sum_{\mathbf{q}} I^e_{ \mathbf{q}, s } - I^m_{ \mathbf{q}, s } log( I^e_{ \mathbf{q}, s } ) + C_0 \right] \left( Epoch \right) \Big) $', ...
+           'FontWeight', 'bold', ...
+           'FontSize', 16,       ...
+           'Interpreter', 'latex' );
+   
+   
+   
+   
+   
+   
+   
+   
+   
+   
+   return
+   
+   
+   
+   
+   
+   
+   
+   
+   
+   
+   
+   
+   
+   
+   
+   
+   
+   
+   
+   
+   
+   
+       
+       
+       
+       
+%     figure; plot( meas_poisson ./ meas_gauss_magnitude )
+    
+    
+
+    
+    
+%     plot( ax1, y1, linestyle, 'marker', '.', 'markersize', 12, 'linewidth', 2, 'color', shadingcolor )
+% 
+% % ccolor = [ 0.0, 0.0, 0.8 ];
+% 
+% x     = 1 : 40;
+% xconf = [ x, x( end : -1 : 1) ]; 
+% yconf = [ log10_meas_all_avg_max_early, fliplr( log10_meas_all_avg_min_early ) ];
+% % yconf = [ log10_meas_all_avg + 0.5 * log10_meas_all_avg_variance, fliplr( log10_meas_all_avg - 0.5 * log10_meas_all_avg_variance ) ];
+% 
+% hold on
+% 
+% p = fill( ax1, xconf, yconf, shadingcolor );
+% p.FaceColor = shadingcolor;      
+% p.EdgeColor = 'none';           
+% p.FaceAlpha = 0.2;
+% 
+% hold off
+% 
+% return
+
+
+
+
+% std( meas_gauss_intensity( end, :) )
+% std( meas_gauss_magnitude( end, :) )
+% std( meas_poisson( end, :) )
+%     
+    
+
+    
+    
+    
+
+%     
+%     log_mult = 3;
+%     
+%     meas_gauss_intensity = log10( 1 + 10^log_mult * meas_gauss_intensity );
+%     meas_gauss_magnitude = log10( 1 + 10^log_mult * meas_gauss_magnitude );
+%     meas_poisson         = log10( 1 + 10^log_mult * meas_poisson );
+%     
+%     meas_gauss_intensity = meas_gauss_intensity / max( meas_gauss_intensity(:) );
+%     meas_gauss_magnitude = meas_gauss_magnitude / max( meas_gauss_magnitude(:) );
+%     meas_poisson         = meas_poisson         / max( meas_poisson(:) );
+%     
+%     
+%     figure; 
+%     plot( meas_gauss_intensity ); 
+% 
+%     figure; 
+%     plot( meas_gauss_magnitude ); 
+% 
+%     figure; 
+%     plot( meas_poisson ); 
+% 
+%     return
+
+    %========
+% 
+%     log10_meas_gauss_intensity_avg = 0;
+%     log10_meas_gauss_magnitude_avg = 0;
+%     log10_meas_poisson_avg         = 0;
+%     
+%     for ii = 1 : N_trials
+%   
+%         log10_meas_gauss_intensity_avg = log10_meas_gauss_intensity_avg + log10( 1 + meas_gauss_intensity( :, ii ));    
+%         log10_meas_gauss_magnitude_avg = log10_meas_gauss_magnitude_avg + log10( 1 + meas_gauss_magnitude( :, ii ));    
+%         log10_meas_poisson_avg         = log10_meas_poisson_avg         + log10( 1 + meas_poisson( :, ii ));    
+%   
+%     end
+% 
+%     log10_meas_gauss_intensity_avg = log10_meas_gauss_intensity_avg / N_trials;
+%     log10_meas_gauss_magnitude_avg = log10_meas_gauss_magnitude_avg / N_trials;
+%     log10_meas_poisson_avg         = log10_meas_poisson_avg         / N_trials;
+% 
+%     log10_meas_gauss_intensity_avg = 10 .^ log10_meas_gauss_intensity_avg;
+%     log10_meas_gauss_magnitude_avg = 10 .^ log10_meas_gauss_magnitude_avg;
+%     log10_meas_poisson_avg         = 10 .^ log10_meas_poisson_avg;
+    
+    %=================================================
+    % create a struct from metrics data for future use
+    %=================================================
+    
+    for ii = 1 : N_trials
+        
+        metrics.meas_gauss_intensity( :, ii ) = sim_ptycho2DTPA{ ii }.sol.metrics.meas_gauss_intensity;
+        metrics.meas_gauss_magnitude( :, ii ) = sim_ptycho2DTPA{ ii }.sol.metrics.meas_gauss_magnitude;
+        metrics.meas_poisson( :, ii )         = sim_ptycho2DTPA{ ii }.sol.metrics.meas_poiss;
+        
+        metrics.timing( ii )          = sim_ptycho2DTPA{ ii }.sol.timings;
+        metrics.it( ii )              = sim_ptycho2DTPA{ ii }.sol.it;
+        metrics.rPIE_alpha_phi( ii )  = sim_ptycho2DTPA{ ii }.sol.rPIE_alpha_phi;
+        metrics.rPIE_alpha_T( ii )    = sim_ptycho2DTPA{ ii }.sol.rPIE_alpha_T;
+        metrics.probe_intensity( ii ) = sim_ptycho2DTPA{ ii }.sol.probe.scpm.fro2TOT;
+        
+        if isfield( sim_ptycho2DTPA{ ii }.sol.spos, 'rand_spos_subset_pct' )
+            
+            metrics.rand_spos_subset_pct( ii ) = sim_ptycho2DTPA{ ii }.sol.spos.rand_spos_subset_pct;
+            
+        end
+        
+    end
+    
+    %============================================
+    % create name strings for the saved the image
+    %============================================
+    
+    if isfield( sim_ptycho2DTPA{ ii }.sol.spos, 'rand_spos_subset_pct' )
+        
+        name_data = [ path_data_fields, num2str( [ metrics.rPIE_alpha_T( 1 ),           ...
+                                                   metrics.rand_spos_subset_pct( 1 )  ], ', rPIE_alpha_T = %0.3e, MBpct = %0.4f') ];
+                                               
+        save_data = [ path_data_fields, num2str( [ metrics.rPIE_alpha_phi( 1 ),         ...
+                                                   metrics.rPIE_alpha_T( 1 ),           ...
+                                                   metrics.rand_spos_subset_pct( 1 ) ,  ...
+                                                   round( metrics.probe_intensity( 1 )) ], '_rPIEalpha_phi_%0.3e_rPIEalpha_T_%0.3e_MBpct_%0.4f_photons_%0.3e_log10mean'), '.jpg' ];
+        
+    else
+        
+        name_data = [ path_data_fields, num2str( [ sim_ptycho2DTPA{ ii }.sol.rPIE_alpha_T ], ', rPIE_alpha_T = %0.3e') ];
+                                               
+        save_data = [ path_data_fields, num2str( [ sim_ptycho2DTPA{ ii }.sol.rPIE_alpha_T, ...
+                                                   round( metrics.probe_intensity( 1 )) ], '_rPIEalpha_phi_%0.3e_rPIEalpha_T_%0.3e_photons_%0.3e_log10mean'), '.jpg' ];
+        
+    end
+  
+    %========
+    
+    metrics.meas_gauss_intensity_max = meas_gauss_intensity_max;
+    metrics.meas_gauss_intensity_min = meas_gauss_intensity_min;
+    
+    metrics.meas_gauss_magnitude_max = meas_gauss_magnitude_max;
+    metrics.meas_gauss_magnitude_min = meas_gauss_magnitude_min;
+    
+    metrics.meas_poisson_max         = meas_poisson_max;
+    metrics.meas_poisson_min         = meas_poisson_min;
+   
+    metrics.meas_gauss_intensity = meas_gauss_intensity;
+    metrics.meas_gauss_magnitude = meas_gauss_magnitude;
+    metrics.meas_poisson         = meas_poisson;
+    
+    metrics.meas_gauss_intensity_avg = log10_meas_gauss_intensity_avg;
+    metrics.meas_gauss_magnitude_avg = log10_meas_gauss_magnitude_avg;
+    metrics.meas_poisson_avg         = log10_meas_poisson_avg;
+
+    metrics.name_data           = name_data;
+    metrics.N_trials            = N_trials;
+    metrics.path_data           = path_data;
+    
+    %============================================================
+    % create figures of the specified metrics over the trials run
+    %============================================================
+    
+%     skip = 1;
+%     
+%     y_lim = [ 3, 6 ];
+%     
+%     h1 = figure();  
+%     set( h1, 'Visible', 'off', 'Position',[ 1, 1, 1920, 1080 ] )
+% 
+%     x     = metrics.it( 1 ).mtot( 1 : skip : end );
+%     xconf = [ x, x( end : -1 : 1) ]; 
+%     yconf = [ log10_meas_all_max, fliplr( log10_meas_all_min ) ];
+%     
+%     p = fill( xconf, yconf, 'red' );
+%     p.FaceColor = [ 1, 0.8, 0.8 ];      
+%     p.EdgeColor = 'none';           
+% 
+%     hold on
+% 
+%     plot( metrics.it( 1 ).mtot( 1 : skip : end ), log10_meas_gauss_intensity_avg( 1 : skip : end ), '--', 'linewidth', 4, 'color', [ 0.0, 0.0, 0.0 ] )
+% 
+%     xlabel('Epoch')
+%     ylabel( { [ name_data, ',' ], 'Cost Function Value' }, 'Interpreter', 'none' )
+%     hold off
+%     title('$log_{10}\bigg[ \frac{1}{N_s} \sum_{s=1}^{N_s} \left \Vert \sqrt{W_s} -  \sqrt{ \sum_p \left\vert \mathcal{F}[ \phi_p \odot T_s ] \right\vert^2} \right\Vert^2_F \bigg]$', 'FontWeight','bold', 'FontSize', 14, 'Interpreter', 'latex' );
+%     grid on
+%     ylim( y_lim )
+% %     legend( 'Location', 'northeast' ) 
+%     
+%     hold off
+
+    %==========================================================================
+    % ?????
+    %==========================================================================
+
+    normalize_metric_start = logical( 0 ); %#ok<LOGL>
+
+    if normalize_metric_start == true
+        
+%         tmp0 = log10( metrics.meas_all / probe_scaling );
+%         tmp1 = log10_meas_gauss_intensity_avg / probe_scaling;
+%  
+%         tmp2 = log10( metrics.meas_all / probe_scaling );
+%         tmp3 = log10_meas_gauss_intensity_avg / probe_scaling;
+%         
+%         tmp4 = log10( metrics.meas_all / probe_scaling );
+%         tmp5 = log10_meas_gauss_intensity_avg / probe_scaling;
+        
+    else
+
+%         tmp0 = log10( metrics.meas_gauss_intensity );
+%         tmp1 = metrics.log10_meas_gauss_intensity_avg;
+  
+        tmp0 = metrics.meas_gauss_intensity;
+        tmp1 = metrics.meas_gauss_intensity_avg;
+        
+%         tmp2 = log10( metrics.meas_gauss_magnitude );
+%         tmp3 = metrics.log10_meas_gauss_magnitude_avg;
+        
+        tmp2 = metrics.meas_gauss_magnitude;
+        tmp3 = metrics.meas_gauss_magnitude_avg;
+        
+        tmp4 = metrics.meas_poisson;
+        tmp5 = metrics.meas_poisson_avg;
+        
+    end
+
+    tmp6 = metrics.it( 1 ).mtot;
+    
+    %=========================
+    % create the plot, save it
+    %=========================
+    
+    skip = 1;
+    
+%     y_lim = [ 5.0, 6 ];
+%     y_lim = 10.^[ 6.5, 11.0 ];
+    y_lim = 10.^[ -7, 0 ];
+    
+    h1 = figure();  
+%     set( h1, 'Visible', 'off', 'Position',[ 1, 1, 1920, 1080 ] )
+    set( h1, 'Visible', 'on', 'Position',[ 10, 1, 700, 1080 ] )
+
+    
+    semilogy( tmp6( 1 : skip : end - 0 ), tmp0( 1 : skip : end - 0, : ), '-', 'linewidth', 2 )
+    
+    hold on
+    semilogy( tmp6( 1 : skip : end - 0 ), tmp1( 1 : skip : end - 0 ), '--', 'linewidth', 4, 'color', [ 0.0, 0.0, 0.0 ] )
+    hold off
+    
+    set( gca, 'fontweight', 'bold' )
+    xlabel('Epoch')
+    ylabel( { [ name_data, ',' ], 'Cost Function Value' }, 'Interpreter', 'none' )
+    
+    title('$ \frac{1}{N_s} \sum_s \sum_{\mathbf{r}}  \big\vert I^m_{ \mathbf{r}, s } -  I^e_{ \mathbf{r}, s }  \big\vert^2 $', 'FontWeight','bold', 'FontSize', 14, 'Interpreter', 'latex' );
+    grid on
+    ylim( y_lim )
+    legend( 'Location', 'northeast' ) 
+    
+    export_fig( [ 'intensity_metric_', save_data ], '-r120.0' )
+    close all;
+    
+    %========
+    
+    skip = 1;
+    
+%     y_lim = [ 5.0, 6 ];
+%     y_lim = 10.^[ 3.5, 6.5 ];
+
+    h1 = figure();  
+%     set( h1, 'Visible', 'off', 'Position',[ 1, 1, 1920, 1080 ] )
+    set( h1, 'Visible', 'on', 'Position',[ 10, 1, 700, 1080 ] )
+    
+    semilogy( tmp6( 1 : skip : end - 0 ), tmp2( 1 : skip : end - 0, : ), '-', 'linewidth', 2 )
+    
+    hold on
+    semilogy( tmp6( 1 : skip : end - 0 ), tmp3( 1 : skip : end - 0 ), '--', 'linewidth', 4, 'color', [ 0.0, 0.0, 0.0 ] )
+    hold off
+    
+    
+    set( gca, 'fontweight', 'bold' )
+    xlabel('Epoch')
+    ylabel( { [ name_data, ',' ], 'Cost Function Value' }, 'Interpreter', 'none' )
+
+    title('$ \frac{1}{N_s} \sum_s \sum_{\mathbf{r}} \big\vert \sqrt{I^m_{ \mathbf{r}, s }} -  \sqrt{I^e_{ \mathbf{r}, s }} \big\vert^2 $', 'FontWeight','bold', 'FontSize', 14, 'Interpreter', 'latex' );
+    grid on
+    ylim( y_lim )
+    legend( 'Location', 'northeast' ) 
+    
+    hold off
+
+    export_fig( [ 'magnitude_metric_' , save_data ], '-r120.0' )
+    close all;
+        
+    %========
+    
+    skip = 1;
+    
+%     y_lim = [ 5.0, 6 ];
+%     y_lim = 10.^[ 0, 7 ];
+
+    h1 = figure();  
+%     set( h1, 'Visible', 'off', 'Position',[ 1, 1, 1920, 1080 ] )
+    set( h1, 'Visible', 'on', 'Position',[ 10, 1, 700, 1080 ] )
+    
+    
+    semilogy( tmp6( 1 : skip : end - 0 ), tmp4( 1 : skip : end - 0, : ), '-', 'linewidth', 2 )
+    
+    hold on
+    semilogy( tmp6( 1 : skip : end - 0 ), tmp5( 1 : skip : end - 0 ), '--', 'linewidth', 4, 'color', [ 0.0, 0.0, 0.0 ] )
+    hold off
+    
+    
+    
+    set( gca, 'fontweight', 'bold' )
+    xlabel('Epoch')
+    ylabel( { [ name_data, ',' ], 'Cost Function Value' }, 'Interpreter', 'none' )
+
+    title('$ \frac{1}{N_s} \sum_s \sum_{\mathbf{r}} I^e_{ \mathbf{r}, s } - I^m_{ \mathbf{r}, s } log\big( I^e_{ \mathbf{r}, s }  \big) $', 'FontWeight','bold', 'FontSize', 14, 'Interpreter', 'latex' );
+    grid on
+    ylim( y_lim )
+    legend( 'Location', 'northeast' ) 
+    
+
+    fprintf( [ 'saving dataset = ', save_data, '\n' ] );
+    
+    export_fig( [ 'poisson_metric_', save_data ], '-r120.0' )
+    close all;
+    
+    
+    %========================
+    % plot variance of trials
+    %========================
+    
+%     stdev = log10( std( meas_all, [], 2 ));  
+% %     stdev = std( log10_meas_all, [], 2 );  
+%     h1 = figure();  
+%     set( h1, 'Visible', 'off', 'Position',[ 1, 1, 1920, 1080 ] )
+%     
+%     plot( tmp2, stdev, '-', 'linewidth', 2 )
+%     set( gca, 'fontweight', 'bold' )
+%     xlabel('Epoch')
+%     ylabel( { [ name_data, ',' ], 'Variance of log10( Cost Function Value )' }, 'Interpreter', 'none' )
+%     title('$Var\left( log_{10}\bigg[ \frac{1}{N_s} \sum_{s=1}^{N_s} \left \Vert \sqrt{W_s} -  \sqrt{ \sum_p \left\vert \mathcal{F}[ \phi_p \odot T_s ] \right\vert^2} \right\Vert^2_F \bigg]\right)$', 'FontWeight','bold', 'FontSize', 14, 'Interpreter', 'latex' );
+%     grid on
+%     
+%     
+%     save_data = [ path_data_fields, num2str( [ sim_ptycho2DTPA{ ii }.sol.rPIE_alpha_T, ...
+%                                                sim_ptycho2DTPA{ ii }.sol.rPIE_alpha_phi, ...
+%                                                round( metrics.probe_intensity( 1 )) ], '_rPIE_alpha_phi_%0.3e_rPIE_alpha_T_%0.3e_photons_%0.3e_log10variance'), '.jpg' ];
+%     
+%     export_fig( save_data, '-r120.0' )
+%     close all;
+    
+    %============================================================================
+    % get trial with lowest final cost, and plot corresponding sample/probe modes
+    %============================================================================
+    
+%     [~, ii ] = min( tmp0( end, : ), [], 2 );
+%     
+%    
+%     [ scpm ] = compute_scpm_photonocc( sim_ptycho2DTPA{ ii }.sol.probe.phi );
+% 
+%     h1 = figure();        
+%     set( h1, 'Visible', 'off', 'Position', [ 1, 1, 1920, 1080 ] )
+% 
+%     for pp = 1 : sim_ptycho2DTPA{ ii }.sol.probe.scpm.N
+% 
+%         subplot( 1, double( sim_ptycho2DTPA{ ii }.sol.probe.scpm.N ), double( pp ) )   
+%         imagescHSV( sim_ptycho2DTPA{ ii }.sol.probe.phi( :, :, pp ) ); 
+% 
+%         daspect( [ 1, 1, 1 ]); 
+% 
+%         title( { num2str(  scpm.occ( pp ), 'occupancy = %.4f' ), ...
+%                   num2str(  scpm.fro2TOT, 'fro2TOT = %.4e' ) })
+%         grid on;
+%         set( gca, 'GridColor', [0.8, 0.0, 0.0], 'GridLineStyle', '--', 'GridAlpha', 0.5 )
+% 
+%     end
+%         
+%     save_data = [ path_data_fields,                                                                                                                                   ...
+%                   num2str( [ sim_ptycho2DTPA{ ii }.sol.rPIE_alpha_phi, sim_ptycho2DTPA{ ii }.sol.rPIE_alpha_T, round( metrics.probe_intensity( ii )) ], ...
+%                   '_rPIEalpha_phi_%0.3e_rPIEalpha_T_%0.3e_photons_%0.3e'),  '_probes.jpg' ];
+%     
+%     export_fig( save_data, '-r120.0' )
+%     close all;
+%     
+%     %========
+% 
+%     h1 = figure();        
+%     set( h1, 'Visible', 'off', 'Position', [ 1, 1, 1920, 1080 ] )
+%     
+%     imagescHSV( sim_ptycho2DTPA{ ii }.sol.sample.T )
+%     daspect( [ 1, 1, 1 ]); 
+%     
+%     save_data = [ path_data_fields,                                                                                                                                     ...
+%                   num2str( [ sim_ptycho2DTPA{ ii }.sol.rPIE_alpha_phi, sim_ptycho2DTPA{ ii }.sol.rPIE_alpha_T, round( metrics.probe_intensity( ii )) ], ...
+%                   '_rPIEalpha_phi_%0.3e_rPIEalpha_T_%0.3e_photons_%0.3e'),    ...
+%                   '_sample.jpg' ];
+%     
+%     export_fig( save_data, '-r120.0' )
+%     close all;
+
+
+end
+
+%====================================================================================================================================================
+
+function metrics = load_and_plot_OLD( path_data, N_trials, path_data_fields, probe_scaling )
     
     metrics = {};
 
@@ -397,7 +1070,9 @@ function metrics = load_and_plot( path_data, N_trials, path_data_fields, probe_s
     
     hold off
 
-    export_fig( save_data, '-r120.0' )
+    fprintf( [ 'saving dataset = ', save_data, '\n' ] );
+    
+    export_fig( save_data, '-r120.0' );
     close all;
     
     %========================
@@ -428,50 +1103,50 @@ function metrics = load_and_plot( path_data, N_trials, path_data_fields, probe_s
     % get trial with lowest final cost, and plot corresponding sample/probe modes
     %============================================================================
     
-    [~, ii ] = min( tmp0( end, : ), [], 2 );
-    
-   
-    [ scpm ] = compute_scpm_photonocc( sim_ptycho2DTPA{ ii }.sol.probe.phi );
-
-    h1 = figure();        
-    set( h1, 'Visible', 'off', 'Position', [ 1, 1, 1920, 1080 ] )
-
-    for pp = 1 : sim_ptycho2DTPA{ ii }.sol.probe.scpm.N
-
-        subplot( 1, double( sim_ptycho2DTPA{ ii }.sol.probe.scpm.N ), double( pp ) )   
-        imagescHSV( sim_ptycho2DTPA{ ii }.sol.probe.phi( :, :, pp ) ); 
-
-        daspect( [ 1, 1, 1 ]); 
-
-        title( { num2str(  scpm.occ( pp ), 'occupancy = %.4f' ), ...
-                  num2str(  scpm.fro2TOT, 'fro2TOT = %.4e' ) })
-        grid on;
-        set( gca, 'GridColor', [0.8, 0.0, 0.0], 'GridLineStyle', '--', 'GridAlpha', 0.5 )
-
-    end
-        
-    save_data = [ path_data_fields,                                                                                                                                   ...
-                  num2str( [ sim_ptycho2DTPA{ ii }.sol.rPIE_alpha_phi, sim_ptycho2DTPA{ ii }.sol.rPIE_alpha_T, round( metrics.probe_intensity( ii )) ], ...
-                  '_rPIEalpha_phi_%0.3e_rPIEalpha_T_%0.3e_photons_%0.3e'),  '_probes.jpg' ];
-    
-    export_fig( save_data, '-r120.0' )
-    close all;
-    
-    %========
-
-    h1 = figure();        
-    set( h1, 'Visible', 'off', 'Position', [ 1, 1, 1920, 1080 ] )
-    
-    imagescHSV( sim_ptycho2DTPA{ ii }.sol.sample.T )
-    daspect( [ 1, 1, 1 ]); 
-    
-    save_data = [ path_data_fields,                                                                                                                                     ...
-                  num2str( [ sim_ptycho2DTPA{ ii }.sol.rPIE_alpha_phi, sim_ptycho2DTPA{ ii }.sol.rPIE_alpha_T, round( metrics.probe_intensity( ii )) ], ...
-                  '_rPIEalpha_phi_%0.3e_rPIEalpha_T_%0.3e_photons_%0.3e'),    ...
-                  '_sample.jpg' ];
-    
-    export_fig( save_data, '-r120.0' )
-    close all;
+%     [~, ii ] = min( tmp0( end, : ), [], 2 );
+%     
+%    
+%     [ scpm ] = compute_scpm_photonocc( sim_ptycho2DTPA{ ii }.sol.probe.phi );
+% 
+%     h1 = figure();        
+%     set( h1, 'Visible', 'off', 'Position', [ 1, 1, 1920, 1080 ] )
+% 
+%     for pp = 1 : sim_ptycho2DTPA{ ii }.sol.probe.scpm.N
+% 
+%         subplot( 1, double( sim_ptycho2DTPA{ ii }.sol.probe.scpm.N ), double( pp ) )   
+%         imagescHSV( sim_ptycho2DTPA{ ii }.sol.probe.phi( :, :, pp ) ); 
+% 
+%         daspect( [ 1, 1, 1 ]); 
+% 
+%         title( { num2str(  scpm.occ( pp ), 'occupancy = %.4f' ), ...
+%                   num2str(  scpm.fro2TOT, 'fro2TOT = %.4e' ) })
+%         grid on;
+%         set( gca, 'GridColor', [0.8, 0.0, 0.0], 'GridLineStyle', '--', 'GridAlpha', 0.5 )
+% 
+%     end
+%         
+%     save_data = [ path_data_fields,                                                                                                                                   ...
+%                   num2str( [ sim_ptycho2DTPA{ ii }.sol.rPIE_alpha_phi, sim_ptycho2DTPA{ ii }.sol.rPIE_alpha_T, round( metrics.probe_intensity( ii )) ], ...
+%                   '_rPIEalpha_phi_%0.3e_rPIEalpha_T_%0.3e_photons_%0.3e'),  '_probes.jpg' ];
+%     
+%     export_fig( save_data, '-r120.0' )
+%     close all;
+%     
+%     %========
+% 
+%     h1 = figure();        
+%     set( h1, 'Visible', 'off', 'Position', [ 1, 1, 1920, 1080 ] )
+%     
+%     imagescHSV( sim_ptycho2DTPA{ ii }.sol.sample.T )
+%     daspect( [ 1, 1, 1 ]); 
+%     
+%     save_data = [ path_data_fields,                                                                                                                                     ...
+%                   num2str( [ sim_ptycho2DTPA{ ii }.sol.rPIE_alpha_phi, sim_ptycho2DTPA{ ii }.sol.rPIE_alpha_T, round( metrics.probe_intensity( ii )) ], ...
+%                   '_rPIEalpha_phi_%0.3e_rPIEalpha_T_%0.3e_photons_%0.3e'),    ...
+%                   '_sample.jpg' ];
+%     
+%     export_fig( save_data, '-r120.0' )
+%     close all;
 
 
 end
@@ -1131,10 +1806,6 @@ N_data = N_data + length( path_data.mb10_noise_rmbg );
 
 %}
 
-
-
-
-
 %================================================
 
 %{
@@ -1267,8 +1938,11 @@ N_trials.mb05_noise_rmbg( end + 1 )  = 10;
 path_data.mb05_noise_rmbg{ end + 1 } = [ rootpath_data, 'probe_mb05_rPIE_alpha_phi_1e-9_rPIE_alpha_T_1e-8/independenttrials_20Feb2022_t050234/' ];
 N_trials.mb05_noise_rmbg( end + 1 )  = 10;
 
-path_data.mb05_noise_rmbg{ end + 1 } = [ rootpath_data, 'probe_mb05_rPIE_alpha_phi_1e-9_rPIE_alpha_T_1e-9/independenttrials_16Mar2022_t112853/' ];
+path_data.mb05_noise_rmbg{ end + 1 } = [ rootpath_data, 'probe_mb05_rPIE_alpha_phi_1e-9_rPIE_alpha_T_1e-9_OLD/independenttrials_16Mar2022_t112853/' ];
 N_trials.mb05_noise_rmbg( end + 1 )  = 10;
+
+% path_data.mb05_noise_rmbg{ end + 1 } = [ rootpath_data, 'probe_mb05_rPIE_alpha_phi_1e-9_rPIE_alpha_T_1e-9/independenttrials_03Apr2022_t130725/' ];
+% N_trials.mb05_noise_rmbg( end + 1 )  = 10;
 
 %========
 
@@ -1447,22 +2121,68 @@ N_data = N_data + length( path_data.mb01_noise_rmbg );
 
 %========
 
-path_data.gaussian_fixedocc{ 1 } = [ rootpath_data, 'ptycho_mb20_rPIEalphaT_1e-1_gaussian_exp0p5fixedSCPMocc/independenttrials_31Mar2022_t093714/' ];
-N_trials.gaussian_fixedocc( 1 )  = 10;
+% path_data.gaussian_fixedocc{ 1 } = [ rootpath_data, 'ptycho_mb20_rPIEalphaT_1e-1_gaussian_exp0p5fixedSCPMocc/independenttrials_31Mar2022_t093714/' ];
+% N_trials.gaussian_fixedocc( 1 )  = 10;
+% 
+% path_data.poisson_fixedocc_step1{ 1 } = [ rootpath_data, 'ptycho_mb20_rPIEalphaT_1e-1_poisson1_exp0p5fixedSCPMocc/independenttrials_26Mar2022_t190834/' ];
+% N_trials.poisson_fixedocc_step1( 1 )  = 10;
+% 
+% path_data.poisson_fixedocc_step5{ 1 } = [ rootpath_data, 'ptycho_mb20_rPIEalphaT_1e-1_poisson5_exp0p5fixedSCPMocc/independenttrials_28Mar2022_t191936/' ];
+% N_trials.poisson_fixedocc_step5( 1 )  = 10;
+% 
+% path_data.poisson_fixedocc_step10{ 1 } = [ rootpath_data, 'ptycho_mb20_rPIEalphaT_1e-1_poisson10_exp0p5fixedSCPMocc/independenttrials_28Mar2022_t070834/' ];
+% N_trials.poisson_fixedocc_step10( 1 )  = 10;
+% 
+% path_data.poisson_fixedocc_step25{ 1 } = [ rootpath_data, 'ptycho_mb20_rPIEalphaT_1e-1_poisson25_exp0p5fixedSCPMocc/independenttrials_27Mar2022_t193922/' ];
+% N_trials.poisson_fixedocc_step25( 1 )  = 10;
+% 
+% N_data = 4;
 
-path_data.poisson_fixedocc_step1{ 1 } = [ rootpath_data, 'ptycho_mb20_rPIEalphaT_1e-1_poisson1_exp0p5fixedSCPMocc/independenttrials_26Mar2022_t190834/' ];
-N_trials.poisson_fixedocc_step1( 1 )  = 10;
+%========
 
-path_data.poisson_fixedocc_step5{ 1 } = [ rootpath_data, 'ptycho_mb20_rPIEalphaT_1e-1_poisson5_exp0p5fixedSCPMocc/independenttrials_28Mar2022_t191936/' ];
-N_trials.poisson_fixedocc_step5( 1 )  = 10;
+% path_data.gaussian_freeocc_rPIEalphaT_1e0{ 1 } = [ rootpath_data, 'ptycho_mb10_rPIEalphaT_1e-0_gaussian/independenttrials_02Apr2022_t135018/' ];
+% N_trials.gaussian_freeocc_rPIEalphaT_1e0( 1 )  = 10;
 
-path_data.poisson_fixedocc_step10{ 1 } = [ rootpath_data, 'ptycho_mb20_rPIEalphaT_1e-1_poisson10_exp0p5fixedSCPMocc/independenttrials_28Mar2022_t070834/' ];
-N_trials.poisson_fixedocc_step10( 1 )  = 10;
+path_data.poisson_freeocc_step1_rPIEalphaT_1e0{ 1 } = [ rootpath_data, 'ptycho_mb10_rPIEalphaT_1e-0_poisson1/independenttrials_02Apr2022_t135805/' ];
+N_trials.poisson_freeocc_step1_rPIEalphaT_1e0( 1 )  = 10;
 
-path_data.poisson_fixedocc_step25{ 1 } = [ rootpath_data, 'ptycho_mb20_rPIEalphaT_1e-1_poisson25_exp0p5fixedSCPMocc/independenttrials_27Mar2022_t193922/' ];
-N_trials.poisson_fixedocc_step25( 1 )  = 10;
+% path_data.poisson_freeocc_step5_rPIEalphaT_1e0{ 1 } = [ rootpath_data, 'ptycho_mb10_rPIEalphaT_1e-0_poisson5/independenttrials_02Apr2022_t140713/' ];
+% N_trials.poisson_freeocc_step5_rPIEalphaT_1e0( 1 )  = 10;
 
-N_data = 4;
+% path_data.poisson_freeocc_step10_rPIEalphaT_1e0{ 1 } = [ rootpath_data, 'ptycho_mb10_rPIEalphaT_1e-0_poisson10/independenttrials_02Apr2022_t141038/' ];
+% N_trials.poisson_freeocc_step10_rPIEalphaT_1e0( 1 )  = 10;
+
+
+
+
+% path_data.gaussian_freeocc_rPIEalphaT_1em1{ 1 } = [ rootpath_data, 'ptycho_mb10_rPIEalphaT_1e-1_gaussian/independenttrials_02Apr2022_t213443/' ];
+% N_trials.gaussian_freeocc_rPIEalphaT_1em1( 1 )  = 10;
+
+% path_data.poisson_freeocc_step1_rPIEalphaT_1em1{ 1 } = [ rootpath_data, 'ptycho_mb10_rPIEalphaT_1e-1_poisson1/independenttrials_03Apr2022_t024918/' ];
+% N_trials.poisson_freeocc_step1_rPIEalphaT_1em1( 1 )  = 10;
+
+% path_data.poisson_freeocc_step5_rPIEalphaT_1em1{ 1 } = [ rootpath_data, 'ptycho_mb10_rPIEalphaT_1e-1_poisson5/independenttrials_02Apr2022_t231648/' ];
+% N_trials.poisson_freeocc_step5_rPIEalphaT_1em1( 1 )  = 10;
+
+% path_data.poisson_freeocc_step10_rPIEalphaT_1em1{ 1 } = [ rootpath_data, 'ptycho_mb10_rPIEalphaT_1e-1_poisson10/independenttrials_02Apr2022_t225304/' ];
+% N_trials.poisson_freeocc_step10_rPIEalphaT_1em1( 1 )  = 10;
+
+
+
+% path_data.gaussian_freeocc_rPIEalphaT_1em2{ 1 } = [ rootpath_data, 'ptycho_mb10_rPIEalphaT_1e-2_gaussian/independenttrials_03Apr2022_t052057/' ];
+% N_trials.gaussian_freeocc_rPIEalphaT_1em2( 1 )  = 10;
+
+% path_data.poisson_freeocc_step1_rPIEalphaT_1em2{ 1 } = [ rootpath_data, 'ptycho_mb10_rPIEalphaT_1e-2_poisson1/independenttrials_03Apr2022_t154013/' ];
+% N_trials.poisson_freeocc_step1_rPIEalphaT_1em2( 1 )  = 10;
+
+% path_data.poisson_freeocc_step5_rPIEalphaT_1em2{ 1 } = [ rootpath_data, 'ptycho_mb10_rPIEalphaT_1e-2_poisson5/independenttrials_03Apr2022_t082645/' ];
+% N_trials.poisson_freeocc_step5_rPIEalphaT_1em2( 1 )  = 10;
+
+% path_data.poisson_freeocc_step10_rPIEalphaT_1em2{ 1 } = [ rootpath_data, 'ptycho_mb10_rPIEalphaT_1e-2_poisson10/independenttrials_03Apr2022_t073122/' ];
+% N_trials.poisson_freeocc_step10_rPIEalphaT_1em2( 1 )  = 10;
+
+
+N_data = 1;
 
 %====================================================================================================================================================
 

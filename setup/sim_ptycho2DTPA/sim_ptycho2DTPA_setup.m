@@ -270,13 +270,6 @@ expt.meas = orderfields( expt.meas );
 
 [ sol ] = make_2Dptycho_initsolns( expt );
 
-% counters keeping track of the total number of iterations we've 
-% run, defined as an update over all or a subset of scan locations. 
-sol.it.mtot = 1;
-sol.it.metr = 1;
-sol.it.exwv = 1;
-sol.it.epoch = 1;
-
 %==================
 % final cleaning up 
 %==================
