@@ -1,8 +1,24 @@
 function ptycho2DTPA_mkimg_sample_SCPM( sol, expt )
 
 
+        close all;
         
+        h1 = figure();  
+        set( h1, 'Visible', 'off', 'Position',[ 1, 1, 1920, 1080 ] )
         
+        plot_2Dscan_positions( expt.spos.rs, [], sol.spos.rs, [] )
+%         plot_2Dscan_positions( expt.spos.rs, [], rs, [] )
+        set( gca, 'xdir', 'reverse' )
+        set( gca, 'ydir', 'normal' )
+        xlabel('xh, lab frame'); 
+        ylabel('yv, lab frame');
+        xlim([-500, 500])
+        ylim([-500, 500])
+        daspect([1 1 1])  
+        grid on
+        
+        export_fig( num2str( sol.it.epoch, 'scanpositions_%d.jpg' ), '-r120.0' )
+        close all;
     
         %==============================
         % probe mode correlation matrix
@@ -41,47 +57,40 @@ function ptycho2DTPA_mkimg_sample_SCPM( sol, expt )
         h1 = figure();  
         set( h1, 'Visible', 'off', 'Position',[ 1, 1, 1920, 1080 ] )
         
-%         ax1 = subaxis(1,2,1,'MR',0.1, 'ML',0.1); 
         ax1 = subplot(131);
-%         imagesc( pltopts.xaxis, pltopts.yaxis, abs( sol.sample.T )); 
-        imagesc( pltopts.xaxis, pltopts.yaxis, abs( sol.sample.T ), [ 0, 1.20 ]); 
-%         imagesc( pltopts.xaxis, pltopts.yaxis,  log10(1 + abs(sol.sample.T))); 
-        daspect([1 1 1]); 
-%         axis square
+        imagesc( pltopts.xaxis, pltopts.yaxis, abs( sol.sample.T ), [ 0, 1.00 ]); 
+
+%         daspect([1 1 1]); 
+        axis square
+
         colorbar
         colormap( ax1, expt.cm.blj )
-%         colormap gray; 
         grid on; 
-%         set( gca, 'GridColor', [0.8, 0.0, 0.0], 'GridLineStyle', '--', 'GridAlpha', 0.5 )
         title('abs sample')
         
-%         ax2 = subaxis(1,2,2,'MR',0.1, 'ML',0.1); 
+
         ax2 = subplot(132);
         imagesc( pltopts.xaxis, pltopts.yaxis, angle( sol.sample.T ), [ -pi, pi ] ); 
-%         imagesc( pltopts.xaxis, pltopts.yaxis, angle( sol.sample.T ), [ sol.sample.phsL, sol.sample.phsH ] ); 
-        daspect([1 1 1]); 
-%         axis square
+        
+%         daspect([1 1 1]); 
+        axis square
+
         colorbar
-%         colormap( ax2, expt.cm.blj )
         colormap( ax2, expt.cm.hsvD )
-%         colormap hsv; 
         grid on; 
-%         set( gca, 'GridColor', [0.8, 0.0, 0.0], 'GridLineStyle', '--', 'GridAlpha', 0.5 )
         title('phase sample')
         
         
-%         subaxis(1,2,2,'MR',0.1, 'ML',0.1); 
         subplot(133)
         imagescHSV( sol.sample.T, pltopts  ); 
-%         imagescHSV( log10(1 + abs( sol.sample.T )) .* exp( 1i * angle( sol.sample.T )), pltopts );
-        daspect([1 1 1]); 
-%         axis square
+
+%         daspect([1 1 1]); 
+        axis square
+
         grid on;
         title('HSV ( V = mag, H = phs ) sample')
         
-%         set( gca, 'GridColor', [0.8, 0.0, 0.0], 'GridLineStyle', '--', 'GridAlpha', 1.0 )
-%         export_fig( num2str( sol.it.exwv, 'sample_%d.jpg' ), '-r120.0' )
-        export_fig( num2str( sol.it.epoch, 'sample_%d.jpg' ), '-r240.0' )
+        export_fig( num2str( sol.it.epoch, 'sample_%d.jpg' ), '-r120.0' )
         close all;
      
         %==============
@@ -144,7 +153,7 @@ function ptycho2DTPA_mkimg_sample_SCPM( sol, expt )
         
         absPmodes2 = sqrt( sum( abs( sol.probe.phi ) .^ 2, 3 ));
         
-        [ phi, ~ ] = enforce_2DTPAsposview( sol.probe.phi, sol.sample.T, sol.sample.vs.r, sol.sample.vs.c, sol.spos.rs( round( 0.5 * expt.spos.N ), : ), sol.spos.shifttype );
+        [ phi, ~ ] = enforce_2DTPAsposview( sol.probe.phi, sol.sample.T, sol.sample.vs.r, sol.sample.vs.c, sol.spos.rs( round( 0.5 * sol.spos.N ), : ), sol.spos.shifttype );
 %         phi = fftshift( fft2( fftshift( phi ))) / sqrt( numel( phi ));
         V = fft( fftshift( fft( fftshift( phi, 1 ), [], 1 ), 2 ), [], 2 ) / sqrt( numel( phi ));
         V = fftshift( sqrt( sum( abs( V ) .^ 2, 3 )));

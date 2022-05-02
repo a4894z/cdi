@@ -5,7 +5,8 @@ function ptycho2DTPA_mkimg_meas_metric( sol, expt )
 
     tmp0 = sol.metrics.meas_gauss_intensity;
     tmp1 = sol.metrics.meas_gauss_magnitude;
-    tmp2 = sol.metrics.meas_poiss - sol.metrics.poisson_offset;
+%     tmp2 = sol.metrics.meas_poiss - sol.metrics.poisson_offset;
+    tmp2 = sol.metrics.meas_poiss - expt.metrics.poisson_offset;
     
     tmp3 = sol.metrics.grad_meas_gauss_intensity;
     tmp4 = sol.metrics.grad_meas_gauss_magnitude;

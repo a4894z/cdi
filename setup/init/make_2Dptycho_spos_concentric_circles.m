@@ -8,10 +8,120 @@ Z = load( '/net/s8iddata/export/8-id-ECA/Analysis/atripath/rPIE_vs_MB_mat/no_noi
 
 spos = Z.expt.spos;
 
+spos.indxsubset = spos.indx;
+
+spos.rs0 = spos.rs;
+
+% spos.rs = spos.rs0;
+
+%=================================================================
+% introduce misc probe position goofiness and scan position errors
+%=================================================================
+
+% translation
+%
+% spos.rs( :, 1 ) = spos.rs( :, 1 ) + 6;
+% spos.rs( :, 2 ) = spos.rs( :, 2 ) - 20;
+
+%=======================
+
+% % shear
+% 
+% % sx = +0.5 * sign( 2 * rand - 1 );
+% % sy = +0.5 * sign( 2 * rand - 1 );
+% % sx = +0.5 * ( 2 * rand - 1 );
+% % sy = +0.5 * ( 2 * rand - 1 );
+% sx = +0.3;
+% sy = -0.1;
+% 
+% spos.rs = transpose( [ 1, 0; sx, 1 ] * transpose( spos.rs ));
+% 
+% figure; 
+% plot_2Dscan_positions( spos.rs0, [], spos.rs, [] )
+% set( gca, 'xdir', 'reverse' )
+% set( gca, 'ydir', 'normal' )
+% xlabel('xh, lab frame'); 
+% ylabel('yv, lab frame');
+% xlim([-400, 400])
+% ylim([-400, 400])
+% daspect([1 1 1])  
+% grid on
+%         
+% spos.rs = transpose( [ 1, sy; 0, 1 ] * transpose( spos.rs ));
+% 
+% figure; 
+% plot_2Dscan_positions( spos.rs0, [], spos.rs, [] )
+% set( gca, 'xdir', 'reverse' )
+% set( gca, 'ydir', 'normal' )
+% xlabel('xh, lab frame'); 
+% ylabel('yv, lab frame');
+% xlim([-400, 400])
+% ylim([-400, 400])
+% daspect([1 1 1])  
+% grid on
+
+%=======================
+
+% rotate
+
+figure; 
+plot_2Dscan_positions( spos.rs0, [], spos.rs, [] )
+% set( gca, 'xdir', 'reverse' )
+set( gca, 'ydir', 'normal' )
+xlabel('xh, lab frame'); 
+ylabel('yv, lab frame');
+xlim([-600, 600])
+ylim([-600, 600])
+daspect([1 1 1])  
+grid on
 
 
 
+th = 12 * pi / 180;
+% spos.rs = spos.rs * [ cos( th ), sin( th ); -sin( th ), cos( th ) ];
+% spos.rs = fliplr( fliplr( spos.rs ) * [ cos( th ), +sin( th ); -sin( th ), cos( th ) ] );
+spos.rs = spos.rs * [ cos( th ), -sin( th ); +sin( th ), cos( th ) ];
 
+figure; 
+plot_2Dscan_positions( spos.rs0, [], spos.rs, [] )
+% set( gca, 'xdir', 'reverse' )
+set( gca, 'ydir', 'normal' )
+xlabel('xh, lab frame'); 
+ylabel('yv, lab frame');
+xlim([-600, 600])
+ylim([-600, 600])
+daspect([1 1 1])  
+grid on
+
+%=======================
+
+% scale
+% 
+% sx = 1.0 + 0.1;
+% sy = 1.0 - 0.2;
+% spos.rs = [ sy, 0; 0, sx ] * transpose( spos.rs );
+% 
+% 
+% figure; 
+% plot_2Dscan_positions( spos.rs0, [], spos.rs, [] )
+% set( gca, 'xdir', 'reverse' )
+% set( gca, 'ydir', 'normal' )
+% xlabel('xh, lab frame'); 
+% ylabel('yv, lab frame');
+% xlim([-600, 600])
+% ylim([-600, 600])
+% daspect([1 1 1])  
+% grid on
+% 
+% 5;
+
+%=======================
+% random position errors
+%=======================
+% 
+% spos.rs = spos.rs + round( 20 * ( 2 * rand( spos.N, 2 ) - 1 ));
+
+%====================================================================================================================================================
 
 return
 
@@ -21,21 +131,15 @@ return
 % (towards storage ring as viewed from beamline ), and +z (vertical) is up.
 %============================================================================
 
-if isfield( expt, 'spos' ), spos = expt.spos; end
+% if isfield( expt, 'spos' ), spos = expt.spos; end
 
 spos.type = 'concentric_circles';
 
-spos.FOVx = 1.7 * 320;                       % fov in the x (col) direction in pixels
+spos.FOVx = 1.1 * 320;                       % fov in the x (col) direction in pixels
 spos.FOVy = 1.7 * 320;                       % fov in the y (row) direction in pixels
 spos.first_shell = 6;                  % number of scan locations in first circle
 spos.shell_dr = 20;                    % shell width in pixels
 spos.theta_offset = 0 * 20 * pi / 180;
-
-spos.randR = 1 * 2;
-spos.randC = 1 * 2;
-
-spos.startrow = round( 0 ); 
-spos.startcol = round( 50 ); 
 
 %====================================================================================================================================================
 
@@ -62,15 +166,40 @@ for ir = 1 : ( nr + 1 )
     if ( abs( x1 ) > spos.FOVy / 2 || ( abs( x2 ) > spos.FOVx / 2 ))
         continue; end
    
-    spos.rs( end + 1, : ) = round( [ x1, x2 ]); 
-
+%     spos.rs( end + 1, : ) = round( [ x1, x2 ]); 
+    spos.rs( end + 1, : ) = single( [ x1, x2 ] ); 
+    
   end
   
 end
 
 spos.N = size( spos.rs, 1 );
 
-spos.indx = 1 : spos.N;
+spos.indx       = 1 : spos.N;
+spos.indxsubset = spos.indx;
+
+
+
+
+
+
+spos.rs0 = spos.rs;
+
+% spos.rs = spos.rs0;
+
+
+% figure; 
+% plot_2Dscan_positions( spos.rs0, [], spos.rs( end, : ), [] )
+% set( gca, 'xdir', 'reverse' )
+% set( gca, 'ydir', 'normal' )
+% xlabel('xh, lab frame'); 
+% ylabel('yv, lab frame');
+% xlim([-400, 400])
+% ylim([-400, 400])
+% daspect([1 1 1])  
+% grid on
+
+
 
 %=================================================================
 % introduce misc probe position goofiness and scan position errors
@@ -83,11 +212,40 @@ spos.indx = 1 : spos.N;
 
 %=======================
 
-% % shear
-%
-% sx = 0.0;
-% sy = 0.0;
-% spos.rs = spos.rs * [ 1, sy; sx, 1 ];
+% shear
+
+% sx = +0.5 * sign( 2 * rand - 1 );
+% sy = +0.5 * sign( 2 * rand - 1 );
+% sx = +0.5 * ( 2 * rand - 1 );
+% sy = +0.5 * ( 2 * rand - 1 );
+sx = +0.1;
+sy = -0.2;
+
+spos.rs = spos.rs * [ 1, sx; 0, 1 ];
+
+figure; 
+plot_2Dscan_positions( spos.rs0, [], spos.rs, [] )
+set( gca, 'xdir', 'reverse' )
+set( gca, 'ydir', 'normal' )
+xlabel('xh, lab frame'); 
+ylabel('yv, lab frame');
+xlim([-400, 400])
+ylim([-400, 400])
+daspect([1 1 1])  
+grid on
+        
+spos.rs = spos.rs * [ 1, 0; sy, 1 ];
+
+figure; 
+plot_2Dscan_positions( spos.rs0, [], spos.rs, [] )
+set( gca, 'xdir', 'reverse' )
+set( gca, 'ydir', 'normal' )
+xlabel('xh, lab frame'); 
+ylabel('yv, lab frame');
+xlim([-400, 400])
+ylim([-400, 400])
+daspect([1 1 1])  
+grid on
 
 %=======================
 
@@ -98,11 +256,25 @@ spos.indx = 1 : spos.N;
 
 %=======================
 
-% % scale
-% 
-% sx = 1.0;
-% sy = 1.0;
-% spos.rs = spos.rs * [ sx, 0; 0, sy ];
+% scale
+
+sx = 1.0 + 0.1;
+sy = 1.0 - 0.2;
+spos.rs = spos.rs * [ sy, 0; 0, sx ];
+
+
+figure; 
+plot_2Dscan_positions( spos.rs0, [], spos.rs, [] )
+set( gca, 'xdir', 'reverse' )
+set( gca, 'ydir', 'normal' )
+xlabel('xh, lab frame'); 
+ylabel('yv, lab frame');
+xlim([-600, 600])
+ylim([-600, 600])
+daspect([1 1 1])  
+grid on
+
+5;
 
 %=======================
 

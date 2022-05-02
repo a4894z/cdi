@@ -1,27 +1,29 @@
 function [ sol ] = make_2Dptycho_initsolns( expt )
 
 %====================================================================================================================================================
-% -------------------------------------------- LOAD PREVIOUSLY DEFINED CANDIDATE SOLUTION PARAMETERS ------------------------------------------------
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% LOAD PREVIOUSLY DEFINED CANDIDATE SOLUTION PARAMETERS %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %====================================================================================================================================================
 
-Z = load( '/net/s8iddata/export/8-id-ECA/Analysis/atripath/rPIE_vs_MB_mat/no_noise/sim_ptycho2DTPA.mat', 'sol' );
-
-sol = Z.sol;
-
-%========
-
-sol.probe.scpm.fro2TOT = expt.probe.scpm.fro2TOT;
-% sol.probe.scpm.fro2TOT = ( 0.2 * ( 2 * rand - 1 ) + 1.0 ) * expt.probe.scpm.fro2TOT;
-
-% ensure modes have the desired occupancy:
-[ sol.probe.phi, sol.probe.scpm.fro2TOT, sol.probe.scpm.occ ] = enforce_scpm_fro2TOT_photonocc( sol.probe.phi, sol.probe.scpm.fro2TOT, sol.probe.scpm.occ );
-
-%========
-
-return
+% Z = load( '/net/s8iddata/export/8-id-ECA/Analysis/atripath/rPIE_vs_MB_mat/no_noise/sim_ptycho2DTPA.mat', 'sol' );
+% 
+% sol = Z.sol;
+% 
+% sol.spos.indxsubset = expt.spos.indxsubset;
+% 
+% %========
+% 
+% sol.probe.scpm.fro2TOT = expt.probe.scpm.fro2TOT;
+% % sol.probe.scpm.fro2TOT = ( 0.2 * ( 2 * rand - 1 ) + 1.0 ) * expt.probe.scpm.fro2TOT;
+% 
+% % ensure modes have the desired occupancy:
+% [ sol.probe.phi, sol.probe.scpm.fro2TOT, sol.probe.scpm.occ ] = enforce_scpm_fro2TOT_photonocc( sol.probe.phi, sol.probe.scpm.fro2TOT, sol.probe.scpm.occ );
+% 
+% %========
+% 
+% return
 
 %====================================================================================================================================================
-% ---------------------------------------------------- DEFINE CANDIDATE SOLUTION PARAMETERS ---------------------------------------------------------
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% DEFINE CANDIDATE SOLUTION PARAMETERS %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %====================================================================================================================================================
 
 %=============================
@@ -44,7 +46,7 @@ sol.sample.T = rand( expt.sample.sz.r, expt.sample.sz.c ) .* exp( 1i * 2 * pi * 
 sol.sample.T = lpf_gauss( sol.sample.T, [ 0.02 * expt.sample.sz.r, 0.02 * expt.sample.sz.c ] );
 
 sol.sample.T = modulus_limits_scale( sol.sample.T, [ 0.01, 0.999 ] );
-sol.sample.T = phase_limits_scale( sol.sample.T, [ 0 * pi, 0.7 * pi ] );
+sol.sample.T = phase_limits_scale( sol.sample.T, [ 0 * pi, 0.1 * pi ] );
 
 sol.sample.sz = expt.sample.sz;
 
@@ -109,12 +111,29 @@ end
 sol.spos.shifttype = 'px';
 % sol.spos.shifttype = 'subpx';  
 
-sol.spos.rs = expt.spos.rs;
+sol.spos.rs = expt.spos.rs0;
+
+
+% figure; 
+% plot_2Dscan_positions( expt.spos.rs, [], sol.spos.rs, [] )
+% set( gca, 'xdir', 'reverse' )
+% set( gca, 'ydir', 'normal' )
+% xlabel('xh, lab frame'); 
+% ylabel('yv, lab frame');
+% xlim([-600, 600])
+% ylim([-600, 600])
+% daspect([1 1 1])  
+% grid on
+% 
+% 5;
+
+
+
 
 sol.spos.N = length( sol.spos.rs );
 
-% sol.spos.indx = 1 : expt.spos.N;
-sol.spos.indx = expt.spos.indx;
+sol.spos.indx       = expt.spos.indx;
+sol.spos.indxsubset = sol.spos.indx;
 
 %========
 

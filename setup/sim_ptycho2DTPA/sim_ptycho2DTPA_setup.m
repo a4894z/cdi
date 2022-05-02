@@ -49,6 +49,8 @@ figure; imagesc( max( abs( V(:) ).^2 ) - abs( V ).^2 )
 
 %====================================================================================================================================================
 
+clear; close all;
+
 rng( 'shuffle' )
 
 fprintf('\n========================================================================================================'); 
@@ -70,8 +72,10 @@ fprintf('=======================================================================
 
 expt.paths.code          = '/net/s8iddata/export/8-id-ECA/Analysis/atripath/cdi/';   
 expt.paths.rimgdata      = '/net/s8iddata/export/8-id-ECA/Analysis/atripath/data/simulated/img/';   
-expt.paths.data_mat_name = 'sim_ptycho2DTPA';
-expt.paths.save_mat_loc  = '/net/s8iddata/export/8-id-ECA/Analysis/atripath/rPIE_vs_MB_mat/noise_rmbg/';
+% expt.paths.data_mat_name = 'sim_ptycho2DTPA';
+expt.paths.data_mat_name = 'sim_ptycho2DTPA_sposcorr_test';
+% expt.paths.save_mat_loc  = '/net/s8iddata/export/8-id-ECA/Analysis/atripath/rPIE_vs_MB_mat/noise_rmbg/';
+expt.paths.save_mat_loc  = '/net/s8iddata/export/8-id-ECA/Analysis/atripath/rPIE_vs_MB_mat/no_noise/';
 
 %================
 % load misc stuff 
@@ -255,6 +259,18 @@ clearvars -except expt sol
 
 % assuming an unfocused beam is used (e.g. a pinhole ) or sample is at the focal plane:
 [ expt.meas, expt.csys.z3 ] = make_measurements_2DTPA_UFB( expt );
+
+%========
+
+I_m                        = expt.meas.D .^ 2;
+log_I_m                    = log( I_m );
+log_I_m( isinf( log_I_m )) = 0;
+
+expt.metrics.poisson_offset = ( I_m - I_m .* log_I_m );
+expt.metrics.poisson_offset = sum( expt.metrics.poisson_offset(:) ) / size( I_m, 3 );
+clear( 'I_m', 'log_I_m' )
+
+%========
 
 expt.csys = orderfields( expt.csys );
 expt.meas = orderfields( expt.meas );

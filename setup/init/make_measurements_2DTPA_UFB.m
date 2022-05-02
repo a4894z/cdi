@@ -40,6 +40,17 @@ csysz3.dqc = csysz3.qcmax / expt.sz.c;
 % sample in measurement 
 %======================
 
+% figure; 
+% plot_2Dscan_positions( expt.spos.rs, [], expt.spos.rs, [] )
+% set( gca, 'xdir', 'reverse' )
+% set( gca, 'ydir', 'normal' )
+% xlabel('xh, lab frame'); 
+% ylabel('yv, lab frame');
+% xlim([-500, 500])
+% ylim([-500, 500])
+% daspect([1 1 1])  
+% grid on
+
 for ss = 1 : expt.spos.N
     
     fprintf( [ num2str( [ ss, expt.spos.N ], 'Creating measurement for scan position %d / %d' ), '\n' ]);
@@ -119,7 +130,7 @@ fprintf('\n');
 % figure( 666 ); 
 % plot( phot_px )
 
-meas.noisy = 1;
+meas.noisy = 0;
 
 if logical( meas.noisy ) == true
 

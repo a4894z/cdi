@@ -25,7 +25,16 @@ function hsv_img = complex2hsv( plot_me, log_absrptn, globl_phs, unwrap )
 %
 %
 
-%================================================
+
+% hsv_img( :, :, 1 ) = ( angle( plot_me ) + pi ) / ( 2 * pi );
+% hsv_img( :, :, 2 ) = ones( size( plot_me ), 'single' );
+
+% abs_plot_me = abs( plot_me );
+% hsv_img( :, :, 3 ) = modulus_limits_project( abs( plot_me ), [ 0.0, 1.0 ] );
+% hsv_img( :, :, 3 ) = abs_plot_me / ( 1e-7 + max( abs_plot_me( : )));
+
+
+%========
 
 if ( unwrap == true )
     
@@ -39,13 +48,12 @@ else
     
 end
 
-%================================================
+%========
 
 Sz = size( plot_me );
 hsv_img( :, :, 2 ) = ones( Sz( 1 ), Sz( 2 ));
 
-%================================================
-
+%========
 abs_plot_me = abs( plot_me );
 
 if log_absrptn == 1
@@ -57,6 +65,7 @@ if log_absrptn == 1
   
 else
   
+%   hsv_img( :, :, 3 ) = modulus_limits_project( abs_plot_me, [ 0.0, 1.0 ] );
   hsv_img( :, :, 3 ) = abs_plot_me / ( 1e-7 + max( abs_plot_me( : )));
 %   hsv_img( :, :, 3 ) = abs_plot_me;
   

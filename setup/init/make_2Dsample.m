@@ -3,23 +3,19 @@ function [ sample ] = make_2Dsample( expt )
 % create a 2D sample transmission function which we will use with 2D probe modes
 % to propagate exit waves ( using the projection approximation ) to the detector
 
-%====================================================================================================================================================
-% ----------------------------------------------- LOAD PREVIOUSLY DEFINED SAMPLE TRANSFER FUNCTION --------------------------------------------------
-%====================================================================================================================================================
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% LOAD PREVIOUSLY DEFINED SAMPLE TRANSFER FUNCTION 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-Z = load( '/net/s8iddata/export/8-id-ECA/Analysis/atripath/rPIE_vs_MB_mat/no_noise/sim_ptycho2DTPA.mat', 'expt' );
+% Z = load( '/net/s8iddata/export/8-id-ECA/Analysis/atripath/rPIE_vs_MB_mat/no_noise/sim_ptycho2DTPA.mat', 'expt' );
+% 
+% sample = Z.expt.sample;
+% 
+% return
 
-sample = Z.expt.sample;
-
-return
-
-%====================================================================================================================================================
-% ----------------------------------------------- CREATE SAMPLE TRANSFER FUNCTION FROM IMAGE --------------------------------------------------------
-%====================================================================================================================================================
-
-%===============================================
-% image we use for the sample transfer function:
-%===============================================
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% CREATE SAMPLE TRANSFER FUNCTION FROM IMAGE
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 % sample.img = [ expt.paths.rimgdata, '/sample/anl.ppm' ];
 % sample.img = [ expt.paths.rimgdata, '/sample/brain2.ppm' ];
@@ -34,24 +30,43 @@ sample.img = [ expt.paths.rimgdata, '/sample/cells4.ppm' ];
 % sample.img = [ expt.paths.rimgdata, '/sample/airforceTP.ppm' ];
 % sample.img = [ expt.paths.rimgdata, '/sample/tulips.ppm' ];
 
-%=======================
-% array size for sample:
-%=======================
 
-% sample.sz.r = single( round( expt.sz.r * 2.70 ));
-% sample.sz.c = single( round( expt.sz.c * 2.70 ));
-% sample.sz.r = single( 128 );
-% sample.sz.c = single( 128 );
-% sample.sz.r = single( 2048 );
-% sample.sz.c = single( 2048 );
+%{
 
-% sol.sample.sz.r = round( 1.01 * round( max( expt.spos.rs( :, 1 )) - min( expt.spos.rs( :, 1 )) + expt.sz.r ));
-% sol.sample.sz.c = round( 1.01 * round( max( expt.spos.rs( :, 2 )) - min( expt.spos.rs( :, 2 )) + expt.sz.c ));
-sample.sz.r = 1280;
-sample.sz.c = 1280;
+%====================================================
+% array size for sample using FOV from scan positions 
+%====================================================
 
-% sample.sz.r = expt.sz.r + 512 - 64 - 32;
-% sample.sz.c = expt.sz.c + 512 - 64 - 32;
+sample.sz.r = round( 1.00 * round( max( expt.spos.rs( :, 1 )) - min( expt.spos.rs( :, 1 )) + expt.sz.r ) );
+sample.sz.c = round( 1.00 * round( max( expt.spos.rs( :, 2 )) - min( expt.spos.rs( :, 2 )) + expt.sz.c ) );
+
+%=======================================================================
+% a bit more padding in case we want to do some scan position correction
+%=======================================================================
+
+sample.sz.r = expt.sample.sz.r + 20;
+sample.sz.c = expt.sample.sz.c + 40;
+
+%================================
+% round (ceiling) to nearest even
+%================================
+
+sample.sz.r = sample.sz.r + mod( sample.sz.r, 2 );
+sample.sz.c = sample.sz.c + mod( sample.sz.c, 2 );
+
+%}
+
+%======================
+% array size for sample
+%======================
+
+sample.sz.r = single( 1536 );
+sample.sz.c = single( 1536 );
+
+%====================================
+% book-keeping for final sample sizes
+%====================================
+
 sample.sz.rc = sample.sz.r * sample.sz.c;
 sample.sz.sqrt_rc = sqrt( sample.sz.rc );
 sample.sz.sz = [ sample.sz.r, sample.sz.c ]; 
@@ -72,7 +87,7 @@ sample.phs_offset = single( 0.0 * pi );
 % load an image, create it to hsv, val <--> abs, hue <--> phs 
 [ tmp1 ] = image2complex( sample.img, 3, 3 );
 
-sample.T = imresize( tmp1, 1 * sample.sz.sz, 'box' );
+sample.T = imresize( tmp1, 1 * sample.sz.sz, 'bicubic' );
 % sample.T = imresize2D( tmp1, 1 * sample.sz.sz );
 
 %========
@@ -99,11 +114,11 @@ sample.T = imresize( tmp1, 1 * sample.sz.sz, 'box' );
 
 %========
 
-sample.sz.r = single( size( sample.T, 1 ));
-sample.sz.c = single( size( sample.T, 2 ));
-sample.sz.rc = sample.sz.r * sample.sz.c;
-sample.sz.sqrt_rc = sqrt( sample.sz.rc );
-sample.sz.sz = [ sample.sz.r, sample.sz.c ]; 
+% sample.sz.r = single( size( sample.T, 1 ));
+% sample.sz.c = single( size( sample.T, 2 ));
+% sample.sz.rc = sample.sz.r * sample.sz.c;
+% sample.sz.sqrt_rc = sqrt( sample.sz.rc );
+% sample.sz.sz = [ sample.sz.r, sample.sz.c ]; 
 
 % view slices for when computing the exit wave views at a particular scan position
 % sample.vs( 1, :  ) = round( ( 0.5 * ( sample.sz.r - expt.sz.r ) + 1 ) : ( 0.5 * ( sample.sz.r + expt.sz.r )));
