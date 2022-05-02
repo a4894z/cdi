@@ -1,10 +1,10 @@
-function [ rs, rot ] = scanpositions_update_2DTPA_rotation_v2( rs, psi, T0, phi, spos_opt, sol_GPU, expt )
+function [ rs, rot ] = scanpositions_update_2DTPA_rotation_v2( rs, psi, T0, phi, measD, nDeq0, spos_opt, sol_GPU, expt )
 
 Nspos = size( rs, 1 );
 Nscpm = size( phi, 3 );
 
 % rot_search = gpuArray( linspace( -5, 5, 31 ));
-rot_search = gpuArray( [ 0, 12 ]);
+rot_search = gpuArray( [ 12, 0, -12 ]);
 
 L = gpuArray( zeros( 1, length( rot_search ), 'single' ) );
 
@@ -19,27 +19,43 @@ for aa = 1 : length( rot_search )
     ind = get_indices_2Dframes( rs_rot, spos_opt.szTF, spos_opt.vs_r, spos_opt.vs_c ); 
     psi_rot = reshape( T0( ind ), [ spos_opt.sz, 1, Nspos ]) .* phi;
 
-%     ind_offset = ind + uint32( sol_GPU.samrc * ( 0 : 1 : ( sol_GPU.Nspos - 1 ) ));
-%     
-%     
-% %          [ TF1 ] = rPIEupdate_batch_2DTPA_sample(  psi_rot,        ...
-% %                                                    sol_GPU.TFvec,      ...
-% %                                                    sol_GPU.phi,        ...
-% %                                                    ind_offset, ...
-% %                                                    sol_GPU.rc,         ...
-% %                                                    sol_GPU.Nspos,      ...
-% %                                                    sol_GPU.rPIE_alpha_T );  
-%     
-%     
-%          [ TF2 ] = rPIEupdate_batch_2DTPA_sample(  psi_rot,        ...
+    ind_offset = ind + uint32( sol_GPU.samrc * ( 0 : 1 : ( sol_GPU.Nspos - 1 ) ));
+    
+    
+    
+    
+    TF0_mat = reshape( T0, spos_opt.szTF );
+
+    
+    
+%          [ TF1 ] = rPIEupdate_batch_2DTPA_sample(  psi_rot,        ...
 %                                                    sol_GPU.TFvec,      ...
 %                                                    sol_GPU.phi,        ...
-%                                                    sol_GPU.ind_offset, ...
+%                                                    ind_offset, ...
 %                                                    sol_GPU.rc,         ...
 %                                                    sol_GPU.Nspos,      ...
-%                                                    sol_GPU.rPIE_alpha_T ); 
-%                                                
+%                                                    sol_GPU.rPIE_alpha_T );  
 %     
+%         TF1_mat = reshape( TF1, spos_opt.szTF );
+    
+    
+         [ TF2 ] = rPIEupdate_batch_2DTPA_sample(  psi_rot,        ...
+                                                   sol_GPU.TFvec,      ...
+                                                   sol_GPU.phi,        ...
+                                                   sol_GPU.ind_offset, ...
+                                                   sol_GPU.rc,         ...
+                                                   sol_GPU.Nspos,      ...
+                                                   sol_GPU.rPIE_alpha_T ); 
+                                               
+      TF2_mat = reshape( TF2, spos_opt.szTF );                                               
+    
+      
+     ind = get_indices_2Dframes( rs_rot, spos_opt.szTF, spos_opt.vs_r, spos_opt.vs_c ); 
+     psi_rot = reshape( TF2( ind ), [ spos_opt.sz, 1, Nspos ]) .* phi;
+    
+      
+      
+      
 %          [ TF3 ] = rPIEupdate_batch_2DTPA_sample(  psi,        ...
 %                                                    sol_GPU.TFvec,      ...
 %                                                    sol_GPU.phi,        ...
@@ -48,17 +64,18 @@ for aa = 1 : length( rot_search )
 %                                                    sol_GPU.Nspos,      ...
 %                                                    sol_GPU.rPIE_alpha_T ); 
 %                                                
-%                                                
-%     TF0_mat = reshape( T0, spos_opt.szTF );
-% %     TF1_mat = reshape( TF1, spos_opt.szTF );
-%     TF2_mat = reshape( TF2, spos_opt.szTF );
 %     TF3_mat = reshape( TF3, spos_opt.szTF );
 %     
-%     figure; imagescHSV(TF0_mat)
-% %     figure; imagescHSV(TF1_mat)
-%     figure; imagescHSV(TF2_mat)
-%     figure; imagescHSV(TF3_mat)
-%     
+
+
+
+
+    figure; imagescHSV(TF0_mat); title('TF0\_mat')
+%     figure; imagescHSV(TF1_mat); title('TF1\_mat')
+    figure; imagescHSV(TF2_mat); title('TF2\_mat')
+%     figure; imagescHSV(TF3_mat); title('TF3\_mat')
+    figure; imagescHSV( expt.sample.T)
+    
 %     figure; imagesc(abs(TF0_mat))
 %     figure; imagesc(abs(TF2_mat))
 %     figure; imagesc(abs(TF3_mat))

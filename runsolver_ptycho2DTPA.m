@@ -131,7 +131,7 @@ data_path = '/net/s8iddata/export/8-id-ECA/Analysis/atripath/rPIE_vs_MB_mat/no_n
 %=========
 
 
-% data_path = './sim_ptycho2DTPA_sposcorr_test.mat';
+data_path = './sim_ptycho2DTPA_sposcorr_test.mat';
 
 % data_path = [ pwd, '/sim_ptycho2DTPA.mat' ];
 % data_path = './L0105_to_L0113_combined_512x512.mat';
