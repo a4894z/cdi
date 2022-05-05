@@ -45,6 +45,14 @@ end
 % 
 % sol.spos.rs = transpose( sol.spos.rotation * transpose( sol.spos.rs ));
 
+% figure; 
+% plot_2Dscan_positions( expt.spos.rs, [], sol.spos.rs, [] )
+% set( gca, 'xdir', 'reverse' )
+% set( gca, 'ydir', 'normal' )
+% xlabel('xh, lab frame'); 
+% ylabel('yv, lab frame');
+% daspect([1 1 1])  
+
 %==========================================
 % Other transformation(s) on scan positions
 %==========================================

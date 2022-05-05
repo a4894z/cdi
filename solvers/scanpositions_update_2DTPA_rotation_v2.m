@@ -1,5 +1,6 @@
 function [ rs, rot ] = scanpositions_update_2DTPA_rotation_v2( rs, psi, T0, phi, measD, nDeq0, spos_opt, sol_GPU, expt )
 
+nDeq0 = not( nDeq0 );
 Nspos = size( rs, 1 );
 Nscpm = size( phi, 3 );
 
@@ -50,12 +51,21 @@ for aa = 1 : length( rot_search )
       TF2_mat = reshape( TF2, spos_opt.szTF );                                               
     
       
-     ind = get_indices_2Dframes( rs_rot, spos_opt.szTF, spos_opt.vs_r, spos_opt.vs_c ); 
+%      ind = get_indices_2Dframes( rs_rot, spos_opt.szTF, spos_opt.vs_r, spos_opt.vs_c ); 
      psi_rot = reshape( TF2( ind ), [ spos_opt.sz, 1, Nspos ]) .* phi;
-    
+     psi_rot = fft( fft( fftshift( fftshift( psi_rot, 1 ), 2 ), [], 1 ), [], 2 ) / spos_opt.sqrt_rc;
       
-      
-      
+     
+     
+TF0rot_a = imrotate( TF0_mat, -12 , 'nearest', 'crop' );
+
+figure; imagescHSV(TF0_mat); title('TF0\_mat')
+figure; imagescHSV(TF0rot_a); title('TF0rot\_a')
+ figure; imagescHSV( expt.sample.T)
+
+
+
+
 %          [ TF3 ] = rPIEupdate_batch_2DTPA_sample(  psi,        ...
 %                                                    sol_GPU.TFvec,      ...
 %                                                    sol_GPU.phi,        ...
@@ -80,8 +90,12 @@ for aa = 1 : length( rot_search )
 %     figure; imagesc(abs(TF2_mat))
 %     figure; imagesc(abs(TF3_mat))
     
+    sqrt_I_e      = sqrt( sum( abs( psi_rot ) .^ 2, 3 ));
+%     I_e      = squeeze( sum( abs( psi ) .^ 2, 3 ) );
+
+    L( aa ) = sum( sum( sum( abs( measD - nDeq0 .* sqrt_I_e  ) .^ 2, 1 ), 2 )) / ( Nspos * spos_opt.rc );
     
-    L( aa ) = sum( sum( sum( sum( abs( psi - psi_rot ) .^ 2 )))) / ( Nspos * spos_opt.rc * Nscpm );
+%     L( aa ) = sum( sum( sum( sum( abs( psi - psi_rot ) .^ 2 )))) / ( Nspos * spos_opt.rc * Nscpm );
 
 
 end

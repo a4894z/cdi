@@ -55,6 +55,7 @@ end
 %========
 
 psi = ( sqrt_I_m .* ( psi ./ ( 1e-7 + sqrt_I_e )) + psi .* sqrt_I_m_eq0 ) .* measLPF;
+% psi = ( sqrt_I_m ./ sqrt_I_e + 1 ) .* psi .* sqrt_I_m_eq0 .* measLPF;
 
 psi = fftshift( fftshift( ifft( ifft( psi, [], 1 ), [], 2 ), 1 ), 2 ) * sqrt_rc;
     

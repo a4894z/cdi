@@ -1,277 +1,304 @@
-%
-%#ok<*LOGL>
-warning('off','MATLAB:prnRenderer:opengl');
+function [ sol, expt ] = runsolver_ptycho2DTPA
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    %#ok<*LOGL>
+    warning('off','MATLAB:prnRenderer:opengl');
 
-%{
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-cd /net/s8iddata/export/8-id-ECA/Analysis/atripath/cdi
+    %{
 
-%========
+    cd /net/s8iddata/export/8-id-ECA/Analysis/atripath/cdi
 
-clear; close all; 
+    %========
 
-restoredefaultpath
+    clear; close all; 
 
-% codelocation =  '~/Documents/Science/Matlab/Code/cdi/';
-codelocation =  '/net/s8iddata/export/8-id-ECA/Analysis/atripath/cdi';
-
-cd( codelocation );
-
-addpath( genpath( pwd ));   
-
-clearvars -except expt sol
-
-%========
-
-clear; close all; [ sol, expt] = runsolver_ptycho2DTPA;
-
-%========
-
-/net/s8iddata/export/8-id-ECA/Analysis/reduced_data/2021-3/zjiang20211214
-/net/s8iddata/export/8-id-i/2020-2/zjiang202007/reduced_data
-
-
-7.5 x10^9
-%}
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-clear; close all; % clc;
-
-rng( 'shuffle' )
-% rng( 555 )
-
-%==============================================================
-% Set paths to code location and add relevant folders and files
-%==============================================================
-
-restoredefaultpath; 
-addpath( genpath( pwd ));
-% addpath( genpath( '/net/s8iddata/export/8-id-ECA/Analysis/atripath/data/pecoCSSIsimulatedmultislicedata/' ));
-% addpath( genpath( '/net/s8iddata/export/8-id-ECA/Analysis/atripath/data/zjiang202112/' ));
-addpath( genpath( '/net/s8iddata/export/8-id-ECA/Analysis/atripath/data/zjiang202204/' ));
-clearvars -except expt sol
-
-%============================
-% Set paths to load data from
-%============================
-
-% data_path = '/net/s8iddata/export/8-id-ECA/Analysis/atripath/rPIE_vs_MB_mat/noise/sim_ptycho2DTPA.mat';      % WITH NOISE, WITHOUT BG RM
-% data_path = '/net/s8iddata/export/8-id-ECA/Analysis/atripath/rPIE_vs_MB_mat/noise_rmbg/sim_ptycho2DTPA.mat'; % WITH NOISE, WITH BG RM
-
-data_path = '/net/s8iddata/export/8-id-ECA/Analysis/atripath/rPIE_vs_MB_mat/no_noise/sim_ptycho2DTPA_sposcorr_test.mat'; % NO NOISE
-
-%=========
-% 
-% data_path = '/net/s8iddata/export/8-id-ECA/Analysis/atripath/data/pecoCSSIsimulatedmultislicedata/PETRAIII_Eiffel_Small_noTi_74ol_1p1degree_1088x2560.mat';  
-% data_path = '/net/s8iddata/export/8-id-ECA/Analysis/atripath/data/pecoCSSIsimulatedmultislicedata/PETRAIII_Eiffel_Small_noTi_74ol_1p2degree_1088x2560.mat'; 
-% 
-% data_path = '/net/s8iddata/export/8-id-ECA/Analysis/atripath/data/pecoCSSIsimulatedmultislicedata/PETRAIII_Eiffel_Small_noTi_74ol_1p3degree_1088x2560.mat';  
-% data_path = '/net/s8iddata/export/8-id-ECA/Analysis/atripath/data/pecoCSSIsimulatedmultislicedata/PETRAIII_Eiffel_Small_noTi_74ol_1p4degree_1088x2560.mat'; 
-% 
-% data_path = '/net/s8iddata/export/8-id-ECA/Analysis/atripath/data/pecoCSSIsimulatedmultislicedata/PETRAIII_Eiffel_Small_noTi_74ol_1p5degree_1088x2560.mat';  
-% data_path = '/net/s8iddata/export/8-id-ECA/Analysis/atripath/data/pecoCSSIsimulatedmultislicedata/PETRAIII_Eiffel_Small_noTi_74ol_1p6degree_1088x2560.mat';  
-
-%=========
-
-% data_path = '/net/s8iddata/export/8-id-ECA/Analysis/atripath/data/zjiang202112/processed_expt/L0274_to_L0280_combined_256x1024.mat';
-% data_path = '/net/s8iddata/export/8-id-ECA/Analysis/atripath/data/zjiang202112/processed_expt/L0274_to_L0280_combined_512x1024.mat';
-
-% data_path = '/net/s8iddata/export/8-id-ECA/Analysis/atripath/data/zjiang202112/processed_expt/old/L0274_to_L0280_combined_512x512.mat';
-% data_path = '/net/s8iddata/export/8-id-ECA/Analysis/atripath/data/zjiang202112/processed_expt/old/L0105_to_L0113_combined_512x512.mat';
-
-%=========
-
-% data_path = '/net/s8iddata/export/8-id-ECA/Analysis/atripath/data/zjiang202204/processed_expt/L0020_to_L0032_combined_512x512.mat';   % +0
-% data_path = '/net/s8iddata/export/8-id-ECA/Analysis/atripath/data/zjiang202204/processed_expt/L0020_to_L0032_combined_512x1024.mat';  % +0
-% data_path = '/net/s8iddata/export/8-id-ECA/Analysis/atripath/data/zjiang202204/processed_expt/L0062_to_L0065_combined_1024x128.mat';  % +60
-% data_path = '/net/s8iddata/export/8-id-ECA/Analysis/atripath/data/zjiang202204/processed_expt/L0058_to_L0061_combined_512x1024.mat';  % +30
-% data_path = '/net/s8iddata/export/8-id-ECA/Analysis/atripath/data/zjiang202204/processed_expt/L0078_to_L0081_combined_512x512.mat';   % +180
-% data_path = '/net/s8iddata/export/8-id-ECA/Analysis/atripath/data/zjiang202204/processed_expt/L0089_to_L0092_combined_1152x128.mat';  % +30
-% data_path = '/net/s8iddata/export/8-id-ECA/Analysis/atripath/data/zjiang202204/processed_expt/L0107_to_L0112_combined_768x256.mat';   % +30
-% data_path = '/net/s8iddata/export/8-id-ECA/Analysis/atripath/data/zjiang202204/processed_expt/L0113_to_L0116_combined_768x1024.mat';  % +5
-% data_path = '/net/s8iddata/export/8-id-ECA/Analysis/atripath/data/zjiang202204/processed_expt/L0117_to_L0120_combined_768x1024.mat';  % -5 
-% data_path = '/net/s8iddata/export/8-id-ECA/Analysis/atripath/data/zjiang202204/processed_expt/L0130_to_L0135_combined_1024x512.mat';  % -30
-% data_path = '/net/s8iddata/export/8-id-ECA/Analysis/atripath/data/zjiang202204/processed_expt/L0156_to_L0159_combined_512x512.mat';   % +10
-% data_path = '/net/s8iddata/export/8-id-ECA/Analysis/atripath/data/zjiang202204/processed_expt/L0160_to_L0163_combined_512x512.mat';   % -10
-
-% data_path = '/net/s8iddata/export/8-id-ECA/Analysis/atripath/data/zjiang202204/ready_for_phaseretrieval/L0145_to_L0153_combined_1024x256.mat';   % +(?) 90
-
-% data_path = '/net/s8iddata/export/8-id-ECA/Analysis/atripath/data/zjiang202204/ready_for_phaseretrieval/L0336_to_L0338_combined_512x512.mat';  % +0
-% data_path = '/net/s8iddata/export/8-id-ECA/Analysis/atripath/data/zjiang202204/ready_for_phaseretrieval/L0339_to_L0341_combined_512x512.mat';  % +180
-
-% data_path = '/net/s8iddata/export/8-id-ECA/Analysis/atripath/data/zjiang202204/ready_for_phaseretrieval/L0342_to_L0345_combined_1024x512.mat';  % +5
-% data_path = '/net/s8iddata/export/8-id-ECA/Analysis/atripath/data/zjiang202204/ready_for_phaseretrieval/L0346_to_L0349_combined_1024x512.mat';  % -5
-% data_path = '/net/s8iddata/export/8-id-ECA/Analysis/atripath/data/zjiang202204/ready_for_phaseretrieval/L0350_to_L0353_combined_1024x512.mat';  % +10
-% data_path = '/net/s8iddata/export/8-id-ECA/Analysis/atripath/data/zjiang202204/ready_for_phaseretrieval/L0354_to_L0357_combined_1024x512.mat';  % -10
-
-% data_path = '/net/s8iddata/export/8-id-ECA/Analysis/atripath/data/zjiang202204/ready_for_phaseretrieval/L0358_to_L0362_combined_1024x256.mat';  % +15
-% data_path = '/net/s8iddata/export/8-id-ECA/Analysis/atripath/data/zjiang202204/ready_for_phaseretrieval/L0363_to_L0367_combined_1024x256.mat';  % -15 
-
-% data_path = '/net/s8iddata/export/8-id-ECA/Analysis/atripath/data/zjiang202204/ready_for_phaseretrieval/L0368_to_L0372_combined_1024x256.mat';  % +20
-% data_path = '/net/s8iddata/export/8-id-ECA/Analysis/atripath/data/zjiang202204/ready_for_phaseretrieval/L0373_to_L0377_combined_1024x256.mat';  % -20
-
-% data_path = '/net/s8iddata/export/8-id-ECA/Analysis/atripath/data/zjiang202204/ready_for_phaseretrieval/L0390_to_L0395_combined_1024x256.mat';  % +30
-% data_path = '/net/s8iddata/export/8-id-ECA/Analysis/atripath/data/zjiang202204/ready_for_phaseretrieval/L0396_to_L0401_combined_1024x256.mat';  % -30
-
-% data_path = '/net/s8iddata/export/8-id-ECA/Analysis/atripath/data/zjiang202204/ready_for_phaseretrieval/L0416_to_L0422_combined_1024x256.mat';  % +40
-% data_path = '/net/s8iddata/export/8-id-ECA/Analysis/atripath/data/zjiang202204/ready_for_phaseretrieval/L0423_to_L0429_combined_1024x256.mat';  % -40
-
-% data_path = '/net/s8iddata/export/8-id-ECA/Analysis/atripath/data/zjiang202204/ready_for_phaseretrieval/L0430_to_L0437_combined_1024x256.mat';  % +45
-% data_path = '/net/s8iddata/export/8-id-ECA/Analysis/atripath/data/zjiang202204/ready_for_phaseretrieval/L0438_to_L0445_combined_1024x256.mat';  % -45
-
-% data_path = '/net/s8iddata/export/8-id-ECA/Analysis/atripath/data/zjiang202204/ready_for_phaseretrieval/L0510_to_L0518_combined_1024x128.mat';  % +90
-
-%=========
-
-
-data_path = './sim_ptycho2DTPA_sposcorr_test.mat';
-
-% data_path = [ pwd, '/sim_ptycho2DTPA.mat' ];
-% data_path = './L0105_to_L0113_combined_512x512.mat';
-
-% data_path = './L0274_to_L0280_combined_512x512.mat';
-% data_path = './L0020_to_L0032_combined_512x512.mat';
-
-%========================
-% Load the processed data 
-%========================
-
-% load( data_path, 'expt' );  
-load( data_path, 'sol', 'expt' );  
-
-%====================================
-% Update path for currently read data
-%====================================
-
-%     expt.paths.rsdata = data_path;
-expt.paths.rsdata = [ './', expt.paths.data_mat_name, '.mat' ];
-%     expt.paths.rsdata = './pecoCSSIsimulatedmultislicedata.mat';
-
-clearvars -except expt sol
-
-%==================================================================
-% Initialize/reset sample, SCPM, scan positions for phase retrieval
-%==================================================================
-
-sol.init.reinit_spos     = logical( 0 );   
-sol.init.reinit_SCPM     = logical( 0 );   
-sol.init.reinit_sampleTF = logical( 0 );
-sol.init.reinit_misc     = logical( 0 );   
-
-sol.init.use_prev_spos       = logical( 0 );  
-sol.init.use_prev_SCPM       = logical( 1 );
-sol.init.use_prev_2DsampleTF = logical( 0 );
-
-if sol.init.reinit_misc,     [ sol, expt ] = define_initial_misc(          sol, expt ); end
-if sol.init.reinit_spos,     [ sol, expt ] = define_initial_scanpositions( sol, expt ); end
-if sol.init.reinit_SCPM,     [ sol, expt ] = define_initial_SCPM(          sol, expt ); end
-if sol.init.reinit_sampleTF, [ sol, expt ] = define_initial_2DsampleTF(    sol, expt ); end
-
-%==================================================
-% Set default parameters for use in phase retrieval
-%==================================================
-
-[ sol, expt ] = runsolver_ptycho2DTPA_params_misc(          sol, expt );      
-[ sol, expt ] = runsolver_ptycho2DTPA_params_scanpositions( sol, expt );
-[ sol, expt ] = runsolver_ptycho2DTPA_params_SCPM(          sol, expt );
-[ sol, expt ] = runsolver_ptycho2DTPA_params_2DsampleTF(    sol, expt );
-
-%=========
-% GPU Init
-%=========
-
-sol.use_gpu = true; 
-
-sol.gpu_id = 1; 
-
-if sol.use_gpu == true, reset( gpuDevice( sol.gpu_id )); end
-
-%================================
-% Stochastic minibatch parameters
-%================================
-
-sol.spos.rand_spos_subset_pct = 0.25;      
-
-sol.spos.rand_spos_subset_pct = single( sol.spos.rand_spos_subset_pct );    
-
-if sol.spos.rand_spos_subset_pct > 1.00, sol.spos.rand_spos_subset_pct = single( 1.00 ); end
-
-%======================================
-% !!!! CHEAT CODES FOR SIMULATIONS !!!!
-%======================================
-
-%     sol.sample.T = expt.sample.T;
-
-    sol.probe.phi          = expt.probe.phi;
-    sol.probe.scpm.occ     = expt.probe.scpm.occ;
-    sol.probe.scpm.N       = expt.probe.scpm.N;
-    sol.probe.scpm.fro2TOT = expt.probe.scpm.fro2TOT;
-    sol.probe.scpm.max     = max( reshape( abs( expt.probe.phi ), [ expt.sz.rc, expt.probe.scpm.N ] ), [], 1 );
+    restoredefaultpath; 
+    clear RESTOREDEFAULTPATH_EXECUTED;
     
-%     sol.spos.rs    = expt.spos.rs0;
-%     sol.spos.indx  = expt.spos.indx;
+    % codelocation =  '~/Documents/Science/Matlab/Code/cdi/';
+    codelocation =  '/net/s8iddata/export/8-id-ECA/Analysis/atripath/cdi';
+
+    cd( codelocation );
+
+    addpath( genpath( pwd ));   
+
+    clearvars -except expt sol
+
+    %========
+
+    clear; close all; [ sol, expt] = runsolver_ptycho2DTPA;
+
+    %========
+
+    /net/s8iddata/export/8-id-ECA/Analysis/reduced_data/2021-3/zjiang20211214
+    /net/s8iddata/export/8-id-i/2020-2/zjiang202007/reduced_data
+
+
+    %}
+
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+    clear; close all; % clc;
+
+    rng( 'shuffle' )
+    % rng( 555 )
+
+    %==================================================================
+    % Set paths to code location and add other relevant folders to path
+    %==================================================================
+
+    restoredefaultpath; 
+    clear RESTOREDEFAULTPATH_EXECUTED;
     
-%=============================================
-% Misc last minute stuff before running ptycho
-%=============================================
+    addpath( genpath( pwd ));
+    % addpath( genpath( '/net/s8iddata/export/8-id-ECA/Analysis/atripath/data/pecoCSSIsimulatedmultislicedata/' ));
+    % addpath( genpath( '/net/s8iddata/export/8-id-ECA/Analysis/atripath/data/zjiang202112/' ));
+%     addpath( genpath( '/net/s8iddata/export/8-id-ECA/Analysis/atripath/data/zjiang202204/' ));
 
-%     sol.probe.scpm.max = single( exp( +0.1 * ( 1 : sol.probe.scpm.N )));
-%     sol.probe.scpm.max = 2.5 * single( 200 * sol.probe.scpm.max / max( sol.probe.scpm.max( : )));
-% 
-%     sol.probe.scpm.fro2TOT = 2.5 * single( 2.00 * mean( squeeze( sum( sum( expt.meas.D .^ 2, 1 ), 2 )))); 
-% 
-%     sol.probe.phi = orthog_modes_eigendecomp( sol.probe.phi );
-%     sol.probe.phi = enforce_scpm_fro2TOT_photonocc( sol.probe.phi, sol.probe.scpm.fro2TOT, sol.probe.scpm.occ );
- 
-%========
+    %=========================================
+    % Set paths to load data from, and load it
+    %=========================================
 
-% testing_minibatch_spos_correction
-% return
+    [ sol, expt ] = runsolver_ptycho2DTPA_setpaths_loaddata;
 
-%================================================================================================================================================
+% figure; 
+% plot_2Dscan_positions( expt.spos.rs, [], sol.spos.rs, [] )
+% set( gca, 'xdir', 'reverse' )
+% set( gca, 'ydir', 'normal' )
+% xlabel('xh, lab frame'); 
+% ylabel('yv, lab frame');
+% xlim([-500, 500])
+% ylim([-500, 500])
+% daspect([1 1 1])  
+% grid on
+
+    %==================================================================
+    % Initialize/reset sample, SCPM, scan positions for phase retrieval
+    %==================================================================
     
-N_pauseandsave = single( 1 );
-N_epochs       = single( 200 );
+    sol.init.reinit          = logical( 0 );
+    
+    sol.init.reinit_spos     = logical( 0 ) & sol.init.reinit;
+    sol.init.reinit_SCPM     = logical( 1 ) & sol.init.reinit;    
+    sol.init.reinit_sampleTF = logical( 0 ) & sol.init.reinit;   
+    sol.init.reinit_misc     = logical( 0 ) & sol.init.reinit;     
 
-for ii = 1 : N_pauseandsave
+    %========
 
-    %=============
-    % Minibatch GD
-    %=============
+    sol.init.use_prev_spos       = logical( 0 );  
+    sol.init.use_prev_SCPM       = logical( 1 );
+    sol.init.use_prev_2DsampleTF = logical( 0 );
 
-    [ sol, expt ] = ptycho2DTPA_runGPU_stochminibatchgrad( sol, expt, N_epochs );    
+    %========
+    
+    if sol.init.reinit_misc,     [ sol, expt ] = define_initial_misc(          sol, expt ); end
+    if sol.init.reinit_spos,     [ sol, expt ] = define_initial_scanpositions( sol, expt ); end
+    if sol.init.reinit_SCPM,     [ sol, expt ] = define_initial_SCPM(          sol, expt ); end
+    if sol.init.reinit_sampleTF, [ sol, expt ] = define_initial_2DsampleTF(    sol, expt ); end
 
-    %==============================
-    % Fullbatch block stochastic GD
-    %==============================
+    %==================================================
+    % Set default parameters for use in phase retrieval
+    %==================================================
 
-%         [ sol, expt ] = ptycho2DTPA_runGPU_stochcoordgrad( sol, expt, N_epochs );    ( !!!!!!!!!! DON'T USE, NEED TO UPDATE !!!!!!!!!! )
+    [ sol, expt ] = runsolver_ptycho2DTPA_params_misc(          sol, expt );      
+    [ sol, expt ] = runsolver_ptycho2DTPA_params_scanpositions( sol, expt );
+    [ sol, expt ] = runsolver_ptycho2DTPA_params_SCPM(          sol, expt );
+    [ sol, expt ] = runsolver_ptycho2DTPA_params_2DsampleTF(    sol, expt );
 
-    %===================
-    % Fullbatch total GD 
-    %===================
+    %=========
+    % GPU Init
+    %=========
 
-%         [ sol, expt ] = ptycho2DTPA_runGPU_totalgrad( sol, expt, N_epochs );       ( !!!!!!!!!! DON'T USE, NEED TO UPDATE !!!!!!!!!! )
+    sol.use_gpu = true; 
 
-    %==========================
-    % Bookkeeping and logistics
-    %==========================
+    sol.gpu_id = 3; 
 
-    % Clean up   
-    [ sol, expt ] = ptycho2DTPA_cleanup( sol, expt );     
-
-    % Save results 
-    expt = ptycho2DTPA_saveresults( sol, expt, ii );    
-
-    % Clear/reset GPU memory
     if sol.use_gpu == true, reset( gpuDevice( sol.gpu_id )); end
+
+    %=================================================================
+    % Stochastic minibatch size ( percentage of total scan positions )
+    %=================================================================
+
+    sol.spos.rand_spos_subset_pct = 0.15;      
+
+    C = ( sol.spos.rand_spos_subset_pct > 1.00 ) || ( sol.spos.rand_spos_subset_pct <= 0 );
+    
+    if C, error('Invalid Minibatch Percentage'); end
+
+    %======================================
+    % !!!! CHEAT CODES FOR SIMULATIONS !!!!
+    %======================================
+
+    %     sol.sample.T = single( expt.sample.T );
+
+    sol.probe.phi          = single( expt.probe.phi );
+    sol.probe.scpm.occ     = single( expt.probe.scpm.occ );
+    sol.probe.scpm.N       = single( expt.probe.scpm.N );
+    sol.probe.scpm.fro2TOT = single( expt.probe.scpm.fro2TOT );
+    sol.probe.scpm.max     = single( max( reshape( abs( expt.probe.phi ), [ expt.sz.rc, expt.probe.scpm.N ] ), [], 1 ) );
+
+%     sol.spos.rs         = single( expt.spos.rs );
+%     sol.spos.indxsubset = single( expt.spos.indxsubset );
+
+    %====================================================
+    % !!!!!! MISC SCREWING AROUND WITH LOADED DATA !!!!!!
+    %====================================================
+    
+    % testing_minibatch_spos_correction
+    % return
+
+    %===================
+    % Ready, set, launch
+    %===================
+    
+    N_pauseandsave = 1;
+    N_epochs       = 5000;
+
+    for ii = 1 : N_pauseandsave
+
+        %=============
+        % Minibatch GD
+        %=============
+
+        [ sol, expt ] = ptycho2DTPA_runGPU_stochminibatchgrad( sol, expt, N_epochs );    
+
+        %==============================
+        % Fullbatch block stochastic GD
+        %==============================
+
+    %         [ sol, expt ] = ptycho2DTPA_runGPU_stochcoordgrad( sol, expt, N_epochs );    ( !!!!!!!!!! DON'T USE, NEED TO UPDATE !!!!!!!!!! )
+
+        %===================
+        % Fullbatch total GD 
+        %===================
+
+    %         [ sol, expt ] = ptycho2DTPA_runGPU_totalgrad( sol, expt, N_epochs );       ( !!!!!!!!!! DON'T USE, NEED TO UPDATE !!!!!!!!!! )
+
+        %==========================
+        % Bookkeeping and logistics
+        %==========================
+
+        % Clean up   
+        [ sol, expt ] = ptycho2DTPA_cleanup( sol, expt );     
+
+        % Save results 
+        expt = ptycho2DTPA_saveresults( sol, expt, ii );    
+
+        % Clear/reset GPU memory
+        if sol.use_gpu == true, reset( gpuDevice( sol.gpu_id )); end
+
+    end
+
+end
+
+%====================================================================================================================================================
+
+function [ sol, expt ] = runsolver_ptycho2DTPA_setpaths_loaddata
+
+    % data_path = '/net/s8iddata/export/8-id-ECA/Analysis/atripath/rPIE_vs_MB_mat/noise/sim_ptycho2DTPA.mat';      % WITH NOISE, WITHOUT BG RM
+    % data_path = '/net/s8iddata/export/8-id-ECA/Analysis/atripath/rPIE_vs_MB_mat/noise_rmbg/sim_ptycho2DTPA.mat'; % WITH NOISE, WITH BG RM
+
+    %=========
+        
+%     data_path = '/net/s8iddata/export/8-id-ECA/Analysis/atripath/rPIE_vs_MB_mat/no_noise/sim_ptycho2DTPA_sposcorr_test.mat'; % NO NOISE
+%     data_path = '/net/s8iddata/export/8-id-ECA/Analysis/atripath/rPIE_vs_MB_mat/no_noise/sim_ptycho2DTPA_sposcorr_shearx_plus0p5_scaley_1p2.mat'; % NO NOISE
+
+    % data_path = '/net/s8iddata/export/8-id-ECA/Analysis/atripath/rPIE_vs_MB_mat/no_noise/sim_ptycho2DTPA_sposcorr_test_rot_plus20.mat';
+%     data_path = '/net/s8iddata/export/8-id-ECA/Analysis/atripath/rPIE_vs_MB_mat/no_noise/sim_ptycho2DTPA_sposcorr_shearx_plus0p5_scaley_1p2.mat';
+    data_path = '/net/s8iddata/export/8-id-ECA/Analysis/atripath/rPIE_vs_MB_mat/no_noise/sim_ptycho2DTPA_sposcorr_scalex1p2_scaley0p9.mat';
+
+    %=========
+    % 
+    % data_path = '/net/s8iddata/export/8-id-ECA/Analysis/atripath/data/pecoCSSIsimulatedmultislicedata/PETRAIII_Eiffel_Small_noTi_74ol_1p1degree_1088x2560.mat';  
+    % data_path = '/net/s8iddata/export/8-id-ECA/Analysis/atripath/data/pecoCSSIsimulatedmultislicedata/PETRAIII_Eiffel_Small_noTi_74ol_1p2degree_1088x2560.mat'; 
+    % 
+    % data_path = '/net/s8iddata/export/8-id-ECA/Analysis/atripath/data/pecoCSSIsimulatedmultislicedata/PETRAIII_Eiffel_Small_noTi_74ol_1p3degree_1088x2560.mat';  
+    % data_path = '/net/s8iddata/export/8-id-ECA/Analysis/atripath/data/pecoCSSIsimulatedmultislicedata/PETRAIII_Eiffel_Small_noTi_74ol_1p4degree_1088x2560.mat'; 
+    % 
+    % data_path = '/net/s8iddata/export/8-id-ECA/Analysis/atripath/data/pecoCSSIsimulatedmultislicedata/PETRAIII_Eiffel_Small_noTi_74ol_1p5degree_1088x2560.mat';  
+    % data_path = '/net/s8iddata/export/8-id-ECA/Analysis/atripath/data/pecoCSSIsimulatedmultislicedata/PETRAIII_Eiffel_Small_noTi_74ol_1p6degree_1088x2560.mat';  
+
+    %=========
+
+    % data_path = '/net/s8iddata/export/8-id-ECA/Analysis/atripath/data/zjiang202112/processed_expt/L0274_to_L0280_combined_256x1024.mat';
+    % data_path = '/net/s8iddata/export/8-id-ECA/Analysis/atripath/data/zjiang202112/processed_expt/L0274_to_L0280_combined_512x1024.mat';
+
+    % data_path = '/net/s8iddata/export/8-id-ECA/Analysis/atripath/data/zjiang202112/processed_expt/old/L0274_to_L0280_combined_512x512.mat';
+    % data_path = '/net/s8iddata/export/8-id-ECA/Analysis/atripath/data/zjiang202112/processed_expt/old/L0105_to_L0113_combined_512x512.mat';
+
+    %=========
+
+    % data_path = '/net/s8iddata/export/8-id-ECA/Analysis/atripath/data/zjiang202204/processed_expt/L0020_to_L0032_combined_512x512.mat';   % +0
+    % data_path = '/net/s8iddata/export/8-id-ECA/Analysis/atripath/data/zjiang202204/processed_expt/L0020_to_L0032_combined_512x1024.mat';  % +0
+    % data_path = '/net/s8iddata/export/8-id-ECA/Analysis/atripath/data/zjiang202204/processed_expt/L0062_to_L0065_combined_1024x128.mat';  % +60
+    % data_path = '/net/s8iddata/export/8-id-ECA/Analysis/atripath/data/zjiang202204/processed_expt/L0058_to_L0061_combined_512x1024.mat';  % +30
+    % data_path = '/net/s8iddata/export/8-id-ECA/Analysis/atripath/data/zjiang202204/processed_expt/L0078_to_L0081_combined_512x512.mat';   % +180
+    % data_path = '/net/s8iddata/export/8-id-ECA/Analysis/atripath/data/zjiang202204/processed_expt/L0089_to_L0092_combined_1152x128.mat';  % +30
+    % data_path = '/net/s8iddata/export/8-id-ECA/Analysis/atripath/data/zjiang202204/processed_expt/L0107_to_L0112_combined_768x256.mat';   % +30
+    % data_path = '/net/s8iddata/export/8-id-ECA/Analysis/atripath/data/zjiang202204/processed_expt/L0113_to_L0116_combined_768x1024.mat';  % +5
+    % data_path = '/net/s8iddata/export/8-id-ECA/Analysis/atripath/data/zjiang202204/processed_expt/L0117_to_L0120_combined_768x1024.mat';  % -5 
+    % data_path = '/net/s8iddata/export/8-id-ECA/Analysis/atripath/data/zjiang202204/processed_expt/L0130_to_L0135_combined_1024x512.mat';  % -30
+    % data_path = '/net/s8iddata/export/8-id-ECA/Analysis/atripath/data/zjiang202204/processed_expt/L0156_to_L0159_combined_512x512.mat';   % +10
+    % data_path = '/net/s8iddata/export/8-id-ECA/Analysis/atripath/data/zjiang202204/processed_expt/L0160_to_L0163_combined_512x512.mat';   % -10
+
+    % data_path = '/net/s8iddata/export/8-id-ECA/Analysis/atripath/data/zjiang202204/ready_for_phaseretrieval/L0145_to_L0153_combined_1024x256.mat';   % +(?) 90
+
+    % data_path = '/net/s8iddata/export/8-id-ECA/Analysis/atripath/data/zjiang202204/ready_for_phaseretrieval/L0336_to_L0338_combined_512x512.mat';  % +0
+    % data_path = '/net/s8iddata/export/8-id-ECA/Analysis/atripath/data/zjiang202204/ready_for_phaseretrieval/L0339_to_L0341_combined_512x512.mat';  % +180
+
+    % data_path = '/net/s8iddata/export/8-id-ECA/Analysis/atripath/data/zjiang202204/ready_for_phaseretrieval/L0342_to_L0345_combined_1024x512.mat';  % +5
+    % data_path = '/net/s8iddata/export/8-id-ECA/Analysis/atripath/data/zjiang202204/ready_for_phaseretrieval/L0346_to_L0349_combined_1024x512.mat';  % -5
+    % data_path = '/net/s8iddata/export/8-id-ECA/Analysis/atripath/data/zjiang202204/ready_for_phaseretrieval/L0350_to_L0353_combined_1024x512.mat';  % +10
+    % data_path = '/net/s8iddata/export/8-id-ECA/Analysis/atripath/data/zjiang202204/ready_for_phaseretrieval/L0354_to_L0357_combined_1024x512.mat';  % -10
+
+    % data_path = '/net/s8iddata/export/8-id-ECA/Analysis/atripath/data/zjiang202204/ready_for_phaseretrieval/L0358_to_L0362_combined_1024x256.mat';  % +15
+    % data_path = '/net/s8iddata/export/8-id-ECA/Analysis/atripath/data/zjiang202204/ready_for_phaseretrieval/L0363_to_L0367_combined_1024x256.mat';  % -15 
+
+    % data_path = '/net/s8iddata/export/8-id-ECA/Analysis/atripath/data/zjiang202204/ready_for_phaseretrieval/L0368_to_L0372_combined_1024x256.mat';  % +20
+    % data_path = '/net/s8iddata/export/8-id-ECA/Analysis/atripath/data/zjiang202204/ready_for_phaseretrieval/L0373_to_L0377_combined_1024x256.mat';  % -20
+
+    % data_path = '/net/s8iddata/export/8-id-ECA/Analysis/atripath/data/zjiang202204/ready_for_phaseretrieval/L0390_to_L0395_combined_1024x256.mat';  % +30
+    % data_path = '/net/s8iddata/export/8-id-ECA/Analysis/atripath/data/zjiang202204/ready_for_phaseretrieval/L0396_to_L0401_combined_1024x256.mat';  % -30
+
+    % data_path = '/net/s8iddata/export/8-id-ECA/Analysis/atripath/data/zjiang202204/ready_for_phaseretrieval/L0416_to_L0422_combined_1024x256.mat';  % +40
+    % data_path = '/net/s8iddata/export/8-id-ECA/Analysis/atripath/data/zjiang202204/ready_for_phaseretrieval/L0423_to_L0429_combined_1024x256.mat';  % -40
+
+    % data_path = '/net/s8iddata/export/8-id-ECA/Analysis/atripath/data/zjiang202204/ready_for_phaseretrieval/L0430_to_L0437_combined_1024x256.mat';  % +45
+    % data_path = '/net/s8iddata/export/8-id-ECA/Analysis/atripath/data/zjiang202204/ready_for_phaseretrieval/L0438_to_L0445_combined_1024x256.mat';  % -45
+
+    % data_path = '/net/s8iddata/export/8-id-ECA/Analysis/atripath/data/zjiang202204/ready_for_phaseretrieval/L0510_to_L0518_combined_1024x128.mat';  % +90
+
+    %=========
+
+    % data_path = './sim_ptycho2DTPA_sposcorr_test.mat';
+
+    % data_path = [ pwd, '/sim_ptycho2DTPA.mat' ];
+    % data_path = './L0105_to_L0113_combined_512x512.mat';
+
+    % data_path = './L0274_to_L0280_combined_512x512.mat';
+    % data_path = './L0020_to_L0032_combined_512x512.mat';
+
+    %========================
+    % Load the processed data 
+    %========================
+
+    % load( data_path, 'expt' );  
+    load( data_path, 'sol', 'expt' );  
+
+    %====================================
+    % Update path for currently read data
+    %====================================
+
+    %     expt.paths.rsdata = data_path;
+    expt.paths.rsdata = [ './', expt.paths.data_mat_name, '.mat' ];
+    %     expt.paths.rsdata = './pecoCSSIsimulatedmultislicedata.mat';
+
+    clearvars -except expt sol
 
 end
 
@@ -287,16 +314,6 @@ function [ sol, expt ] = runsolver_ptycho2DTPA_params_misc( sol, expt )
     
 %      sol.exwv_noisemodel = 'poisson';
 %      sol.it.exwv_poisson_exactsearch = 5;
-    
-    %===================================================================
-    % hold the SCPM occupancies and total scaling fixed, or reinitialize
-    %===================================================================
-    
-    sol.probe.scpm.use_fixed_occ = logical( 0 );   
-    sol.probe.scpm.reinit_occ    = logical( 0 );
-    
-    sol.probe.scpm.use_fixed_scpm_scaling = logical( 0 );  
-    sol.probe.scpm.reinit_scpm_scaling    = logical( 0 );
 
     %=====================================
     % rPIE adaptive step length parameters
@@ -309,8 +326,8 @@ function [ sol, expt ] = runsolver_ptycho2DTPA_params_misc( sol, expt )
     % When to start sample/probe/spos updates 
     %========================================
     
-    sol.it.spos_start  = single( 5 );
-    sol.it.spos_update = single( 5 );
+    sol.it.spos_start  = single( 5e99 );
+    sol.it.spos_update = single( 5e99 );
 
     sol.it.sample_start     = single( 0 );
     sol.it.sample_update    = single( 1 );
@@ -329,9 +346,9 @@ function [ sol, expt ] = runsolver_ptycho2DTPA_params_misc( sol, expt )
     sol.it.probe_smoothing    = single( 1 );
     sol.it.probe_phase_sparse = single( 1e99 );
     
-    sol.it.collect_metrics   = single( 20 );     % when we want to collect performance metrics
-    sol.it.mkimg_meas_metric = single( 20 ); 
-    sol.it.mkimg_sample_SCPM = single( 20 ); 
+    sol.it.collect_metrics   = single( 25 );     % when we want to collect performance metrics
+    sol.it.mkimg_meas_metric = single( 25 ); 
+    sol.it.mkimg_sample_SCPM = single( 200 ); 
     
     %=============================================
     % Performance metric and epoch update counters
@@ -351,9 +368,9 @@ function [ sol, expt ] = runsolver_ptycho2DTPA_params_misc( sol, expt )
     sol.metrics.legend_loc = 'northeast';
 %     sol.metrics.legend_loc = 'southwest';
     
-    %========
-    
+    %========================================================================================================
     % when monitoring the Poisson cost function metric, we need a scaling offset so that it's always positive
+    %========================================================================================================
     
 %     I_m                        = expt.meas.D .^ 2;
 %     log_I_m                    = log( I_m );
@@ -371,9 +388,7 @@ function [ sol, expt ] = runsolver_ptycho2DTPA_params_misc( sol, expt )
     sol.measLPF = make_2Dgaussian( sol.sz.sz, single( 0.50 * sol.sz.sz + 1 ), single( 0.5 * 1e5 * sol.sz.sz ) );
     
     sol.measLPF = fftshift( sol.measLPF / max( abs( sol.measLPF( : ))));
-
-%     expt.meas.D = sol.measLPF .* expt.meas.D;
-    
+ 
     %==========================================
     % fliplr/flipud/rot90()/etc of measurements
     %==========================================
@@ -396,7 +411,17 @@ end
 %====================================================================================================================================================
 
 function [ sol, expt ] = runsolver_ptycho2DTPA_params_SCPM( sol, expt )   
-
+    
+    %===================================================================
+    % hold the SCPM occupancies and total scaling fixed, or reinitialize
+    %===================================================================
+    
+    sol.probe.scpm.use_fixed_occ          = logical( 0 );   % use fixed SCPM occupancies as a constraint
+    sol.probe.scpm.use_fixed_scpm_scaling = logical( 0 );   % use fixed total probe intensity as a constraint
+    
+    sol.probe.scpm.reinit_occ          = logical( 0 );
+    sol.probe.scpm.reinit_scpm_scaling = logical( 0 );
+    
     %========================
     % Guess of SCPM occupancy
     %========================
@@ -431,12 +456,12 @@ function [ sol, expt ] = runsolver_ptycho2DTPA_params_SCPM( sol, expt )
     %==============
 
 %     [ sol.probe.phi ] = orthog_modes_eigendecomp( sol.probe.phi );
-% 
-%     %========
-%     % Rescale
-%     %========
-% 
-%     [ sol.probe.phi ] = enforce_scpm_fro2TOT_photonocc( sol.probe.phi, sol.probe.scpm.fro2TOT, sol.probe.scpm.occ );
+
+    %========
+    % Rescale
+    %========
+
+    [ sol.probe.phi ] = enforce_scpm_fro2TOT_photonocc( sol.probe.phi, sol.probe.scpm.fro2TOT, sol.probe.scpm.occ );
     
     %================================
     % Max abs probe mode pixel values 
@@ -520,24 +545,56 @@ function [ sol, expt ] = runsolver_ptycho2DTPA_params_scanpositions( sol, expt )
     % Gradient descent based scan position correction
     %================================================
 
+    sol.spos.correction.Naalpha_rs = 6;  
+    sol.spos.correction.aalpha_rs  = linspace( 0.0, 5.00, sol.spos.correction.Naalpha_rs );   
 
+    % sol.spos.correction.optimize_rs_GD = 'individual';
+    sol.spos.correction.optimize_rs_GD = 'collective';
 
-sol.spos.correction.Naalpha_rs = 6;  
-sol.spos.correction.aalpha_rs  = linspace( 0.0, 5.00, sol.spos.correction.Naalpha_rs );   
-
-% sol.spos.correction.optimize_rs_GD = 'individual';
-sol.spos.correction.optimize_rs_GD = 'collective';
-
-% sol.spos.correction.noise_model = 'poisson';
-sol.spos.correction.noise_model = 'gaussian';
+    % sol.spos.correction.noise_model = 'poisson';
+    sol.spos.correction.noise_model = 'gaussian';
                 
-
-
     %=================================================================================================
     % When extracting part of the sample in the current scan position, use this type of pixel shifting  
     %=================================================================================================
     
     sol.spos.shifttype = 'px';   
+    
+    %============================================
+    % Modifications to the current scan positions
+    %============================================
+    
+%     % ROTATION
+%     
+%     theta = +20 - 10;
+%     sol.spos.rotation = [ [ +cosd( theta ), +sind( theta )  ]; ...
+%                           [ -sind( theta ), +cosd( theta )  ] ];
+%     
+%     sol.spos.rs = transpose( sol.spos.rotation * transpose( sol.spos.rs ));
+
+    %========
+
+%     % SHEAR
+%     
+%     s_x = +0.5;
+%     sol.spos.shear_x = [ [ 1,   0 ]; ...
+%                          [ s_x, 1 ] ];
+%     
+%     sol.spos.rs = transpose( sol.spos.shear_x * transpose( sol.spos.rs ));
+% 
+%     s_y = +0.00;
+%     sol.spos.shear_y = [ [ 1, s_y ]; ...
+%                          [ 0, 1   ] ];
+%                      
+%     sol.spos.rs = transpose( sol.spos.shear_y * transpose( sol.spos.rs ));
+    
+    %========
+    
+%     % SCALING
+%     
+%     sol.spos.rs( :, 1 ) = 1.1 * sol.spos.rs( :, 1 );   % scaling in rows ( y )
+%     sol.spos.rs( :, 2 ) = 1.0 * sol.spos.rs( :, 2 );   % scaling in cols ( x )
+
     
 end
 

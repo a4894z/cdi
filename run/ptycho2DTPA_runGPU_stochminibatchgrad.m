@@ -106,6 +106,17 @@ function [ sol, expt ] = ptycho2DTPA_runGPU_stochminibatchgrad( sol, expt, N_epo
     %=========================================================================
     % step length parameters for Poisson cost function used in exitwave update
     %=========================================================================
+        
+    % sol.GPU.poissonexwv.longrange_search
+    % sol.GPU.poissonexwv.shortrange_search
+   
+    % sol.GPU.poissonexwv.Nalpha
+    % sol.GPU.poissonexwv.alpha_minmax
+    % sol.GPU.poissonexwv.alpha_test_longrange
+    % sol.GPU.poissonexwv.alpha_prev
+
+    % sol.GPU.poissonexwv.alpha_test_shortrange
+
     
     if strcmp( sol.exwv_noisemodel, 'poisson' )
         
@@ -333,15 +344,16 @@ function [ sol, expt ] = ptycho2DTPA_runGPU_stochminibatchgrad( sol, expt, N_epo
             
             
             
-            
-% 
+
 %  [ rs, rot ] = scanpositions_update_2DTPA_rotation_v2( sol.GPU.batch_rs, ...
 %                                                        sol.GPU.psi, ...
 %                                                        sol.GPU.TFvec, ...
 %                                                        sol.GPU.phi, ...
+%                                                        sol.GPU.meas,  ...
+%                                                        sol.GPU.meas_eq0, ...
 %                                                        sol.GPU.spos_opt, ...
-%                                                        sol.GPU );
-            
+%                                                        sol.GPU, ...
+%                                                        expt );
             
             
             
@@ -618,7 +630,7 @@ function [ sol, expt ] = ptycho2DTPA_runGPU_stochminibatchgrad( sol, expt, N_epo
             
             
             
-            if 1 %( mod( sol.it.epoch, sol.it.spos_update ) == 0 ) && ( sol.it.epoch >= sol.it.spos_start )
+            if 0 %( mod( sol.it.epoch, sol.it.spos_update ) == 0 ) && ( sol.it.epoch >= sol.it.spos_start )
                 
                 
        
@@ -702,6 +714,16 @@ sol.spos.rs( sol.spos.batch_indx, : ) = gather( sol.GPU.batch_rs );
                                                                           
                 
             end
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
             
   
             
@@ -1015,7 +1037,9 @@ sol.spos.rs( sol.spos.batch_indx, : ) = gather( sol.GPU.batch_rs );
             
         end
         
-        %========
+        %===========================================================
+        % make an image of the collected metrics and save it to disk
+        %===========================================================
         
         if ( mod( sol.it.epoch, sol.it.mkimg_meas_metric ) == 0 )
             
@@ -1023,7 +1047,9 @@ sol.spos.rs( sol.spos.batch_indx, : ) = gather( sol.GPU.batch_rs );
         
         end
         
-        %========
+        %=====================================================================
+        % make an image of the sample/SCPMs/scan positions and save it to disk
+        %=====================================================================
         
         if ( mod( sol.it.epoch, sol.it.mkimg_sample_SCPM ) == 0 )
             
@@ -1062,7 +1088,7 @@ sol.spos.rs( sol.spos.batch_indx, : ) = gather( sol.GPU.batch_rs );
                 
     end
     
-    sol.sample.T       = gather( reshape( sol.GPU.TFvec, [ sol.sample.sz.sz ]));
+    sol.sample.T       = gather( reshape( sol.GPU.TFvec, sol.sample.sz.sz ));
     sol.probe.phi      = gather( sol.GPU.phi );
     sol.probe.scpm.occ = gather( sol.GPU.scpmocc );
     

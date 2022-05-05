@@ -66,7 +66,7 @@ function [ Psi, alpha_opt, metrics ] = exitwave_update_2DTPA_poisson( phi,      
     
     if collect_metrics 
 
-        meas_mask = not( I_m_eq0 );
+        meas_mask = not( I_m_eq0 ); % FIX: !!!! pass the already not version !!!!
 
         metrics.gauss_intensity = sum( sum( sum( meas_mask .* abs( I_m - I_e ) .^ 2                 )));
         metrics.gauss_magnitude = sum( sum( sum( meas_mask .* abs( sqrt( I_m ) - sqrt( I_e ) ) .^ 2 )));
@@ -133,7 +133,6 @@ function alpha_opt = poisson_exact_linesearch_vs_minibatch( xi, abs2_Psi, alpha_
     f_eq_0 = abs( lhs_steplength_eqn - rhs_steplength_eqn );
 
     [ ~, II ] = min( f_eq_0, [], 3 );
-    % [ ~, II ] = min( f_eq_0, [], 2 );
 
     alpha_opt = gpuArray.zeros( Nspos, Nscpm, 'single' );
 
