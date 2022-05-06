@@ -5,7 +5,8 @@ function [ rs, spos_opt ] = scanpositions_update_2DTPA_affine( rs, T0, phi, meas
     ind = get_indices_2Dframes( rs, spos_opt.szTF, spos_opt.vs_r, spos_opt.vs_c ); 
     psi = reshape( T0( ind ), [ spos_opt.sz, 1, spos_opt.Nspos ]) .* phi;
     psi = fft( fft( fftshift( fftshift( psi, 1 ), 2 ), [], 1 ), [], 2 ) / spos_opt.sqrt_rc;
-    I_e = squeeze( sum( abs( psi ) .^ 2, 3 ) );
+%     I_e = squeeze( sum( abs( psi ) .^ 2, 3 ) );
+    I_e = sum( abs( psi ) .^ 2, 3 );
 
     if strcmp( spos_opt.noise_model, 'poisson' )
         
@@ -24,7 +25,8 @@ function [ rs, spos_opt ] = scanpositions_update_2DTPA_affine( rs, T0, phi, meas
     ind = get_indices_2Dframes( rs_a, spos_opt.szTF, spos_opt.vs_r, spos_opt.vs_c ); 
     psi = reshape( T0( ind ), [ spos_opt.sz, 1, spos_opt.Nspos ]) .* phi;
     psi = fft( fft( fftshift( fftshift( psi, 1 ), 2 ), [], 1 ), [], 2 ) / spos_opt.sqrt_rc;
-    I_e = squeeze( sum( abs( psi ) .^ 2, 3 ) );
+%     I_e = squeeze( sum( abs( psi ) .^ 2, 3 ) );
+    I_e = sum( abs( psi ) .^ 2, 3 );
 
     if strcmp( spos_opt.noise_model, 'poisson' )
         
@@ -43,7 +45,8 @@ function [ rs, spos_opt ] = scanpositions_update_2DTPA_affine( rs, T0, phi, meas
     ind = get_indices_2Dframes( rs_b, spos_opt.szTF, spos_opt.vs_r, spos_opt.vs_c ); 
     psi = reshape( T0( ind ), [ spos_opt.sz, 1, spos_opt.Nspos ]) .* phi;
     psi = fft( fft( fftshift( fftshift( psi, 1 ), 2 ), [], 1 ), [], 2 ) / spos_opt.sqrt_rc;
-    I_e = squeeze( sum( abs( psi ) .^ 2, 3 ) );
+%     I_e = squeeze( sum( abs( psi ) .^ 2, 3 ) );
+    I_e = sum( abs( psi ) .^ 2, 3 );
 
     if strcmp( spos_opt.noise_model, 'poisson' )
         
@@ -62,7 +65,8 @@ function [ rs, spos_opt ] = scanpositions_update_2DTPA_affine( rs, T0, phi, meas
     ind = get_indices_2Dframes( rs_c, spos_opt.szTF, spos_opt.vs_r, spos_opt.vs_c ); 
     psi = reshape( T0( ind ), [ spos_opt.sz, 1, spos_opt.Nspos ]) .* phi;
     psi = fft( fft( fftshift( fftshift( psi, 1 ), 2 ), [], 1 ), [], 2 ) / spos_opt.sqrt_rc;
-    I_e = squeeze( sum( abs( psi ) .^ 2, 3 ) );
+%     I_e = squeeze( sum( abs( psi ) .^ 2, 3 ) );
+    I_e = sum( abs( psi ) .^ 2, 3 );
 
     if strcmp( spos_opt.noise_model, 'poisson' )
         
@@ -81,8 +85,9 @@ function [ rs, spos_opt ] = scanpositions_update_2DTPA_affine( rs, T0, phi, meas
     ind = get_indices_2Dframes( rs_d, spos_opt.szTF, spos_opt.vs_r, spos_opt.vs_c ); 
     psi = reshape( T0( ind ), [ spos_opt.sz, 1, spos_opt.Nspos ]) .* phi;
     psi = fft( fft( fftshift( fftshift( psi, 1 ), 2 ), [], 1 ), [], 2 ) / spos_opt.sqrt_rc;
-    I_e = squeeze( sum( abs( psi ) .^ 2, 3 ) );
-
+%     I_e = squeeze( sum( abs( psi ) .^ 2, 3 ) );
+    I_e = sum( abs( psi ) .^ 2, 3 );
+    
     if strcmp( spos_opt.noise_model, 'poisson' )
         
         L_d = sum( sum( sum( nDeq0 .* ( I_e - measD .* log( I_e )) ))) / ( spos_opt.rc * spos_opt.Nspos ); 
@@ -101,13 +106,13 @@ function [ rs, spos_opt ] = scanpositions_update_2DTPA_affine( rs, T0, phi, meas
     grad_L_d = L_0 - L_d;
     
     grad_L   = [ grad_L_a, grad_L_b, grad_L_c, grad_L_d ];
-    grad_L_N = grad_L ./ ( 1e-7 + sqrt( sum( abs( grad_L ).^ 2 )));
+    grad_L = grad_L ./ ( 1e-7 + sqrt( sum( abs( grad_L ).^ 2 )));
     
     Laalpha_ALL = gpuArray( zeros( 1, spos_opt.Naalpha_affineT, 'single' ));
     
     for aa = 1 : spos_opt.Naalpha_affineT
 
-        genT_aalpha = spos_opt.affineT + spos_opt.aalpha_affineT( aa ) * grad_L_N;
+        genT_aalpha = spos_opt.affineT + spos_opt.aalpha_affineT( aa ) * grad_L;
         
         genT_aalpha = [ genT_aalpha( 1 ), genT_aalpha( 2 ); genT_aalpha( 3 ), genT_aalpha( 4 ) ]; 
         
@@ -116,8 +121,9 @@ function [ rs, spos_opt ] = scanpositions_update_2DTPA_affine( rs, T0, phi, meas
         ind = get_indices_2Dframes( rs_genT_aalpha, spos_opt.szTF, spos_opt.vs_r, spos_opt.vs_c ); 
         psi = reshape( T0( ind ), [ spos_opt.sz, 1, spos_opt.Nspos ]) .* phi;
         psi = fft( fft( fftshift( fftshift( psi, 1 ), 2 ), [], 1 ), [], 2 ) / spos_opt.sqrt_rc;
-        I_e = squeeze( sum( abs( psi ) .^ 2, 3 )) ;
-
+%         I_e = squeeze( sum( abs( psi ) .^ 2, 3 ));
+        I_e = sum( abs( psi ) .^ 2, 3 );
+        
         if strcmp( spos_opt.noise_model, 'poisson' )
 
             Laalpha_ALL( aa ) = sum( sum( sum( nDeq0 .* ( I_e - measD .* log( I_e )) ))) / ( spos_opt.rc * spos_opt.Nspos );
@@ -131,7 +137,7 @@ function [ rs, spos_opt ] = scanpositions_update_2DTPA_affine( rs, T0, phi, meas
     end
     
     [ ~, II ] = min( Laalpha_ALL );
-    spos_opt.affineT = spos_opt.affineT + spos_opt.aalpha_affineT( II ) * grad_L_N;
+    spos_opt.affineT = spos_opt.affineT + spos_opt.aalpha_affineT( II ) * grad_L;
     
     genT_aalpha = [ spos_opt.affineT( 1 ), spos_opt.affineT( 2 ); spos_opt.affineT( 3 ), spos_opt.affineT( 4 ) ]; 
     

@@ -2,10 +2,10 @@ function [ rs, rot ] = scanpositions_update_2DTPA_rotation( rs, T0, phi, measD, 
 
 % rs = fliplr( rs );
 
-nDeq0 = not( nDeq0 );
+% nDeq0 = not( nDeq0 );
 Nspos = size( rs, 1 );
 
-rot_search = gpuArray( linspace( -5, 5, 21 ));
+rot_search = gpuArray( linspace( -30, 30, 61 ));
 
 L = gpuArray( zeros( 1, length( rot_search ), 'single' ) );
 

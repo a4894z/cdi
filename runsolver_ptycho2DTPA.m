@@ -116,7 +116,7 @@ function [ sol, expt ] = runsolver_ptycho2DTPA
 
     sol.use_gpu = true; 
 
-    sol.gpu_id = 3; 
+    sol.gpu_id = 4; 
 
     if sol.use_gpu == true, reset( gpuDevice( sol.gpu_id )); end
 
@@ -124,7 +124,7 @@ function [ sol, expt ] = runsolver_ptycho2DTPA
     % Stochastic minibatch size ( percentage of total scan positions )
     %=================================================================
 
-    sol.spos.rand_spos_subset_pct = 0.15;      
+    sol.spos.rand_spos_subset_pct = 1.00;      
 
     C = ( sol.spos.rand_spos_subset_pct > 1.00 ) || ( sol.spos.rand_spos_subset_pct <= 0 );
     
@@ -157,7 +157,7 @@ function [ sol, expt ] = runsolver_ptycho2DTPA
     %===================
     
     N_pauseandsave = 1;
-    N_epochs       = 5000;
+    N_epochs       = 300;
 
     for ii = 1 : N_pauseandsave
 
@@ -208,9 +208,9 @@ function [ sol, expt ] = runsolver_ptycho2DTPA_setpaths_loaddata
 %     data_path = '/net/s8iddata/export/8-id-ECA/Analysis/atripath/rPIE_vs_MB_mat/no_noise/sim_ptycho2DTPA_sposcorr_test.mat'; % NO NOISE
 %     data_path = '/net/s8iddata/export/8-id-ECA/Analysis/atripath/rPIE_vs_MB_mat/no_noise/sim_ptycho2DTPA_sposcorr_shearx_plus0p5_scaley_1p2.mat'; % NO NOISE
 
-    % data_path = '/net/s8iddata/export/8-id-ECA/Analysis/atripath/rPIE_vs_MB_mat/no_noise/sim_ptycho2DTPA_sposcorr_test_rot_plus20.mat';
-%     data_path = '/net/s8iddata/export/8-id-ECA/Analysis/atripath/rPIE_vs_MB_mat/no_noise/sim_ptycho2DTPA_sposcorr_shearx_plus0p5_scaley_1p2.mat';
-    data_path = '/net/s8iddata/export/8-id-ECA/Analysis/atripath/rPIE_vs_MB_mat/no_noise/sim_ptycho2DTPA_sposcorr_scalex1p2_scaley0p9.mat';
+%     data_path = '/net/s8iddata/export/8-id-ECA/Analysis/atripath/rPIE_vs_MB_mat/no_noise/sim_ptycho2DTPA_sposcorr_test_rot_plus20.mat';
+    data_path = '/net/s8iddata/export/8-id-ECA/Analysis/atripath/rPIE_vs_MB_mat/no_noise/sim_ptycho2DTPA_sposcorr_shearx_plus0p5_scaley_1p2.mat';
+%     data_path = '/net/s8iddata/export/8-id-ECA/Analysis/atripath/rPIE_vs_MB_mat/no_noise/sim_ptycho2DTPA_sposcorr_scalex1p2_scaley0p9.mat';
 
     %=========
     % 
@@ -275,7 +275,8 @@ function [ sol, expt ] = runsolver_ptycho2DTPA_setpaths_loaddata
 
     %=========
 
-    % data_path = './sim_ptycho2DTPA_sposcorr_test.mat';
+    data_path = './sim_ptycho2DTPA_sposcorr_test.mat';
+%     data_path = './sim_ptycho2DTPA_sposcorr_shearx_plus0p5_scaley_1p2.mat';
 
     % data_path = [ pwd, '/sim_ptycho2DTPA.mat' ];
     % data_path = './L0105_to_L0113_combined_512x512.mat';
@@ -348,7 +349,7 @@ function [ sol, expt ] = runsolver_ptycho2DTPA_params_misc( sol, expt )
     
     sol.it.collect_metrics   = single( 25 );     % when we want to collect performance metrics
     sol.it.mkimg_meas_metric = single( 25 ); 
-    sol.it.mkimg_sample_SCPM = single( 200 ); 
+    sol.it.mkimg_sample_SCPM = single( 100 ); 
     
     %=============================================
     % Performance metric and epoch update counters
