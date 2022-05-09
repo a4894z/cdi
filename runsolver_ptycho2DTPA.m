@@ -10,13 +10,16 @@ function [ sol, expt ] = runsolver_ptycho2DTPA
     %{
 
     cd /net/s8iddata/export/8-id-ECA/Analysis/atripath/cdi
-
+    
+    restoredefaultpath; 
+    clear RESTOREDEFAULTPATH_EXECUTED;
+    addpath( genpath( pwd ));   
+    
     %========
 
     clear; close all; 
 
-    restoredefaultpath; 
-    clear RESTOREDEFAULTPATH_EXECUTED;
+
     
     % codelocation =  '~/Documents/Science/Matlab/Code/cdi/';
     codelocation =  '/net/s8iddata/export/8-id-ECA/Analysis/atripath/cdi';
@@ -124,7 +127,7 @@ function [ sol, expt ] = runsolver_ptycho2DTPA
     % Stochastic minibatch size ( percentage of total scan positions )
     %=================================================================
 
-    sol.spos.rand_spos_subset_pct = 1.00;      
+    sol.spos.rand_spos_subset_pct = 0.20;      
 
     C = ( sol.spos.rand_spos_subset_pct > 1.00 ) || ( sol.spos.rand_spos_subset_pct <= 0 );
     
@@ -209,8 +212,8 @@ function [ sol, expt ] = runsolver_ptycho2DTPA_setpaths_loaddata
 %     data_path = '/net/s8iddata/export/8-id-ECA/Analysis/atripath/rPIE_vs_MB_mat/no_noise/sim_ptycho2DTPA_sposcorr_shearx_plus0p5_scaley_1p2.mat'; % NO NOISE
 
 %     data_path = '/net/s8iddata/export/8-id-ECA/Analysis/atripath/rPIE_vs_MB_mat/no_noise/sim_ptycho2DTPA_sposcorr_test_rot_plus20.mat';
-    data_path = '/net/s8iddata/export/8-id-ECA/Analysis/atripath/rPIE_vs_MB_mat/no_noise/sim_ptycho2DTPA_sposcorr_shearx_plus0p5_scaley_1p2.mat';
-%     data_path = '/net/s8iddata/export/8-id-ECA/Analysis/atripath/rPIE_vs_MB_mat/no_noise/sim_ptycho2DTPA_sposcorr_scalex1p2_scaley0p9.mat';
+%     data_path = '/net/s8iddata/export/8-id-ECA/Analysis/atripath/rPIE_vs_MB_mat/no_noise/sim_ptycho2DTPA_sposcorr_shearx_plus0p5_scaley_1p2.mat';
+    data_path = '/net/s8iddata/export/8-id-ECA/Analysis/atripath/rPIE_vs_MB_mat/no_noise/sim_ptycho2DTPA_sposcorr_scalex1p2_scaley0p9.mat';
 
     %=========
     % 
@@ -274,8 +277,9 @@ function [ sol, expt ] = runsolver_ptycho2DTPA_setpaths_loaddata
     % data_path = '/net/s8iddata/export/8-id-ECA/Analysis/atripath/data/zjiang202204/ready_for_phaseretrieval/L0510_to_L0518_combined_1024x128.mat';  % +90
 
     %=========
-
-    data_path = './sim_ptycho2DTPA_sposcorr_test.mat';
+    
+    data_path = './sim_ptycho2DTPA_sposcorr_scalex1p2_scaley0p9.mat';
+%     data_path = './sim_ptycho2DTPA_sposcorr_test_plus20rot.mat';
 %     data_path = './sim_ptycho2DTPA_sposcorr_shearx_plus0p5_scaley_1p2.mat';
 
     % data_path = [ pwd, '/sim_ptycho2DTPA.mat' ];
@@ -321,7 +325,7 @@ function [ sol, expt ] = runsolver_ptycho2DTPA_params_misc( sol, expt )
     %=====================================
     
     sol.rPIE_alpha_phi = single( 1e-0 );   % relatively insensitive to this?
-    sol.rPIE_alpha_T   = single( 1e-1 );   
+    sol.rPIE_alpha_T   = single( 1e-2 );   
 
     %========================================
     % When to start sample/probe/spos updates 
@@ -347,8 +351,8 @@ function [ sol, expt ] = runsolver_ptycho2DTPA_params_misc( sol, expt )
     sol.it.probe_smoothing    = single( 1 );
     sol.it.probe_phase_sparse = single( 1e99 );
     
-    sol.it.collect_metrics   = single( 25 );     % when we want to collect performance metrics
-    sol.it.mkimg_meas_metric = single( 25 ); 
+    sol.it.collect_metrics   = single( 10 );     % when we want to collect performance metrics
+    sol.it.mkimg_meas_metric = single( 100 ); 
     sol.it.mkimg_sample_SCPM = single( 100 ); 
     
     %=============================================
@@ -452,15 +456,15 @@ function [ sol, expt ] = runsolver_ptycho2DTPA_params_SCPM( sol, expt )
         
     end
         
-    %==============
-    % Orthogonalize
-    %==============
+    %====================
+    % Orthogonalize SCPMs
+    %====================
 
 %     [ sol.probe.phi ] = orthog_modes_eigendecomp( sol.probe.phi );
 
-    %========
-    % Rescale
-    %========
+    %==============
+    % Rescale SCPMs
+    %==============
 
     [ sol.probe.phi ] = enforce_scpm_fro2TOT_photonocc( sol.probe.phi, sol.probe.scpm.fro2TOT, sol.probe.scpm.occ );
     
@@ -542,9 +546,9 @@ function [ sol, expt ] = runsolver_ptycho2DTPA_params_scanpositions( sol, expt )
     sol.spos.rs         = single( sol.spos.rs );
     sol.spos.indxsubset = single( sol.spos.indxsubset );
     
-    %================================================
-    % Gradient descent based scan position correction
-    %================================================
+    %========================================================================================
+    % Gradient descent based scan position correction w/ scan positions as decision variables
+    %========================================================================================
 
     sol.spos.correction.Naalpha_rs = 6;  
     sol.spos.correction.aalpha_rs  = linspace( 0.0, 5.00, sol.spos.correction.Naalpha_rs );   
@@ -565,6 +569,12 @@ function [ sol, expt ] = runsolver_ptycho2DTPA_params_scanpositions( sol, expt )
     % Modifications to the current scan positions
     %============================================
     
+    % RANDOM
+    
+%     sol.spos.rs = sol.spos.rs + 10 * random( sol.spos.N, 2, 'single' );
+
+    %========
+    
 %     % ROTATION
 %     
 %     theta = +20 - 10;
@@ -574,7 +584,7 @@ function [ sol, expt ] = runsolver_ptycho2DTPA_params_scanpositions( sol, expt )
 %     sol.spos.rs = transpose( sol.spos.rotation * transpose( sol.spos.rs ));
 
     %========
-
+        
 %     % SHEAR
 %     
 %     s_x = +0.5;

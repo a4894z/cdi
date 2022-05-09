@@ -36,15 +36,15 @@ if collect_metrics
     I_m      = sqrt_I_m .^ 2;
     meas_mask = not( sqrt_I_m_eq0 );
     
-    metrics.gauss_intensity = sum( sum( sum( meas_mask .* abs( I_m - I_e ) .^ 2           )));
+%     metrics.gauss_intensity = sum( sum( sum( meas_mask .* abs( I_m - I_e ) .^ 2           )));
     metrics.gauss_magnitude = sum( sum( sum( meas_mask .* abs( sqrt_I_m - sqrt_I_e ) .^ 2 )));
-    metrics.poiss           = sum( sum( sum( meas_mask .* ( I_e - I_m .* log( I_e ))      )));
+%     metrics.poiss           = sum( sum( sum( meas_mask .* ( I_e - I_m .* log( I_e ))      )));
     
-    I_m_over_I_e = I_m ./ I_e;
-    
-    metrics.grad_gauss_intensity = sum( sum( sum( meas_mask .* sum( abs( 2 * ( I_e - I_m )           .* psi ) .^ 2, 3 ) )));
-    metrics.grad_gauss_magnitude = sum( sum( sum( meas_mask .* sum( abs( ( 1 - sqrt( I_m_over_I_e )) .* psi ) .^ 2, 3 ) )));
-    metrics.grad_poiss           = sum( sum( sum( meas_mask .* sum( abs( ( 1 - I_m_over_I_e )        .* psi ) .^ 2, 3 ) ))); 
+%     I_m_over_I_e = I_m ./ I_e;
+%     
+%     metrics.grad_gauss_intensity = sum( sum( sum( meas_mask .* sum( abs( 2 * ( I_e - I_m )           .* psi ) .^ 2, 3 ) )));
+%     metrics.grad_gauss_magnitude = sum( sum( sum( meas_mask .* sum( abs( ( 1 - sqrt( I_m_over_I_e )) .* psi ) .^ 2, 3 ) )));
+%     metrics.grad_poiss           = sum( sum( sum( meas_mask .* sum( abs( ( 1 - I_m_over_I_e )        .* psi ) .^ 2, 3 ) ))); 
     
 else
     
