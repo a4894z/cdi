@@ -120,10 +120,10 @@ function [ sol, expt ] = ptycho2DTPA_runGPU_stochminibatchgrad( sol, expt, N_epo
     
     if strcmp( sol.exwv_noisemodel, 'poisson' )
         
-        sol.GPU.Nalpha = gpuArray( single( 6 ));
+        sol.GPU.Nalpha = gpuArray( single( 11 ));
 
 %         sol.GPU.alpha_minmax = [ [ 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00 ]; ...
-%                                  [ 5.00, 5.00, 5.00, 5.00, 5.00, 5.00, 2.50, 2.50 ] ];
+%                                  [ 3.00, 2.00, 2.00, 2.00, 1.00, 1.00, 1.00, 1.00 ] ];
 
     %     sol.GPU.alpha_minmax = [ [ 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00 ]; ...
     %                              [ 6.00, 6.00, 4.00, 3.00, 3.00, 1.00, 1.00 ] ];
@@ -131,14 +131,14 @@ function [ sol, expt ] = ptycho2DTPA_runGPU_stochminibatchgrad( sol, expt, N_epo
     %     sol.GPU.alpha_minmax = [ [ 0.00, 0.00, 0.00, 0.00, 0.00, 0.00 ]; ...
     %                              [ 1.00, 1.00, 1.00, 1.00, 1.00, 1.00 ] ];
 
-    %     sol.GPU.alpha_minmax = [ [ 0.00, 0.00, 0.00, 0.00, 0.00 ]; ...
-    %                              [ 2.00, 2.00, 2.00, 2.00, 1.00 ] ];
+        sol.GPU.alpha_minmax = [ [ 0.00, 0.00, 0.00, 0.00, 0.00 ]; ...
+                                 [ 3.00, 3.00, 3.00, 1.00, 1.00 ] ];
 
     %     sol.GPU.alpha_minmax = [ [ 0.00, 0.00, 0.00, 0.00 ]; ...
     %                              [ 1e-6, 2.00, 2.00, 1.00 ] ];
 
-        sol.GPU.alpha_minmax = [ [ 0.00, 0.00, 0.00 ]; ...
-                                 [ 5.00, 2.50, 1.00 ] ];
+%         sol.GPU.alpha_minmax = [ [ 0.00, 0.00, 0.00 ]; ...
+%                                  [ 5.00, 2.50, 1.00 ] ];
 
     %     sol.GPU.alpha_minmax = [ [ 0.00, 0.00 ]; ...
     %                              [ 1.00, 1.00 ] ];
@@ -261,8 +261,8 @@ function [ sol, expt ] = ptycho2DTPA_runGPU_stochminibatchgrad( sol, expt, N_epo
                                                                                 collect_metrics );
                                                                                                  
             elseif strcmp( sol.exwv_noisemodel, 'poisson' )
-            
-                if ( mod( sol.it.epoch, sol.it.exwv_poisson_exactsearch ) == 0 ) || ( sol.it.epoch == 1 )
+                
+                if strcmp( sol.it.exwv_poisson_steplength, 'use_exact_linesearch' ) && (( mod( sol.it.epoch, sol.it.exwv_poisson_update_steplength ) == 0 ) || ( sol.it.epoch == 1 ))
 
                     [ sol.GPU.psi, sol.GPU.alpha_opt, meas_metrics ] = exitwave_update_2DTPA_poisson( sol.GPU.phi,        ...
                                                                                                       sol.GPU.TFvec,      ...
@@ -278,6 +278,9 @@ function [ sol, expt ] = ptycho2DTPA_runGPU_stochminibatchgrad( sol, expt, N_epo
                                                                                                       sol.GPU.meas_eq0,   ...
                                                                                                       sol.GPU.measLPF,    ...
                                                                                                       collect_metrics );
+                           
+                                                                                                  
+
                                                                                                   
                     %======================================================================
                     % keep track of step length for the scan positions we just computed for
@@ -285,11 +288,19 @@ function [ sol, expt ] = ptycho2DTPA_runGPU_stochminibatchgrad( sol, expt, N_epo
                     
                     sol.GPU.alpha_prev( sol.GPU.batch_indx, : ) = squeeze( sol.GPU.alpha_opt );
 
+                elseif strcmp( sol.it.exwv_poisson_steplength, 'use_sign_test' ) && ( mod( sol.it.epoch, sol.it.exwv_poisson_update_steplength ) == 0 )
+
+                    
+                    
+                    
+                    
                 else
 
-                    alpha_prev = sol.GPU.alpha_prev( sol.GPU.batch_indx, : );
-                    alpha_prev = reshape( alpha_prev, [ 1, size( alpha_prev ) ] );
+%                     alpha_prev = sol.GPU.alpha_prev( sol.GPU.batch_indx, : );
+%                     alpha_prev = reshape( alpha_prev, [ 1, size( alpha_prev ) ] );
 
+                    alpha_prev = reshape( sol.GPU.alpha_prev( sol.GPU.batch_indx, : ), [ 1, sol.GPU.Nspos, sol.GPU.Nscpm ] );
+                    
                     [ sol.GPU.psi, sol.GPU.alpha_opt, meas_metrics ] = exitwave_update_2DTPA_poisson( sol.GPU.phi,       ...
                                                                                                       sol.GPU.TFvec,     ...
                                                                                                       sol.GPU.ind,       ...
@@ -304,6 +315,10 @@ function [ sol, expt ] = ptycho2DTPA_runGPU_stochminibatchgrad( sol, expt, N_epo
                                                                                                       sol.GPU.meas_eq0,  ...
                                                                                                       sol.GPU.measLPF,   ...
                                                                                                       collect_metrics );
+                                                                                                  
+                                                                                                  
+                                                                                                  
+                                                                                                  
 
                 end
             
@@ -326,7 +341,9 @@ function [ sol, expt ] = ptycho2DTPA_runGPU_stochminibatchgrad( sol, expt, N_epo
                 grad_meas_poiss           = grad_meas_poiss           + meas_metrics.grad_poiss; 
                 
             end
-   
+            
+            %=======
+              
             texwv = texwv + toc( start_exwv );
 
             
@@ -402,7 +419,9 @@ function [ sol, expt ] = ptycho2DTPA_runGPU_stochminibatchgrad( sol, expt, N_epo
 
 
 %====================================================================================================================================================                        
-   
+
+%{
+
 %             tmp1 = modulus_limits_project( sol.GPU.TFvec, sol.GPU.abs_TF_lim );   
 %             tmp1 = reshape( tmp1, sol.GPU.samsz );
 %             figure; imagescHSV( tmp1 )
@@ -758,8 +777,8 @@ GPU.vs_c = sol.GPU.vs_c;
             
             
             
-            
-            
+%}
+
             
             %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
             %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% Sample Update %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -1149,15 +1168,15 @@ GPU.vs_c = sol.GPU.vs_c;
         
         
  
-    GPU.batch_indx              = [];
-    GPU.batch_rs                = [];
-    GPU.sample_sposview_indices = []; 
-    GPU.Nspos                   = [];
-    GPU.Nscpm                   = [];
-    GPU.ind                     = []; 
-    GPU.ind_offset              = [];
-    GPU.meas                    = [];
-    GPU.meas_eq0                = [];
+%     GPU.batch_indx              = [];
+%     GPU.batch_rs                = [];
+%     GPU.sample_sposview_indices = []; 
+%     GPU.Nspos                   = [];
+%     GPU.Nscpm                   = [];
+%     GPU.ind                     = []; 
+%     GPU.ind_offset              = [];
+%     GPU.meas                    = [];
+%     GPU.meas_eq0                = [];
 
         
         
@@ -1489,7 +1508,7 @@ function [ GPU ] = CPUmem2GPUmem( sol, expt, GPU )
     %========
     
     GPU.batch_indx = gpuArray( sol.spos.batch_indx );
-    GPU.Nspos      = gpuArray( length( GPU.batch_indx ) );
+    GPU.Nspos      = gpuArray( single( length( GPU.batch_indx )));
 
     GPU.batch_rs = gpuArray( sol.spos.rs( sol.spos.batch_indx, : ) );
 

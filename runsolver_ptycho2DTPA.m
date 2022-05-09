@@ -119,7 +119,7 @@ function [ sol, expt ] = runsolver_ptycho2DTPA
 
     sol.use_gpu = true; 
 
-    sol.gpu_id = 4; 
+    sol.gpu_id = 1; 
 
     if sol.use_gpu == true, reset( gpuDevice( sol.gpu_id )); end
 
@@ -127,7 +127,7 @@ function [ sol, expt ] = runsolver_ptycho2DTPA
     % Stochastic minibatch size ( percentage of total scan positions )
     %=================================================================
 
-    sol.spos.rand_spos_subset_pct = 0.20;      
+    sol.spos.rand_spos_subset_pct = 0.05;      
 
     C = ( sol.spos.rand_spos_subset_pct > 1.00 ) || ( sol.spos.rand_spos_subset_pct <= 0 );
     
@@ -206,6 +206,8 @@ function [ sol, expt ] = runsolver_ptycho2DTPA_setpaths_loaddata
     % data_path = '/net/s8iddata/export/8-id-ECA/Analysis/atripath/rPIE_vs_MB_mat/noise/sim_ptycho2DTPA.mat';      % WITH NOISE, WITHOUT BG RM
     % data_path = '/net/s8iddata/export/8-id-ECA/Analysis/atripath/rPIE_vs_MB_mat/noise_rmbg/sim_ptycho2DTPA.mat'; % WITH NOISE, WITH BG RM
 
+    data_path = '/home/ash/Documents/Science/Matlab/Code/cdi/sim_ptycho2DTPA.mat';
+    
     %=========
         
 %     data_path = '/net/s8iddata/export/8-id-ECA/Analysis/atripath/rPIE_vs_MB_mat/no_noise/sim_ptycho2DTPA_sposcorr_test.mat'; % NO NOISE
@@ -213,7 +215,7 @@ function [ sol, expt ] = runsolver_ptycho2DTPA_setpaths_loaddata
 
 %     data_path = '/net/s8iddata/export/8-id-ECA/Analysis/atripath/rPIE_vs_MB_mat/no_noise/sim_ptycho2DTPA_sposcorr_test_rot_plus20.mat';
 %     data_path = '/net/s8iddata/export/8-id-ECA/Analysis/atripath/rPIE_vs_MB_mat/no_noise/sim_ptycho2DTPA_sposcorr_shearx_plus0p5_scaley_1p2.mat';
-    data_path = '/net/s8iddata/export/8-id-ECA/Analysis/atripath/rPIE_vs_MB_mat/no_noise/sim_ptycho2DTPA_sposcorr_scalex1p2_scaley0p9.mat';
+%     data_path = '/net/s8iddata/export/8-id-ECA/Analysis/atripath/rPIE_vs_MB_mat/no_noise/sim_ptycho2DTPA_sposcorr_scalex1p2_scaley0p9.mat';
 
     %=========
     % 
@@ -278,7 +280,7 @@ function [ sol, expt ] = runsolver_ptycho2DTPA_setpaths_loaddata
 
     %=========
     
-    data_path = './sim_ptycho2DTPA_sposcorr_scalex1p2_scaley0p9.mat';
+%     data_path = './sim_ptycho2DTPA_sposcorr_scalex1p2_scaley0p9.mat';
 %     data_path = './sim_ptycho2DTPA_sposcorr_test_plus20rot.mat';
 %     data_path = './sim_ptycho2DTPA_sposcorr_shearx_plus0p5_scaley_1p2.mat';
 
@@ -315,17 +317,19 @@ function [ sol, expt ] = runsolver_ptycho2DTPA_params_misc( sol, expt )
     % Poisson or Gaussian Noise Model for Exitwave Updates
     %=====================================================
  
-   sol.exwv_noisemodel = 'gaussian';
+%    sol.exwv_noisemodel = 'gaussian';
     
-%      sol.exwv_noisemodel = 'poisson';
-%      sol.it.exwv_poisson_exactsearch = 5;
-
+    sol.exwv_noisemodel = 'poisson';
+    sol.it.exwv_poisson_update_steplength = 5;
+    sol.it.exwv_poisson_steplength = 'use_exact_linesearch';
+%     sol.it.exwv_poisson_steplength = 'use_sign_test';
+    
     %=====================================
     % rPIE adaptive step length parameters
     %=====================================
     
     sol.rPIE_alpha_phi = single( 1e-0 );   % relatively insensitive to this?
-    sol.rPIE_alpha_T   = single( 1e-2 );   
+    sol.rPIE_alpha_T   = single( 1e-0 );   
 
     %========================================
     % When to start sample/probe/spos updates 
@@ -542,6 +546,8 @@ end
 %====================================================================================================================================================
 
 function [ sol, expt ] = runsolver_ptycho2DTPA_params_scanpositions( sol, expt )   
+    
+    sol.spos.indxsubset = single( sol.spos.indx );
     
     sol.spos.rs         = single( sol.spos.rs );
     sol.spos.indxsubset = single( sol.spos.indxsubset );

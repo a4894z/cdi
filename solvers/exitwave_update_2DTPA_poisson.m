@@ -86,9 +86,18 @@ function [ Psi, alpha_opt, metrics ] = exitwave_update_2DTPA_poisson( phi,      
 
     if ~isempty( alpha_test )
 
-        alpha_opt = poisson_exact_linesearch_vs_minibatch( xi, abs2_Psi, alpha_test, I_e, I_m, Nspos, Nscpm );
+        alpha_opt = poisson_steplength_exact_linesearch_vs_minibatch( xi, abs2_Psi, alpha_test, I_e, I_m, Nspos, Nscpm );
         
+        
+%                     %======================================================================
+%                     % keep track of step length for the scan positions we just computed for
+%                     %======================================================================
+%                     
+%                     sol.GPU.alpha_prev( sol.GPU.batch_indx, : ) = squeeze( sol.GPU.alpha_opt );
+
     else
+        
+%         alpha_prev = reshape( sol.GPU.alpha_prev( sol.GPU.batch_indx, : ), [ 1, sol.GPU.Nspos, sol.GPU.Nscpm ] );
 
         alpha_opt = alpha_prev;
 
@@ -112,22 +121,10 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-function alpha_opt = poisson_exact_linesearch_vs_minibatch( xi, abs2_Psi, alpha_test, I_e, I_m, Nspos, Nscpm )
+function alpha_opt = poisson_steplength_exact_linesearch_vs_minibatch( xi, abs2_Psi, alpha_test, I_e, I_m, Nspos, Nscpm )
 
-    xi_abs_Psi2        = xi .* abs2_Psi;
-    xi_alpha_minus_one = xi .* alpha_test - 1;
-
-    %========
-
-    lhs_steplength_eqn = squeeze( sum( xi_abs_Psi2 .* xi_alpha_minus_one, 1 ));    % sum over image pixels
-
-    %========
-
-    numer = I_m .* xi_alpha_minus_one;
-    denom = abs2_Psi .* xi_alpha_minus_one .^ 2 + I_e - abs2_Psi;
-
-    rhs_steplength_eqn = squeeze( sum( xi_abs_Psi2 .* ( numer ./ denom ), 1 ));    % sum over image pixels
-
+    [ lhs_steplength_eqn, rhs_steplength_eqn ] = compute_lhs_rhs_optimal_poisson_steplength( xi, abs2_Psi, alpha_test, I_e, I_m );
+ 
     %========
 
     f_eq_0 = abs( lhs_steplength_eqn - rhs_steplength_eqn );
@@ -145,26 +142,26 @@ function alpha_opt = poisson_exact_linesearch_vs_minibatch( xi, abs2_Psi, alpha_
     alpha_opt = reshape( alpha_opt, [ 1, size( alpha_opt ) ] );
 
 
+    
+    
+    
     %{
-
+    
+    sign_lhs_minus_rhs = sign( lhs_steplength_eqn - rhs_steplength_eqn );
+        
     kk = 1;
 
     for pp = 1 : Nscpm
+
+        %========
 
         figure( 667 );
         subplot( 1, double(gather( Nscpm )), kk )
 
         imagesc( squeeze( alpha_test( 1, 1, pp, : )), 1 : Nspos, squeeze( log10( 1 + f_eq_0( :, pp, : ) )))
-    %     imagesc( squeeze( alpha_test( 1, 1, pp, : )), 1 : length( spos_test ), log10( 1 + squeeze( f_eq_0n( :, pp, : )) ))
-    %     imagesc( alpha_test( :, pp ), 1 : length( spos_test ), log10( 1 + squeeze( f_eq_0n( :, pp, : )) ))
-
-
-
 
         hold on
         plot( alpha_opt( 1, :, pp ), 1 : Nspos, 'r.', 'MarkerSize', 5 );
-    %     plot( alpha_opt, 1 : size( f_eq_0, 1 ), 'r.', 'MarkerSize', 5 );
-
         hold off
 
         grid on
@@ -172,9 +169,36 @@ function alpha_opt = poisson_exact_linesearch_vs_minibatch( xi, abs2_Psi, alpha_
         xlabel('\alpha')
         ylabel('spos index')
 
+        %========
+        
+        figure( 666	);
+        subplot( 1, double(gather( Nscpm )), kk )
+        
+
+        
+        imagesc( squeeze( alpha_test( 1, 1, pp, : )), 1 : Nspos, squeeze( sign_lhs_minus_rhs( :, pp, : ) ))
+        
+        hold on
+        plot( alpha_opt( 1, :, pp ), 1 : Nspos, 'r.', 'MarkerSize', 5 );
+        hold off
+        
+        grid on
+        colormap bone
+        xlabel('\alpha')
+        ylabel('spos index')
+
+        
+        
+        
+
+        %========
+        
         kk = kk + 1;
 
         drawnow
+        
+        
+        
 
     end
 
@@ -184,4 +208,39 @@ function alpha_opt = poisson_exact_linesearch_vs_minibatch( xi, abs2_Psi, alpha_
     
 end
 
+%====================================================================================================================================================
 
+function alpha_opt = poisson_steplength_signtest_vs_minibatch( xi, abs2_Psi, alpha_test, I_e, I_m, Nspos, Nscpm )
+
+    [ lhs_steplength_eqn, rhs_steplength_eqn ] = compute_lhs_rhs_optimal_poisson_steplength( xi, abs2_Psi, alpha_test, I_e, I_m );
+ 
+    sign_lhs_minus_rhs = sign( lhs_steplength_eqn - rhs_steplength_eqn );
+
+    
+    
+    
+    
+
+
+end
+
+
+%====================================================================================================================================================
+
+function [ lhs, rhs ] = compute_lhs_rhs_optimal_poisson_steplength( xi, abs2_Psi, alpha_test, I_e, I_m )
+
+    xi_abs_Psi2        = xi .* abs2_Psi;
+    xi_alpha_minus_one = xi .* alpha_test - 1;
+
+    %========
+
+    lhs = squeeze( sum( xi_abs_Psi2 .* xi_alpha_minus_one, 1 ));    % sum over image pixels
+
+    %========
+
+    numer = I_m .* xi_alpha_minus_one;
+    denom = abs2_Psi .* xi_alpha_minus_one .^ 2 + I_e - abs2_Psi;
+
+    rhs = squeeze( sum( xi_abs_Psi2 .* ( numer ./ denom ), 1 ));    % sum over image pixels
+
+end
