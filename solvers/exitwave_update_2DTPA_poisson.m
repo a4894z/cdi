@@ -1,6 +1,7 @@
 function [ Psi, alpha_opt, metrics ] = exitwave_update_2DTPA_poisson( phi,       ...
                                                                      T0,         ...
                                                                      ind,        ...
+                                                                     batch_indx, ...
                                                                      sz,         ...
                                                                      Nspos,      ...
                                                                      Nscpm,      ...
@@ -83,17 +84,34 @@ function [ Psi, alpha_opt, metrics ] = exitwave_update_2DTPA_poisson( phi,      
     %================================================
     % compute the step length by 1st order optimality
     %================================================
-
+    
+%     poiss_exwv_alpha.alpha_test
+    
     if ~isempty( alpha_test )
 
-        alpha_opt = poisson_steplength_exact_linesearch_vs_minibatch( xi, abs2_Psi, alpha_test, I_e, I_m, Nspos, Nscpm );
+        alpha_opt = poisson_steplength_exact_linesearch_vs_minibatch( xi,         ...
+                                                                      abs2_Psi,   ...
+                                                                      alpha_test, ...
+                                                                      I_e,        ...
+                                                                      I_m,        ...
+                                                                      Nspos,      ...
+                                                                      Nscpm );
         
         
+        
+        
+                     % sol.GPU.poiss_exwv_alpha <-- sol.GPU.alpha_opt, sol.GPU.alpha_prev
+                     
 %                     %======================================================================
 %                     % keep track of step length for the scan positions we just computed for
 %                     %======================================================================
 %                     
 %                     sol.GPU.alpha_prev( sol.GPU.batch_indx, : ) = squeeze( sol.GPU.alpha_opt );
+
+%         poiss_exwv_alpha.alpha_prev( batch_indx, : ) = squeeze( alpha_opt );
+
+
+
 
     else
         
@@ -103,8 +121,10 @@ function [ Psi, alpha_opt, metrics ] = exitwave_update_2DTPA_poisson( phi,      
 
     end
 
-    %========
-
+    %=======================================================================
+    % apply the step length to make exitwaves satisfy measurement constraint
+    %=======================================================================
+    
 %     tic
     Psi = reshape( Psi .* ( 1 - alpha_opt .* xi ), [ sz, Nspos, Nscpm ] );
 %     Psi = reshape( Psi - alpha_opt .* grad_Psi, [ sz, Nspos, Nscpm ] );

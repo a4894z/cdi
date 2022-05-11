@@ -118,6 +118,11 @@ function [ sol, expt ] = ptycho2DTPA_runGPU_stochminibatchgrad( sol, expt, N_epo
     % sol.GPU.poissonexwv.alpha_test_shortrange
 
     
+    
+    
+    
+    
+    
     if strcmp( sol.exwv_noisemodel, 'poisson' )
         
         sol.GPU.Nalpha = gpuArray( single( 11 ));
@@ -160,6 +165,70 @@ function [ sol, expt ] = ptycho2DTPA_runGPU_stochminibatchgrad( sol, expt, N_epo
         sol.GPU.alpha_prev = gpuArray( zeros( [ sol.spos.N, sol.GPU.Nscpm ], 'single' ) );
     
     end
+    
+    
+    
+    
+    
+    
+    
+
+
+    sol.GPU.poissonexwv.steplength_update_freq = sol.poissonexwv.steplength_update_freq;
+    sol.GPU.poissonexwv.steplength_update_type = sol.poissonexwv.steplength_update_type;
+    
+    if strcmp( sol.exwv_noisemodel, 'poisson' )
+        
+        sol.GPU.poissonexwv.Nalpha = gpuArray( single( 11 ));
+
+%        sol.GPU.poissonexwv.alpha_minmax = [ [ 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00 ]; ...
+%                                             [ 3.00, 2.00, 2.00, 2.00, 1.00, 1.00, 1.00, 1.00 ] ];
+
+    %     sol.GPU.poissonexwv.alpha_minmax = [ [ 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00 ]; ...
+    %                                          [ 6.00, 6.00, 4.00, 3.00, 3.00, 1.00, 1.00 ] ];
+
+    %     sol.GPU.poissonexwv.alpha_minmax = [ [ 0.00, 0.00, 0.00, 0.00, 0.00, 0.00 ]; ...
+    %                                          [ 1.00, 1.00, 1.00, 1.00, 1.00, 1.00 ] ];
+
+        sol.GPU.poissonexwv.alpha_minmax = [ [ 0.00, 0.00, 0.00, 0.00, 0.00 ]; ...
+                                             [ 3.00, 3.00, 3.00, 1.00, 1.00 ] ];
+
+    %     sol.GPU.poissonexwv.alpha_minmax = [ [ 0.00, 0.00, 0.00, 0.00 ]; ...
+    %                                          [ 1e-6, 2.00, 2.00, 1.00 ] ];
+
+%         sol.GPU.poissonexwv.alpha_minmax = [ [ 0.00, 0.00, 0.00 ]; ...
+%                                              [ 5.00, 2.50, 1.00 ] ];
+
+    %     sol.GPU.poissonexwv.alpha_minmax = [ [ 0.00, 0.00 ]; ...
+    %                                          [ 1.00, 1.00 ] ];
+
+    %     sol.GPU.poissonexwv.alpha_minmax = [ [ 0.00 ]; ...
+    %                                          [ 1.00 ] ];
+
+        %========
+
+        sol.GPU.poissonexwv.alpha_minmax = gpuArray( single( sol.GPU.alpha_minmax ));
+
+        for pp = 1 : sol.GPU.Nscpm
+
+            sol.GPU.poissonexwv.alpha_test( pp, : ) = linspace( sol.GPU.poissonexwv.alpha_minmax( 1, pp ), ...
+                                                                sol.GPU.poissonexwv.alpha_minmax( 2, pp ), ...
+                                                                sol.GPU.poissonexwv.Nalpha );
+
+        end
+
+        sol.GPU.poissonexwv.alpha_test = gpuArray( reshape( sol.GPU.poissonexwv.alpha_test, [ 1, 1, sol.GPU.Nscpm, sol.GPU.Nalpha ] ));
+        sol.GPU.poissonexwv.alpha_prev = gpuArray( zeros( [ sol.spos.N, sol.GPU.Nscpm ], 'single' ) );
+    
+    end
+    
+    
+    
+    
+    
+    
+    
+    
     
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% Main Loop %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -262,11 +331,19 @@ function [ sol, expt ] = ptycho2DTPA_runGPU_stochminibatchgrad( sol, expt, N_epo
                                                                                                  
             elseif strcmp( sol.exwv_noisemodel, 'poisson' )
                 
+                
+                
+                
+                %%{
+                
                 if strcmp( sol.it.exwv_poisson_steplength, 'use_exact_linesearch' ) && (( mod( sol.it.epoch, sol.it.exwv_poisson_update_steplength ) == 0 ) || ( sol.it.epoch == 1 ))
-
-                    [ sol.GPU.psi, sol.GPU.alpha_opt, meas_metrics ] = exitwave_update_2DTPA_poisson( sol.GPU.phi,        ...
+                    
+                     % sol.GPU.poiss_exwv <-- sol.GPU.alpha_opt, sol.GPU.alpha_prev
+                     
+                    [ sol.GPU.psi_B, sol.GPU.alpha_opt, meas_metrics ] = exitwave_update_2DTPA_poisson( sol.GPU.phi,        ...
                                                                                                       sol.GPU.TFvec,      ...
                                                                                                       sol.GPU.ind,        ...
+                                                                                                      sol.GPU.batch_indx, ...
                                                                                                       sol.GPU.sz,         ...
                                                                                                       sol.GPU.Nspos,      ...
                                                                                                       sol.GPU.Nscpm,      ...
@@ -304,6 +381,7 @@ function [ sol, expt ] = ptycho2DTPA_runGPU_stochminibatchgrad( sol, expt, N_epo
                     [ sol.GPU.psi, sol.GPU.alpha_opt, meas_metrics ] = exitwave_update_2DTPA_poisson( sol.GPU.phi,       ...
                                                                                                       sol.GPU.TFvec,     ...
                                                                                                       sol.GPU.ind,       ...
+                                                                                                      sol.GPU.batch_indx, ...
                                                                                                       sol.GPU.sz,        ...
                                                                                                       sol.GPU.Nspos,     ...
                                                                                                       sol.GPU.Nscpm,     ...
@@ -321,6 +399,40 @@ function [ sol, expt ] = ptycho2DTPA_runGPU_stochminibatchgrad( sol, expt, N_epo
                                                                                                   
 
                 end
+                
+                
+                
+                %}
+                
+                
+                
+                
+
+                
+                
+                
+           [ sol.GPU.psi_A, sol.GPU.poissonexwv, meas_metrics ] = exitwave_update_2DTPA_poisson_v2( sol.GPU.phi,         ...
+                                                                                                  sol.GPU.TFvec,       ...
+                                                                                                  sol.GPU.ind,         ...
+                                                                                                  sol.GPU.batch_indx,  ...
+                                                                                                  sol.GPU.sz,          ...
+                                                                                                  sol.GPU.Nspos,       ...
+                                                                                                  sol.GPU.Nscpm,       ...
+                                                                                                  sol.GPU.poissonexwv, ...
+                                                                                                  sol.GPU.rc,          ... 
+                                                                                                  sol.GPU.sqrt_rc,     ...
+                                                                                                  sol.GPU.meas,        ...
+                                                                                                  sol.GPU.meas_eq0,    ...
+                                                                                                  sol.GPU.measLPF,     ...
+                                                                                                  sol.it.epoch,        ...
+                                                                                                  collect_metrics );
+                
+                
+                
+
+                
+                
+                
             
             else
         

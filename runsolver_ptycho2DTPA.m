@@ -69,16 +69,16 @@ function [ sol, expt ] = runsolver_ptycho2DTPA
 
     [ sol, expt ] = runsolver_ptycho2DTPA_setpaths_loaddata;
 
-% figure; 
-% plot_2Dscan_positions( expt.spos.rs, [], sol.spos.rs, [] )
-% set( gca, 'xdir', 'reverse' )
-% set( gca, 'ydir', 'normal' )
-% xlabel('xh, lab frame'); 
-% ylabel('yv, lab frame');
-% xlim([-500, 500])
-% ylim([-500, 500])
-% daspect([1 1 1])  
-% grid on
+figure; 
+plot_2Dscan_positions( expt.spos.rs, [], sol.spos.rs, [] )
+set( gca, 'xdir', 'reverse' )
+set( gca, 'ydir', 'normal' )
+xlabel('xh, lab frame'); 
+ylabel('yv, lab frame');
+xlim([-500, 500])
+ylim([-500, 500])
+daspect([1 1 1])  
+grid on
 
     %==================================================================
     % Initialize/reset sample, SCPM, scan positions for phase retrieval
@@ -206,7 +206,7 @@ function [ sol, expt ] = runsolver_ptycho2DTPA_setpaths_loaddata
     % data_path = '/net/s8iddata/export/8-id-ECA/Analysis/atripath/rPIE_vs_MB_mat/noise/sim_ptycho2DTPA.mat';      % WITH NOISE, WITHOUT BG RM
     % data_path = '/net/s8iddata/export/8-id-ECA/Analysis/atripath/rPIE_vs_MB_mat/noise_rmbg/sim_ptycho2DTPA.mat'; % WITH NOISE, WITH BG RM
 
-    data_path = '/home/ash/Documents/Science/Matlab/Code/cdi/sim_ptycho2DTPA.mat';
+%     data_path = '/home/ash/Documents/Science/Matlab/Code/cdi/sim_ptycho2DTPA.mat';
     
     %=========
         
@@ -282,7 +282,7 @@ function [ sol, expt ] = runsolver_ptycho2DTPA_setpaths_loaddata
     
 %     data_path = './sim_ptycho2DTPA_sposcorr_scalex1p2_scaley0p9.mat';
 %     data_path = './sim_ptycho2DTPA_sposcorr_test_plus20rot.mat';
-%     data_path = './sim_ptycho2DTPA_sposcorr_shearx_plus0p5_scaley_1p2.mat';
+    data_path = './sim_ptycho2DTPA_sposcorr_shearx_plus0p5_scaley_1p2.mat';
 
     % data_path = [ pwd, '/sim_ptycho2DTPA.mat' ];
     % data_path = './L0105_to_L0113_combined_512x512.mat';
@@ -317,13 +317,17 @@ function [ sol, expt ] = runsolver_ptycho2DTPA_params_misc( sol, expt )
     % Poisson or Gaussian Noise Model for Exitwave Updates
     %=====================================================
  
-%    sol.exwv_noisemodel = 'gaussian';
+   sol.exwv_noisemodel = 'gaussian';
     
-    sol.exwv_noisemodel = 'poisson';
-    sol.it.exwv_poisson_update_steplength = 5;
-    sol.it.exwv_poisson_steplength = 'use_exact_linesearch';
-%     sol.it.exwv_poisson_steplength = 'use_sign_test';
-    
+%     sol.exwv_noisemodel = 'poisson';
+%     sol.it.exwv_poisson_update_steplength = 5;
+%     sol.it.exwv_poisson_steplength = 'use_exact_linesearch';
+% %     sol.it.exwv_poisson_steplength = 'use_sign_test';
+% 
+%     sol.poissonexwv.steplength_update_freq = 5;   
+%     sol.poissonexwv.steplength_update_type = 'use_exact_linesearch';
+% %     sol.poissonexwv.steplength_update_type = 'use_sign_test';
+                        
     %=====================================
     % rPIE adaptive step length parameters
     %=====================================
@@ -356,8 +360,8 @@ function [ sol, expt ] = runsolver_ptycho2DTPA_params_misc( sol, expt )
     sol.it.probe_phase_sparse = single( 1e99 );
     
     sol.it.collect_metrics   = single( 10 );     % when we want to collect performance metrics
-    sol.it.mkimg_meas_metric = single( 100 ); 
-    sol.it.mkimg_sample_SCPM = single( 100 ); 
+    sol.it.mkimg_meas_metric = single( 10 ); 
+    sol.it.mkimg_sample_SCPM = single( 10 ); 
     
     %=============================================
     % Performance metric and epoch update counters
@@ -381,14 +385,20 @@ function [ sol, expt ] = runsolver_ptycho2DTPA_params_misc( sol, expt )
     % when monitoring the Poisson cost function metric, we need a scaling offset so that it's always positive
     %========================================================================================================
     
-%     I_m                        = expt.meas.D .^ 2;
-%     log_I_m                    = log( I_m );
-%     log_I_m( isinf( log_I_m )) = 0;
+%     if ~isfield( expt.metrics, 'poisson_offset' )
+%         
+%         I_m                        = expt.meas.D .^ 2;
+%         log_I_m                    = log( I_m );
+%         log_I_m( isinf( log_I_m )) = 0;
 % 
-%     sol.metrics.poisson_offset = ( I_m - I_m .* log_I_m );
-%     sol.metrics.poisson_offset = sum( sol.metrics.poisson_offset(:) ) / size( I_m, 3 );
+%         expt.metrics.poisson_offset = ( I_m - I_m .* log_I_m );
+%         expt.metrics.poisson_offset = sum( expt.metrics.poisson_offset(:) ) / size( I_m, 3 );
 % 
-%     clear( 'I_m', 'log_I_m' )
+%         clear( 'I_m', 'log_I_m' )
+% 
+%     end
+    
+        
 
     %===============================================================
     % Gaussian LPF for suppressing noise at high spatial frequencies

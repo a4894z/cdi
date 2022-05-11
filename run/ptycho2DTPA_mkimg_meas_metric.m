@@ -1,13 +1,26 @@
-function ptycho2DTPA_mkimg_meas_metric( sol, expt )
+function [ sol ] = ptycho2DTPA_mkimg_meas_metric( sol, expt )
 
     figure( 666 ); 
     set( gcf, 'Visible', 'off', 'Position', [ 1, 1, 1920, 1080 ] )     
 
+    
+    if ~isfield( sol.metrics, 'poisson_offset' )
+        
+        I_m                        = expt.meas.D .^ 2;
+        log_I_m                    = log( I_m );
+        log_I_m( isinf( log_I_m )) = 0;
+
+        sol.metrics.poisson_offset = ( I_m - I_m .* log_I_m );
+        sol.metrics.poisson_offset = sum( sol.metrics.poisson_offset(:) ) / size( I_m, 3 );
+
+        clear( 'I_m', 'log_I_m' )
+
+    end
+
     tmp0 = sol.metrics.meas_gauss_intensity;
     tmp1 = sol.metrics.meas_gauss_magnitude;
-%     tmp2 = sol.metrics.meas_poiss - sol.metrics.poisson_offset;
-    tmp2 = sol.metrics.meas_poiss - expt.metrics.poisson_offset;
-    
+    tmp2 = sol.metrics.meas_poiss - sol.metrics.poisson_offset;
+
     tmp3 = sol.metrics.grad_meas_gauss_intensity;
     tmp4 = sol.metrics.grad_meas_gauss_magnitude;
     tmp5 = sol.metrics.grad_meas_poiss;

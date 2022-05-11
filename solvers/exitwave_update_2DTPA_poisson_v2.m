@@ -1,311 +1,287 @@
-function [ psi_opt, alpha_opt ] = exitwave_update_2DTPA_poisson_v2( phi,       ...
-                                                                 T0,         ...
-                                                                 ind,        ...
-                                                                 sz,         ...
-                                                                 Nspos,      ...
-                                                                 Nscpm,      ...
-                                                                 alpha_prev, ...
-                                                                 rc,         ... 
-                                                                 sqrt_rc,    ...
-                                                                 I_m,        ...
-                                                                 meas_Deq0,  ...
-                                                                 measLPF )
+function [ Psi, poissonexwv, metrics ] = exitwave_update_2DTPA_poisson_v2( phi,       ...
+                                                                          T0,         ...
+                                                                          ind,        ...
+                                                                          batch_indx, ...
+                                                                          sz,         ...
+                                                                          Nspos,      ...
+                                                                          Nscpm,      ...
+                                                                          poissonexwv, ...
+                                                                          rc,         ... 
+                                                                          sqrt_rc,    ...
+                                                                          I_m,        ...
+                                                                          I_m_eq0,    ...
+                                                                          measLPF,    ...
+                                                                          epoch,      ...
+                                                                          collect_metrics )
+                                                                     
+    metrics = [];    
 
-%========================================
-% get sample frames at each scan position
-%========================================
+    % metrics.gauss = [];
+    % metrics.poiss = [];
 
-T = reshape( T0( ind ), [ sz, 1, Nspos ]);
+    %========================================
+    % get sample frames at each scan position
+    %========================================
 
-%===========================
-% form exitwaves using 2DTPA
-%===========================
+    T = reshape( T0( ind ), [ sz, 1, Nspos ]);
 
-psi = T .* phi;
+    %===========================
+    % form exitwaves using 2DTPA
+    %===========================
 
-%=====================================
-% propagate exitwave modes to detector
-%=====================================
+    Psi = T .* phi;
 
-Psi = fft( fft( fftshift( fftshift( psi, 1 ), 2 ), [], 1 ), [], 2 ) / sqrt_rc;
-Psi = reshape( Psi, [ rc, Nscpm, Nspos ] );
-Psi = permute( Psi, [ 1, 3, 2 ] );
+    %=====================================
+    % propagate exitwave modes to detector
+    %=====================================
 
-%==================================================================
-% intensity for current sample/probe solutions at measurement plane
-%==================================================================
+    Psi = fft( fft( fftshift( fftshift( Psi, 1 ), 2 ), [], 1 ), [], 2 ) / sqrt_rc;
+    Psi = reshape( Psi, [ rc, Nscpm, Nspos ] );
+    Psi = permute( Psi, [ 1, 3, 2 ] );
 
-abs2_Psi = abs( Psi ) .^ 2;
+    %==================================================================
+    % intensity for current sample/probe solutions at measurement plane
+    %==================================================================
 
-I_e = squeeze( sum( abs2_Psi, 3 ));        % sum over scpm
+    abs2_Psi = abs( Psi ) .^ 2;
 
-%==================================================
-% intensity for measurements over current minibatch
-%==================================================
-
-xi = 1 - I_m ./ I_e;
-
-% xi( isnan( xi ) | isinf( xi ) ) = 0;
-
-chknan = isnan( xi );
-chkinf = isinf( xi );
-
-if any( chknan( : ) ), xi( chknan ) = 0; end
-if any( chkinf( : ) ), xi( chkinf ) = 0; end
-
-
-
-
-
-
-% xi( abs( xi ) > 2 ) = 0;
-
-%{
-
-close all
-
-tmp2 = reshape( I_e, [ sz, Nspos ] );  
-tmp3 = reshape( I_m, [ sz, Nspos ] );  
-tmp5 = reshape( xi, [ sz, Nspos ] );  
-
-figure; imagesc( log10( 1 + abs( fftshift( tmp2(:,:,44) )))); title( 'I\_e' )
-figure; imagesc( log10( 1 + abs( fftshift( tmp3(:,:,44) )))); title( 'I\_m' )
-figure; imagesc( log10( 1 + abs( fftshift( tmp5(:,:,44) )))); title( 'xi' )
-
-%}
-
-%================================================
-% compute the step length by 1st order optimality
-%================================================
-
-% xi_abs_Psi2        = xi .* abs2_Psi;
-% xi_alpha_minus_one = xi .* alpha_prev - 1;
-% 
-% %========
-% 
-% lhs_steplength_eqn = squeeze( sum( xi_abs_Psi2 .* xi_alpha_minus_one, 1 ));    % sum over image pixels
-% 
-% %========
-% 
-% numer = I_m .* xi_alpha_minus_one;
-% denom = abs2_Psi .* xi_alpha_minus_one .^ 2 + I_e - abs2_Psi;
-% 
-% rhs_steplength_eqn = squeeze( sum( xi_abs_Psi2 .* ( numer ./ denom ), 1 ));    % sum over image pixels
-% 
-% %========
-% 
-% f_eq_0 = abs( lhs_steplength_eqn - rhs_steplength_eqn );
-% 
-% 
-% 
-% 
-% 
-% 
-% 
-% 
-% %{
-% 
-% kk = 1;
-% 
-% for pp = 1 : Nscpm
-% 
-%     figure( 667 );
-%     subplot( 1, double(gather( Nscpm )), kk )
-%     
-%     imagesc( 1 : 3, 1 : Nspos, squeeze( log10( 1 + f_eq_0( :, pp, : ) )))
-% %     imagesc( squeeze( I_e( 1, 1, pp, : )), 1 : length( spos_test ), log10( 1 + squeeze( f_eq_0n( :, pp, : )) ))
-% %     imagesc( I_e( :, pp ), 1 : length( spos_test ), log10( 1 + squeeze( f_eq_0n( :, pp, : )) ))
-%     
-% 
-% 
-% %     
-% %     hold on
-% %     plot( alpha_opt( 1, :, pp ), 1 : Nspos, 'r.', 'MarkerSize', 5 );
-% % %     plot( alpha_opt, 1 : size( f_eq_0, 1 ), 'r.', 'MarkerSize', 5 );
-% 
-%     hold off
-%     
-%     grid on
-%     colormap bone
-%     xlabel('Test \alpha Index')
-%     ylabel('spos index')
-%     
-%     kk = kk + 1;
-%     
-%     drawnow
-% 
-% end
-% 
-% %}
-% 
-% 
-% 
-% 
-% 
-% 
-% 
-% 
-% 
-% 
-% 
-% 
-% 
-% 
-% [ ~, II ] = min( f_eq_0, [], 3 );
-% % [ ~, II ] = min( f_eq_0, [], 2 );
-% 
-% alpha_opt = gpuArray.zeros( Nspos, Nscpm, 'single' );
-% 
-% 
-% 
-% 
-% 
-% for ss = 1 : Nspos
-%     
-%     for pp = 1 : Nscpm
-% 
-%         alpha_opt( ss, pp ) = alpha_prev( 1, ss, pp, II( ss, pp ) );
-% 
-%     end
-% 
-% end
-% 
-% 
-% 
-% 
-% 
-% % for pp = 1 : Nscpm
-% % 
-% %     alpha_opt( :, pp ) = alpha_prev( 1, :, pp, II( :, pp ) );
-% % 
-% % end
-% 
-% 
-% 
-% 
-% alpha_opt = reshape( alpha_opt, [ 1, size( alpha_opt ) ] );
-
-
-
-
-
-
-alpha_opt = alpha_prev;
-
-
-
-
-
-%{
-
-
-
-
-
-
-kk = 1;
-
-for pp = 1 : Nscpm
-
-    figure( 667 );
-    subplot( 1, double(gather( Nscpm )), kk )
+    I_e = sum( abs2_Psi, 3 ); % sum over scpm
     
-    imagesc( 1 : 3, 1 : Nspos, squeeze( log10( 1 + f_eq_0( :, pp, : ) )))
-%     imagesc( squeeze( I_e( 1, 1, pp, : )), 1 : length( spos_test ), log10( 1 + squeeze( f_eq_0n( :, pp, : )) ))
-%     imagesc( I_e( :, pp ), 1 : length( spos_test ), log10( 1 + squeeze( f_eq_0n( :, pp, : )) ))
-    
+    %========
 
-    tmp0 = 1 : 3;
-    
-    hold on
-    plot( II( :, pp ), 1 : Nspos, 'r.', 'MarkerSize', 5 );
-%     plot( alpha_opt, 1 : size( f_eq_0, 1 ), 'r.', 'MarkerSize', 5 );
+    xi = 1 - I_m ./ I_e;
 
-    hold off
+    % chknan = isnan( xi );
+    % chkinf = isinf( xi );
+    % 
+    % if any( chknan( : ) ), xi( chknan ) = 0; end
+    % if any( chkinf( : ) ), xi( chkinf ) = 0; end
     
-    grid on
-    colormap bone
-    xlabel('\alpha Index')
-    ylabel('spos index')
+    %========
     
-    kk = kk + 1;
+%     grad_Psi = Psi .* xi;
     
-    drawnow
+    %=================================
+    % Collect algo performance metrics
+    %=================================
+    
+    if collect_metrics 
+
+        meas_mask = not( I_m_eq0 ); % FIX: !!!! pass the already not version !!!!
+
+        metrics.gauss_intensity = sum( sum( sum( meas_mask .* abs( I_m - I_e ) .^ 2                 )));
+        metrics.gauss_magnitude = sum( sum( sum( meas_mask .* abs( sqrt( I_m ) - sqrt( I_e ) ) .^ 2 )));
+        metrics.poiss           = sum( sum( sum( meas_mask .* ( I_e - I_m .* log( I_e ))            )));
+
+        I_m_over_I_e = 1 - xi;
+          
+        metrics.grad_gauss_intensity = sum( sum( sum( meas_mask .* sum( abs( 2 * ( I_e - I_m )           .* Psi ) .^ 2, 3 ) )));
+        metrics.grad_gauss_magnitude = sum( sum( sum( meas_mask .* sum( abs( ( 1 - sqrt( I_m_over_I_e )) .* Psi ) .^ 2, 3 ) )));
+        metrics.grad_poiss           = sum( sum( sum( meas_mask .* sum( abs( ( 1 - I_m_over_I_e )        .* Psi ) .^ 2, 3 ) ))); 
+
+    end
+
+    %================================================
+    % compute the step length by 1st order optimality
+    %================================================
+    
+    if strcmp( poissonexwv.steplength_update_type, 'use_exact_linesearch' ) && (( mod( epoch, poissonexwv.steplength_update_freq ) == 0 ) || ( epoch == 1 ))
+
+        poissonexwv.alpha_opt = poisson_steplength_exact_linesearch_vs_minibatch( xi,                     ...
+                                                                                  abs2_Psi,               ...
+                                                                                  poissonexwv.alpha_test, ...
+                                                                                  I_e,                    ...
+                                                                                  I_m,                    ...
+                                                                                  Nspos,                  ...
+                                                                                  Nscpm );
+        
+        poissonexwv.alpha_prev( batch_indx, : ) = squeeze( poissonexwv.alpha_opt );
+    
+        
+        
+        
+        
+        
+        
+        
+        alpha_test = poissonexwv.alpha_prev( batch_indx, : );
+        alpha_test = reshape( alpha_test, [ 1, size( alpha_test ) ] );
+        
+%         poissonexwv.alpha_opt = poisson_steplength_exact_linesearch_vs_minibatch( xi,                     ...
+%                                                                                   abs2_Psi,               ...
+%                                                                                   alpha_test, ...
+%                                                                                   I_e,                    ...
+%                                                                                   I_m,                    ...
+%                                                                                   Nspos,                  ...
+%                                                                                   Nscpm );
+                                                                              
+                                                                              
+                                                                              
+        alpha_opt = poisson_steplength_signtest_vs_minibatch( xi, abs2_Psi, alpha_test, I_e, I_m, Nspos, Nscpm );
+        
+        
+    elseif strcmp( poissonexwv.steplength_update_type, 'use_sign_test' ) && (( mod( epoch, poissonexwv.steplength_update_freq ) == 0 ) || ( epoch == 1 ))
+
+        alpha_test = poissonexwv.alpha_prev( batch_indx, : );
+        alpha_test = reshape( alpha_test, [ 1, size( alpha_test ) ] );
+        
+        
+    elseif isfield( poissonexwv, 'alpha_prev' )
+        
+        poissonexwv.alpha_opt = reshape( poissonexwv.alpha_prev( batch_indx, : ), [ 1, Nspos, Nscpm ] );
+        
+    else
+        
+        error( '!!!!! Can''t Compute Optimal Step Length For Poisson Exitwave Update !!!!!' )
+
+    end
+
+    %=======================================================================
+    % apply the step length to make exitwaves satisfy measurement constraint
+    %=======================================================================
+    
+%     tic
+    Psi = reshape( Psi .* ( 1 - poissonexwv.alpha_opt .* xi ), [ sz, Nspos, Nscpm ] );
+%     Psi = reshape( Psi - alpha_opt .* grad_Psi, [ sz, Nspos, Nscpm ] );
+%     toc
+    
+%     Psi = fftshift( fftshift( ifft( ifft( Psi .* measLPF, [], 1 ), [], 2 ), 1 ), 2 ) * sqrt_rc;
+    Psi = fftshift( fftshift( ifft( ifft( Psi, [], 1 ), [], 2 ), 1 ), 2 ) * sqrt_rc;
+
+    Psi = permute( Psi, [ 1, 2, 4, 3 ]);
 
 end
 
-%}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+function alpha_opt = poisson_steplength_exact_linesearch_vs_minibatch( xi, abs2_Psi, alpha_test, I_e, I_m, Nspos, Nscpm )
+
+    [ lhs_steplength_eqn, rhs_steplength_eqn ] = compute_lhs_rhs_optimal_poisson_steplength( xi, abs2_Psi, alpha_test, I_e, I_m );
+ 
+    %========
+
+    f_eq_0 = abs( lhs_steplength_eqn - rhs_steplength_eqn );
+
+    [ ~, II ] = min( f_eq_0, [], 3 );
+
+    alpha_opt = gpuArray.zeros( Nspos, Nscpm, 'single' );
+
+    for pp = 1 : Nscpm
+
+        alpha_opt( :, pp ) = alpha_test( 1, 1, pp, II( :, pp ) );
+
+    end
+
+    alpha_opt = reshape( alpha_opt, [ 1, size( alpha_opt ) ] );
 
 
+    
+    
+    
+    %%{
+    
+    sign_lhs_minus_rhs = sign( lhs_steplength_eqn - rhs_steplength_eqn );
+        
+    kk = 1;
 
+    for pp = 1 : Nscpm
 
+        %========
 
+        figure( 667 );
+        subplot( 1, double(gather( Nscpm )), kk )
 
+        imagesc( squeeze( alpha_test( 1, 1, pp, : )), 1 : Nspos, squeeze( log10( 1 + f_eq_0( :, pp, : ) )))
+
+        hold on
+        plot( alpha_opt( 1, :, pp ), 1 : Nspos, 'r.', 'MarkerSize', 5 );
+        hold off
+
+        grid on
+        colormap bone
+        xlabel('\alpha')
+        ylabel('spos index')
+
+        %========
+        
+        figure( 666	);
+        subplot( 1, double(gather( Nscpm )), kk )
+        
+
+        
+        imagesc( squeeze( alpha_test( 1, 1, pp, : )), 1 : Nspos, squeeze( sign_lhs_minus_rhs( :, pp, : ) ))
+        
+        hold on
+        plot( alpha_opt( 1, :, pp ), 1 : Nspos, 'r.', 'MarkerSize', 5 );
+        hold off
+        
+        grid on
+        colormap bone
+        xlabel('\alpha')
+        ylabel('spos index')
+
+        
+        
+        
+
+        %========
+        
+        kk = kk + 1;
+
+        drawnow
+        
+        
+        
+
+    end
+
+    %}
+    
+    5;
+    
+end
 
 %====================================================================================================================================================
 
-Psi_opt = reshape( Psi .* ( 1 - alpha_opt .* xi ), [ sz, Nspos, Nscpm ] );
+function alpha_opt = poisson_steplength_signtest_vs_minibatch( xi, abs2_Psi, alpha_test, I_e, I_m, delta_alpha_signtest )
 
+    [ lhs_steplength_eqn, rhs_steplength_eqn ] = compute_lhs_rhs_optimal_poisson_steplength( xi, abs2_Psi, alpha_test, I_e, I_m );
+ 
+    sign_lhs_minus_rhs = sign( lhs_steplength_eqn - rhs_steplength_eqn );
 
+    alpha_opt = squeeze( alpha_test ) - delta_alpha_signtest * sign_lhs_minus_rhs;
+    
+%     Z1 = squeeze( alpha_test );
+%     Z2 = squeeze( alpha_opt );
+%     
+%     figure;
+%     plot( Z1(:,5), 'o')
+%     hold on
+%     plot( Z2(:,5), 'x')
+%     hold off
 
-% grad_Psi = Psi .* xi;
-% Psi_opt   = reshape( Psi - alpha_opt .* grad_Psi, [ sz, Nscpm, Nspos ] );
-% Psi_opt   = reshape( Psi - 0.25 .* grad_Psi, [ sz, Nscpm, Nspos ] );
+    alpha_opt = reshape( alpha_opt, [ 1, size( alpha_opt ) ]);
+    
+end
 
-psi_opt   = fftshift( fftshift( ifft( ifft( Psi_opt, [], 1 ), [], 2 ), 1 ), 2 ) * sqrt_rc;
+%====================================================================================================================================================
 
-psi_opt = permute( psi_opt, [ 1, 2, 4, 3 ]);
+function [ lhs, rhs ] = compute_lhs_rhs_optimal_poisson_steplength( xi, abs2_Psi, alpha_test, I_e, I_m )
 
-5;
+    xi_abs_Psi2        = xi .* abs2_Psi;
+    xi_alpha_minus_one = xi .* alpha_test - 1;
 
-%{
+    %========
 
-close all
+    lhs = squeeze( sum( xi_abs_Psi2 .* xi_alpha_minus_one, 1 ));    % sum over image pixels
 
-figure; imagesc( abs(psi_opt(:,:,1,44)  ) ) 
-figure; imagesc( abs(psi_opt(:,:,2,44)  ) ) 
-figure; imagesc( abs(psi_opt(:,:,3,44)  ) ) 
+    %========
 
-figure; imagesc( abs(psi(:,:,1,44)  ) ) 
-figure; imagesc( abs(psi(:,:,2,44)  ) ) 
-figure; imagesc( abs(psi(:,:,3,44)  ) ) 
+    numer = I_m .* xi_alpha_minus_one;
+    denom = abs2_Psi .* xi_alpha_minus_one .^ 2 + I_e - abs2_Psi;
 
+    rhs = squeeze( sum( xi_abs_Psi2 .* ( numer ./ denom ), 1 ));    % sum over image pixels
 
-
-
-
-
-
-tmp0 = reshape( Psi, [ sz, Nscpm, Nspos ] );  
-tmp1 = reshape( grad_Psi, [ sz, Nscpm, Nspos ] );
-tmp2 = reshape( I_e, [ sz, Nspos ] );  
-tmp3 = reshape( I_m, [ sz, Nspos ] );  
-tmp4 = reshape( meas_Deq0, [ sz, Nspos ] );  
-
-close all
-
-figure; imagesc( log10( 1 + abs( fftshift( tmp0(:,:,44) )))); title( 'Psi' )
-figure; imagesc( log10( 1 + abs( fftshift( tmp1(:,:,44) )))); title( 'grad\_Psi' )
-figure; imagesc( log10( 1 + abs( fftshift( tmp2(:,:,44) )))); title( 'I\_e' )
-figure; imagesc( log10( 1 + abs( fftshift( tmp3(:,:,44) )))); title( 'I\_m' )
-figure; imagesc( log10( 1 + abs( fftshift( tmp4(:,:,44) )))); title( 'meas\_Deq0' )
-
-figure; imagesc( log10( 1 + abs( fftshift( not(tmp4(:,:,44)) .* tmp1(:,:,44) )))); 
-
-
-tmp5 = reshape( xi, [ sz, Nspos ] );  
-figure; imagesc( fftshift(   tmp5(:,:,44) )); title( 'xi' )
-
-
-
-
-tmp6 = reshape( 1 - alpha_opt .* xi, [ sz, Nscpm, Nspos ] );
-figure; imagesc( log10( 1 + abs( fftshift(   tmp6(:,:,3, 44) )))); title( 'exitwave scaling update' )
-
-
-
-
-
-
-%}
-
+end
