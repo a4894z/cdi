@@ -3,7 +3,6 @@ function [ sol ] = ptycho2DTPA_mkimg_meas_metric( sol, expt )
     figure( 666 ); 
     set( gcf, 'Visible', 'off', 'Position', [ 1, 1, 1920, 1080 ] )     
 
-    
     if ~isfield( sol.metrics, 'poisson_offset' )
         
         I_m                        = expt.meas.D .^ 2;

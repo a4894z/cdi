@@ -130,11 +130,11 @@ fprintf('\n');
 % figure( 666 ); 
 % plot( phot_px )
 
-meas.noisy = 0;
+meas.noisy = 1;
 
 if logical( meas.noisy ) == true
 
-    meas.Nexposures = 1;
+    meas.Nexposures = 3;
     
     %=======================
     % sample in measurements 
@@ -143,7 +143,7 @@ if logical( meas.noisy ) == true
     meas_noisy = meas.D .^ 2;
     csum       = 0;
     sz         = size( meas.D );
-    max_BG     = 10;                    % define max background value allowed ( for unif random distribution ):
+    max_BG     = 1;                    % define max background value allowed ( for unif random distribution ):
 
     %========
     
@@ -168,15 +168,22 @@ if logical( meas.noisy ) == true
     % Background removal
     %===================
     
-    bg_sub = 1 * max_BG;                      
-    meas_noisy = meas_noisy - bg_sub;
-    meas_noisy( meas_noisy < 0 ) = 0;
+    bg_sub = 0.95 * max_BG;   
+    
+%     meas_noisy = meas_noisy - bg_sub;
+%     meas_noisy( meas_noisy < 0 ) = 0;
 
 %     meas_noisy( meas_noisy < 0.95e-4 * max( meas_noisy(:) ) ) = 0;
-
-%     figure; imagesc(log10( 1 + 10^0 * fftshift(abs(meas.D(:,:,155) .^ 2))))
-%     figure; imagesc(log10( 1 + 10^0 * fftshift(abs(meas_noisy(:,:,155)))))
-%     
+    meas_noisy( meas_noisy < bg_sub ) = 0;
+    
+    for ss = 1 : 3 : size( meas.D, 3 )
+        
+        figure( 666 ); 
+        subplot(121); imagesc(log10( 1 + 10^0 * fftshift(abs(meas.D(:,:,ss) .^ 2)))); daspect([1 1 1])
+        subplot(122); imagesc(log10( 1 + 10^0 * fftshift(abs(meas_noisy(:,:,ss))))); daspect([1 1 1])
+        colormap turbo
+        
+    end
 %     norm(  meas.D(:)  ) / norm( sqrt( meas_noisy(:) ) )
 
     %========

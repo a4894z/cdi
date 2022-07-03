@@ -12,7 +12,10 @@ if sol.init.use_prev_SCPM
 %     old_scpm = load( '/net/s8iddata/export/8-id-ECA/Analysis/atripath/data/zjiang202204/results/L0020_to_L0032_combined_512x1024_21Apr2022_t180119_epoch1000.mat', 'probe' );
 %     old_scpm = load( '/net/s8iddata/export/8-id-ECA/Analysis/atripath/data/zjiang202204/results/L0020_to_L0032_combined_512x1024_21Apr2022_t224635_epoch3000.mat', 'probe' );
 %     old_scpm = load( '/net/s8iddata/export/8-id-ECA/Analysis/atripath/data/zjiang202204/results/L0117_to_L0120_combined_768x1024_24Apr2022_t145039_epoch3000.mat', 'probe' );
-   old_scpm = load( '/net/s8iddata/export/8-id-ECA/Analysis/atripath/data/zjiang202204/results/L0117_to_L0120_combined_768x1024_25Apr2022_t022803_epoch4000.mat', 'probe' );
+%     old_scpm = load( '/net/s8iddata/export/8-id-ECA/Analysis/atripath/data/zjiang202204/results/L0117_to_L0120_combined_768x1024_25Apr2022_t022803_epoch4000.mat', 'probe' );
+    
+%     old_scpm = load( '/net/s8iddata/export/8-id-ECA/Analysis/atripath/data/zjiang202204/results/L0339_to_L0341_combined_512x512_17May2022_t093655_epoch1000.mat', 'probe' );
+    old_scpm = load( '/net/s8iddata/export/8-id-ECA/Analysis/atripath/data/zjiang202206/results/L0304_to_L0305_combined_768x768_17Jun2022_t182807_epoch2500.mat', 'probe' );
     
     sol.probe.phi     = old_scpm.probe.phi;
     sol.probe.scpm    = old_scpm.probe.scpm;
@@ -20,13 +23,22 @@ if sol.init.use_prev_SCPM
 
     %========
     
-    sol.probe.phi = [];
-    
-%     sol.probe.phi( :, :, 5 ) = old_scpm.probe.phi( :, :, 8 );
-%     sol.probe.phi( :, :, 4 ) = old_scpm.probe.phi( :, :, 7 );
-    sol.probe.phi( :, :, 3 ) = old_scpm.probe.phi( :, :, 5 );
-    sol.probe.phi( :, :, 2 ) = old_scpm.probe.phi( :, :, 4 ); 
-    sol.probe.phi( :, :, 1 ) = old_scpm.probe.phi( :, :, 3 );
+%     sz = size( old_scpm.probe.phi( :, :, end ) );
+%     
+%     sol.probe.phi = [];
+%    
+% %     sol.probe.phi( :, :, 5 ) = old_scpm.probe.phi( :, :, 3 );
+% %     sol.probe.phi( :, :, 4 ) = old_scpm.probe.phi( :, :, 2 );
+% %     sol.probe.phi( :, :, 3 ) = old_scpm.probe.phi( :, :, 1 ); 
+% %     sol.probe.phi( :, :, 2 ) = make_2Dgaussian( sz, 0.5 * sz + 1, [ single( (( 2 * rand - 1 ) * 0.05 + 1.0 ) * ( 0.8e-6 / sol.csys.z2.dLy )), single( (( 2 * rand - 1 ) * 0.05 + 1.0 ) * ( 0.8e-6 / sol.csys.z2.dLx )) ] );
+% %     sol.probe.phi( :, :, 1 ) = make_2Dgaussian( sz, 0.5 * sz + 1, [ single( (( 2 * rand - 1 ) * 0.05 + 1.0 ) * ( 0.8e-6 / sol.csys.z2.dLy )), single( (( 2 * rand - 1 ) * 0.05 + 1.0 ) * ( 0.8e-6 / sol.csys.z2.dLx )) ] );
+% 
+%     sol.probe.phi( :, :, 4 ) = old_scpm.probe.phi( :, :, 3 );
+%     sol.probe.phi( :, :, 3 ) = old_scpm.probe.phi( :, :, 2 );
+%     sol.probe.phi( :, :, 2 ) = old_scpm.probe.phi( :, :, 1 ); 
+%     sol.probe.phi( :, :, 1 ) = make_2Dgaussian( sz, 0.5 * sz + 1, [ single( (( 2 * rand - 1 ) * 0.05 + 1.0 ) * ( 0.8e-6 / sol.csys.z2.dLy )), single( (( 2 * rand - 1 ) * 0.05 + 1.0 ) * ( 0.8e-6 / sol.csys.z2.dLx )) ] );
+
+    %========
     
     sol.probe.scpm.N = size( sol.probe.phi, 3 );
 
@@ -74,7 +86,7 @@ else
     % number of spatially coherent probe modes (SCPMs)
     %=================================================
 
-    sol.probe.scpm.N = single( 5 ); 
+    sol.probe.scpm.N = single( 3 ); 
 
     %========================================
     % Initialize to Gaussians of random sizes
@@ -116,6 +128,8 @@ else
     %========
     % Rescale
     %========
+    
+    if ~isfield( sol.probe.scpm, 'fro2TOT' ), sol.probe.scpm.fro2TOT = []; end
 
     [ sol.probe.phi ] = enforce_scpm_fro2TOT_photonocc( sol.probe.phi, sol.probe.scpm.fro2TOT, sol.probe.scpm.occ );
 

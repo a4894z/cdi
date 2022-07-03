@@ -1,4 +1,4 @@
-function [ rs ] = scanpositions_update_2DTPA( rs, T0, phi, measD, nDeq0, spos_opt )
+function [ rs ] = scanpositions_update_2DTPA( rs, batch_indx, T0, phi, measD, nDeq0, spos_opt )
     
     nDeq0 = not( nDeq0 );
     Nspos = size( rs, 1 );
@@ -14,7 +14,9 @@ function [ rs ] = scanpositions_update_2DTPA( rs, T0, phi, measD, nDeq0, spos_op
     
     if strcmp( spos_opt.noise_model, 'poisson' )
         
-        L_0 = squeeze( sum( sum( nDeq0 .* ( I_e - measD2 .* log( I_e )), 1 ), 2 )) / spos_opt.rc;     
+        I_e = reshape( I_e, [ spos_opt.rc, Nspos ] );
+
+        L_0 = squeeze( sum( sum( nDeq0 .* ( I_e - measD .* log( I_e )), 1 ), 2 )) / spos_opt.rc;     
         
     else
         
@@ -33,7 +35,9 @@ function [ rs ] = scanpositions_update_2DTPA( rs, T0, phi, measD, nDeq0, spos_op
 
     if strcmp( spos_opt.noise_model, 'poisson' )
         
-        L_dy = squeeze( sum( sum( nDeq0 .* ( I_e - measD2 .* log( I_e )), 1 ), 2 )) / spos_opt.rc;
+        I_e = reshape( I_e, [ spos_opt.rc, Nspos ] );
+        
+        L_dy = squeeze( sum( sum( nDeq0 .* ( I_e - measD .* log( I_e )), 1 ), 2 )) / spos_opt.rc;
         
     else
         
@@ -52,7 +56,9 @@ function [ rs ] = scanpositions_update_2DTPA( rs, T0, phi, measD, nDeq0, spos_op
 
     if strcmp( spos_opt.noise_model, 'poisson' )
 
-        L_dx = squeeze( sum( sum( nDeq0 .* ( I_e - measD2 .* log( I_e )), 1 ), 2 )) / spos_opt.rc;
+        I_e = reshape( I_e, [ spos_opt.rc, Nspos ] );
+        
+        L_dx = squeeze( sum( sum( nDeq0 .* ( I_e - measD .* log( I_e )), 1 ), 2 )) / spos_opt.rc;
 
     else
 
@@ -81,7 +87,9 @@ function [ rs ] = scanpositions_update_2DTPA( rs, T0, phi, measD, nDeq0, spos_op
         
         if strcmp( spos_opt.noise_model, 'poisson' )
             
-            Laalpha( :, aa ) = squeeze( sum( sum( nDeq0 .* ( I_e - measD2 .* log( I_e )) , 1 ), 2 )) / spos_opt.rc;   
+            I_e = reshape( I_e, [ spos_opt.rc, Nspos ] );
+            
+            Laalpha( :, aa ) = squeeze( sum( sum( nDeq0 .* ( I_e - measD .* log( I_e )) , 1 ), 2 )) / spos_opt.rc;   
             Laalpha_ALL( aa ) = sum( Laalpha( :, aa ) ) / Nspos;
 
         else
@@ -112,5 +120,36 @@ function [ rs ] = scanpositions_update_2DTPA( rs, T0, phi, measD, nDeq0, spos_op
 
     end
 
+    
+%==========================================================================================
+% Reset scan positions if they drift too far away from guessed experimental starting points
+%==========================================================================================
+
+tmp0 = ( spos_opt.maxcorrect_r < abs( rs( :, 1 ) - spos_opt.rs0( batch_indx, 1 )));
+tmp1 = ( spos_opt.maxcorrect_c < abs( rs( :, 2 ) - spos_opt.rs0( batch_indx, 2 )));
+
+rs( tmp0, 1 ) = 0.0 * rs( tmp0, 1 ) + 1.0 * spos_opt.rs0( batch_indx( tmp0 ), 1 );
+rs( tmp1, 2 ) = 0.0 * rs( tmp1, 2 ) + 1.0 * spos_opt.rs0( batch_indx( tmp1 ), 2 );
+
+rs( tmp0, 1 ) = rs( tmp0, 1 ) + spos_opt.reset_rand_r * ( 2 * rand( size( rs( tmp0, 1 ))) - 1 );
+rs( tmp1, 2 ) = rs( tmp1, 2 ) + spos_opt.reset_rand_c * ( 2 * rand( size( rs( tmp1, 2 ))) - 1 );
+
+% spos_opt.maxcorrect_r
+% spos_opt.reset_rand_c
+% spos_opt.rs0
+
+%=======================================================================================================
+% Shift the scan positions so that they're on average as closest to guessed experimental starting points
+%=======================================================================================================
+
+
+% mr = mean( rs( :, 1 ) - spos_opt.rs0( :, 1 ));
+% mc = mean( rs( :, 2 ) - spos_opt.rs0( :, 2 ));
+% rs = rs - [ mr, mc ];
+
+    
+    
+    
 end
+
 

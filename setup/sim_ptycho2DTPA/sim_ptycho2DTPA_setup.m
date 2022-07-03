@@ -75,10 +75,11 @@ expt.paths.rimgdata      = '/net/s8iddata/export/8-id-ECA/Analysis/atripath/data
 
 % expt.paths.data_mat_name = 'sim_ptycho2DTPA';
 expt.paths.data_mat_name = 'sim_ptycho2DTPA_sposcorr_test';
-
 % expt.paths.data_mat_name = 'sim_ptycho2DTPA_sposcorr_test_rot_plus20';
-expt.paths.data_mat_name = 'sim_ptycho2DTPA_sposcorr_shearx_plus0p5_scaley_1p2';
+% expt.paths.data_mat_name = 'sim_ptycho2DTPA_sposcorr_shearx_plus0p5_scaley_1p2';
 % expt.paths.data_mat_name = 'sim_ptycho2DTPA_sposcorr_scalex1p2_scaley0p9';
+% expt.paths.data_mat_name = 'sim_ptycho2DTPA_sposcorr_shearx_minux0p2_sheary_plus0p4';
+% expt.paths.data_mat_name = 'sim_ptycho2DTPA_xxx';
 
 % expt.paths.save_mat_loc  = '/net/s8iddata/export/8-id-ECA/Analysis/atripath/rPIE_vs_MB_mat/noise_rmbg/';
 expt.paths.save_mat_loc  = '/net/s8iddata/export/8-id-ECA/Analysis/atripath/rPIE_vs_MB_mat/no_noise/';

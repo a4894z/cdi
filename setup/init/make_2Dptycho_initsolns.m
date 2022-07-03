@@ -1,8 +1,8 @@
 function [ sol ] = make_2Dptycho_initsolns( expt )
 
-%====================================================================================================================================================
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% LOAD PREVIOUSLY DEFINED CANDIDATE SOLUTION PARAMETERS %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%====================================================================================================================================================
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 % Z = load( '/net/s8iddata/export/8-id-ECA/Analysis/atripath/rPIE_vs_MB_mat/no_noise/sim_ptycho2DTPA.mat', 'sol' );
 % 
@@ -22,9 +22,9 @@ function [ sol ] = make_2Dptycho_initsolns( expt )
 % 
 % return
 
-%====================================================================================================================================================
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% DEFINE CANDIDATE SOLUTION PARAMETERS %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%====================================================================================================================================================
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 %=============================
 % misc experimental parameters
@@ -54,32 +54,24 @@ sol.sample.sz = expt.sample.sz;
 % 2D SCPM probe 
 %==============
 
-% some goofy shapes for the probe modes
+sol.probe.scpm.N = expt.probe.scpm.N + 2;
 
-sol.probe.scpm = expt.probe.scpm;
-
-% sol.probe.scpm.occ = [ 1 ];
-% sol.probe.scpm.occ = [ 0.05, 0.1, 0.2, 0.4, 0.9 ];
-% sol.probe.scpm.occ = [ 0.2, 0.8 ];
-sol.probe.scpm.occ = [ 0.05, 0.15, 0.80 ];
-% sol.probe.scpm.occ = [ 0.32, 0.33, 0.35 ];
-% sol.probe.scpm.occ = [ 0.2, 0.2, 0.2, 0.2, 0.2 ];
-% sol.probe.scpm.occ = exp( -7 * linspace( 1, 0, 8 ));
-
+sol.probe.scpm.occ = exp( -4 * linspace( 1, 0, sol.probe.scpm.N ));
 sol.probe.scpm.occ = sol.probe.scpm.occ / norm( sol.probe.scpm.occ, 1 );
-
-sol.probe.scpm.N = length( sol.probe.scpm.occ );
 
 guess_probe = zeros( [ sol.sz.sz, sol.probe.scpm.N ], 'single' );
 
 for pp = 1 : sol.probe.scpm.N
     
-    mmu     = [ 0.5 * expt.sz.r + 1, 0.5 * expt.sz.c + 1 ];
-%     sstev   = [ 0.20 * expt.sz.r, 0.20 * expt.sz.c ];
-    sstev   = [ 0.02 * ( 2 * rand + 2 ) * expt.sz.r, 0.02 * ( 2 * rand + 1 ) * expt.sz.c ];
+    sstev   = [ 0.02 * ( 2 * rand + 2 ) * expt.sz.r, ...
+                0.02 * ( 2 * rand + 1 ) * expt.sz.c ];
     
-    tmp0 = make_2Dgaussian( expt.sz.sz, mmu, sstev );
+    tmp0 = make_2Dgaussian( expt.sz.sz,             ...
+                            0.5 * expt.sz.sz + 1,   ...
+                            sstev );
     
+    tmp0 = tmp0 / max( abs( tmp0(:) ));     
+         
     tmp0 = tmp0 .* exp( 2 * pi * 1i * 0 * tmp0 );
     
     guess_probe( :, :, pp ) = tmp0 * sol.probe.scpm.fro2TOT / norm( tmp0, 'fro' );

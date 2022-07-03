@@ -87,7 +87,7 @@ function [ Psi, alpha_opt, metrics ] = exitwave_update_2DTPA_poisson( phi,      
     
 %     poiss_exwv_alpha.alpha_test
     
-    if ~isempty( alpha_test )
+    if ~isempty( alpha_test ) || isempty( alpha_prev )
 
         alpha_opt = poisson_steplength_exact_linesearch_vs_minibatch( xi,         ...
                                                                       abs2_Psi,   ...
@@ -227,23 +227,6 @@ function alpha_opt = poisson_steplength_exact_linesearch_vs_minibatch( xi, abs2_
     5;
     
 end
-
-%====================================================================================================================================================
-
-function alpha_opt = poisson_steplength_signtest_vs_minibatch( xi, abs2_Psi, alpha_test, I_e, I_m, Nspos, Nscpm )
-
-    [ lhs_steplength_eqn, rhs_steplength_eqn ] = compute_lhs_rhs_optimal_poisson_steplength( xi, abs2_Psi, alpha_test, I_e, I_m );
- 
-    sign_lhs_minus_rhs = sign( lhs_steplength_eqn - rhs_steplength_eqn );
-
-    
-    
-    
-    
-
-
-end
-
 
 %====================================================================================================================================================
 

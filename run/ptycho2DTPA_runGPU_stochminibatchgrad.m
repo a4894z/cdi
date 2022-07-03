@@ -90,6 +90,9 @@ function [ sol, expt ] = ptycho2DTPA_runGPU_stochminibatchgrad( sol, expt, N_epo
     % scan position correction parameters
     %====================================
     
+    sol.GPU.spos_rs          = gpuArray( sol.spos.rs );
+    sol.GPU.spos_rs0         = gpuArray( sol.spos.rs0 );
+
     sol.GPU.spos_opt.sz      = sol.GPU.sz;
     sol.GPU.spos_opt.szTF    = sol.GPU.samsz;
     sol.GPU.spos_opt.rc      = sol.GPU.rc;
@@ -102,113 +105,29 @@ function [ sol, expt ] = ptycho2DTPA_runGPU_stochminibatchgrad( sol, expt, N_epo
 
     sol.GPU.spos_opt.optimize_rs_GD = sol.spos.correction.optimize_rs_GD;
     sol.GPU.spos_opt.noise_model    = sol.spos.correction.noise_model;
-    
+
+    sol.GPU.spos_opt.maxcorrect_r = gpuArray( sol.spos.correction.maxcorrect_r );
+    sol.GPU.spos_opt.maxcorrect_c = gpuArray( sol.spos.correction.maxcorrect_c );
+    sol.GPU.spos_opt.reset_rand_r = gpuArray( sol.spos.correction.reset_rand_r );
+    sol.GPU.spos_opt.reset_rand_c = gpuArray( sol.spos.correction.reset_rand_c );
+    sol.GPU.spos_opt.rs0          = gpuArray( sol.spos.correction.rs0 );
+
     %=========================================================================
     % step length parameters for Poisson cost function used in exitwave update
-    %=========================================================================
-        
-    % sol.GPU.poissonexwv.longrange_search
-    % sol.GPU.poissonexwv.shortrange_search
-   
-    % sol.GPU.poissonexwv.Nalpha
-    % sol.GPU.poissonexwv.alpha_minmax
-    % sol.GPU.poissonexwv.alpha_test_longrange
-    % sol.GPU.poissonexwv.alpha_prev
-
-    % sol.GPU.poissonexwv.alpha_test_shortrange
-
-    
-    
-    
-    
-    
+    %=========================================================================    
     
     if strcmp( sol.exwv_noisemodel, 'poisson' )
         
-        sol.GPU.Nalpha = gpuArray( single( 11 ));
+        sol.GPU.poissonexwv.steplength_update_freq = sol.poissonexwv.steplength_update_freq;
+        sol.GPU.poissonexwv.steplength_update_type = sol.poissonexwv.steplength_update_type;
 
-%         sol.GPU.alpha_minmax = [ [ 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00 ]; ...
-%                                  [ 3.00, 2.00, 2.00, 2.00, 1.00, 1.00, 1.00, 1.00 ] ];
+        %========  
 
-    %     sol.GPU.alpha_minmax = [ [ 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00 ]; ...
-    %                              [ 6.00, 6.00, 4.00, 3.00, 3.00, 1.00, 1.00 ] ];
-
-    %     sol.GPU.alpha_minmax = [ [ 0.00, 0.00, 0.00, 0.00, 0.00, 0.00 ]; ...
-    %                              [ 1.00, 1.00, 1.00, 1.00, 1.00, 1.00 ] ];
-
-        sol.GPU.alpha_minmax = [ [ 0.00, 0.00, 0.00, 0.00, 0.00 ]; ...
-                                 [ 3.00, 3.00, 3.00, 1.00, 1.00 ] ];
-
-    %     sol.GPU.alpha_minmax = [ [ 0.00, 0.00, 0.00, 0.00 ]; ...
-    %                              [ 1e-6, 2.00, 2.00, 1.00 ] ];
-
-%         sol.GPU.alpha_minmax = [ [ 0.00, 0.00, 0.00 ]; ...
-%                                  [ 5.00, 2.50, 1.00 ] ];
-
-    %     sol.GPU.alpha_minmax = [ [ 0.00, 0.00 ]; ...
-    %                              [ 1.00, 1.00 ] ];
-
-    %     sol.GPU.alpha_minmax = [ [ 0.00 ]; ...
-    %                              [ 1.00 ] ];
-
-        %========
-
-        sol.GPU.alpha_minmax = gpuArray( single( sol.GPU.alpha_minmax ));
-
-        for pp = 1 : sol.GPU.Nscpm
-
-            sol.GPU.alpha_test( pp, : ) = linspace( sol.GPU.alpha_minmax( 1, pp ), sol.GPU.alpha_minmax( 2, pp ), sol.GPU.Nalpha );
-
-        end
-
-        sol.GPU.alpha_test = gpuArray( reshape( sol.GPU.alpha_test, [ 1, 1, sol.GPU.Nscpm, sol.GPU.Nalpha ] ));
-        sol.GPU.alpha_prev = gpuArray( zeros( [ sol.spos.N, sol.GPU.Nscpm ], 'single' ) );
-    
-    end
-    
-    
-    
-    
-    
-    
-    
-
-
-    sol.GPU.poissonexwv.steplength_update_freq = sol.poissonexwv.steplength_update_freq;
-    sol.GPU.poissonexwv.steplength_update_type = sol.poissonexwv.steplength_update_type;
-    
-    if strcmp( sol.exwv_noisemodel, 'poisson' )
+        sol.GPU.poissonexwv.Nalpha       = gpuArray( sol.poissonexwv.Nalpha );
+        sol.GPU.poissonexwv.alpha_minmax = gpuArray( sol.poissonexwv.alpha_minmax );
         
-        sol.GPU.poissonexwv.Nalpha = gpuArray( single( 11 ));
-
-%        sol.GPU.poissonexwv.alpha_minmax = [ [ 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00 ]; ...
-%                                             [ 3.00, 2.00, 2.00, 2.00, 1.00, 1.00, 1.00, 1.00 ] ];
-
-    %     sol.GPU.poissonexwv.alpha_minmax = [ [ 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00 ]; ...
-    %                                          [ 6.00, 6.00, 4.00, 3.00, 3.00, 1.00, 1.00 ] ];
-
-    %     sol.GPU.poissonexwv.alpha_minmax = [ [ 0.00, 0.00, 0.00, 0.00, 0.00, 0.00 ]; ...
-    %                                          [ 1.00, 1.00, 1.00, 1.00, 1.00, 1.00 ] ];
-
-        sol.GPU.poissonexwv.alpha_minmax = [ [ 0.00, 0.00, 0.00, 0.00, 0.00 ]; ...
-                                             [ 3.00, 3.00, 3.00, 1.00, 1.00 ] ];
-
-    %     sol.GPU.poissonexwv.alpha_minmax = [ [ 0.00, 0.00, 0.00, 0.00 ]; ...
-    %                                          [ 1e-6, 2.00, 2.00, 1.00 ] ];
-
-%         sol.GPU.poissonexwv.alpha_minmax = [ [ 0.00, 0.00, 0.00 ]; ...
-%                                              [ 5.00, 2.50, 1.00 ] ];
-
-    %     sol.GPU.poissonexwv.alpha_minmax = [ [ 0.00, 0.00 ]; ...
-    %                                          [ 1.00, 1.00 ] ];
-
-    %     sol.GPU.poissonexwv.alpha_minmax = [ [ 0.00 ]; ...
-    %                                          [ 1.00 ] ];
-
-        %========
-
-        sol.GPU.poissonexwv.alpha_minmax = gpuArray( single( sol.GPU.alpha_minmax ));
-
+        sol.GPU.poissonexwv.alpha_test = zeros( sol.GPU.Nscpm, sol.GPU.poissonexwv.Nalpha, 'single' );
+        
         for pp = 1 : sol.GPU.Nscpm
 
             sol.GPU.poissonexwv.alpha_test( pp, : ) = linspace( sol.GPU.poissonexwv.alpha_minmax( 1, pp ), ...
@@ -217,18 +136,13 @@ function [ sol, expt ] = ptycho2DTPA_runGPU_stochminibatchgrad( sol, expt, N_epo
 
         end
 
-        sol.GPU.poissonexwv.alpha_test = gpuArray( reshape( sol.GPU.poissonexwv.alpha_test, [ 1, 1, sol.GPU.Nscpm, sol.GPU.Nalpha ] ));
-        sol.GPU.poissonexwv.alpha_prev = gpuArray( zeros( [ sol.spos.N, sol.GPU.Nscpm ], 'single' ) );
-    
+        sol.GPU.poissonexwv.alpha_test = gpuArray( reshape( sol.GPU.poissonexwv.alpha_test, [ 1, 1, sol.GPU.Nscpm, sol.GPU.poissonexwv.Nalpha ] ));
+        
+        sol.GPU.poissonexwv.alpha_prev = gpuArray( single( sol.poissonexwv.alpha_start + zeros( [ sol.spos.N, sol.GPU.Nscpm ] )));
+        
+        sol.GPU.poissonexwv.delta_alpha_signtest = gpuArray( sol.poissonexwv.delta_alpha_signtest ); 
+        
     end
-    
-    
-    
-    
-    
-    
-    
-    
     
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% Main Loop %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -316,8 +230,26 @@ function [ sol, expt ] = ptycho2DTPA_runGPU_stochminibatchgrad( sol, expt, N_epo
 
             %========
 
-            if strcmp( sol.exwv_noisemodel, 'gaussian' )
-            
+            if strcmp( sol.exwv_noisemodel, 'poisson' )
+
+                [ sol.GPU.psi, sol.GPU.poissonexwv, meas_metrics ] = exitwave_update_2DTPA_poisson_v2( sol.GPU.phi,         ...
+                                                                                                       sol.GPU.TFvec,       ...
+                                                                                                       sol.GPU.ind,         ...
+                                                                                                       sol.GPU.batch_indx,  ...
+                                                                                                       sol.GPU.sz,          ...
+                                                                                                       sol.GPU.Nspos,       ...
+                                                                                                       sol.GPU.Nscpm,       ...
+                                                                                                       sol.GPU.poissonexwv, ...
+                                                                                                       sol.GPU.rc,          ... 
+                                                                                                       sol.GPU.sqrt_rc,     ...
+                                                                                                       sol.GPU.meas,        ...
+                                                                                                       sol.GPU.meas_eq0,    ...
+                                                                                                       sol.GPU.measLPF,     ...
+                                                                                                       kk,                  ...
+                                                                                                       collect_metrics );
+                
+            else
+        
                 [ sol.GPU.psi, meas_metrics ] = exitwave_update_2DTPA_gaussian( sol.GPU.phi,      ...            
                                                                                 sol.GPU.TFvec,    ...
                                                                                 sol.GPU.ind,      ...
@@ -328,115 +260,6 @@ function [ sol, expt ] = ptycho2DTPA_runGPU_stochminibatchgrad( sol, expt, N_epo
                                                                                 sol.GPU.meas_eq0, ...
                                                                                 sol.GPU.measLPF,  ...
                                                                                 collect_metrics );
-                                                                                                 
-            elseif strcmp( sol.exwv_noisemodel, 'poisson' )
-                
-                
-                
-                
-                %%{
-                
-                if strcmp( sol.it.exwv_poisson_steplength, 'use_exact_linesearch' ) && (( mod( sol.it.epoch, sol.it.exwv_poisson_update_steplength ) == 0 ) || ( sol.it.epoch == 1 ))
-                    
-                     % sol.GPU.poiss_exwv <-- sol.GPU.alpha_opt, sol.GPU.alpha_prev
-                     
-                    [ sol.GPU.psi_B, sol.GPU.alpha_opt, meas_metrics ] = exitwave_update_2DTPA_poisson( sol.GPU.phi,        ...
-                                                                                                      sol.GPU.TFvec,      ...
-                                                                                                      sol.GPU.ind,        ...
-                                                                                                      sol.GPU.batch_indx, ...
-                                                                                                      sol.GPU.sz,         ...
-                                                                                                      sol.GPU.Nspos,      ...
-                                                                                                      sol.GPU.Nscpm,      ...
-                                                                                                      sol.GPU.alpha_test, ...
-                                                                                                      [],                 ...
-                                                                                                      sol.GPU.rc,         ... 
-                                                                                                      sol.GPU.sqrt_rc,    ...
-                                                                                                      sol.GPU.meas,       ...
-                                                                                                      sol.GPU.meas_eq0,   ...
-                                                                                                      sol.GPU.measLPF,    ...
-                                                                                                      collect_metrics );
-                           
-                                                                                                  
-
-                                                                                                  
-                    %======================================================================
-                    % keep track of step length for the scan positions we just computed for
-                    %======================================================================
-                    
-                    sol.GPU.alpha_prev( sol.GPU.batch_indx, : ) = squeeze( sol.GPU.alpha_opt );
-
-                elseif strcmp( sol.it.exwv_poisson_steplength, 'use_sign_test' ) && ( mod( sol.it.epoch, sol.it.exwv_poisson_update_steplength ) == 0 )
-
-                    
-                    
-                    
-                    
-                else
-
-%                     alpha_prev = sol.GPU.alpha_prev( sol.GPU.batch_indx, : );
-%                     alpha_prev = reshape( alpha_prev, [ 1, size( alpha_prev ) ] );
-
-                    alpha_prev = reshape( sol.GPU.alpha_prev( sol.GPU.batch_indx, : ), [ 1, sol.GPU.Nspos, sol.GPU.Nscpm ] );
-                    
-                    [ sol.GPU.psi, sol.GPU.alpha_opt, meas_metrics ] = exitwave_update_2DTPA_poisson( sol.GPU.phi,       ...
-                                                                                                      sol.GPU.TFvec,     ...
-                                                                                                      sol.GPU.ind,       ...
-                                                                                                      sol.GPU.batch_indx, ...
-                                                                                                      sol.GPU.sz,        ...
-                                                                                                      sol.GPU.Nspos,     ...
-                                                                                                      sol.GPU.Nscpm,     ...
-                                                                                                      [],                ...
-                                                                                                      alpha_prev,        ...
-                                                                                                      sol.GPU.rc,        ... 
-                                                                                                      sol.GPU.sqrt_rc,   ...
-                                                                                                      sol.GPU.meas,      ...
-                                                                                                      sol.GPU.meas_eq0,  ...
-                                                                                                      sol.GPU.measLPF,   ...
-                                                                                                      collect_metrics );
-                                                                                                  
-                                                                                                  
-                                                                                                  
-                                                                                                  
-
-                end
-                
-                
-                
-                %}
-                
-                
-                
-                
-
-                
-                
-                
-           [ sol.GPU.psi_A, sol.GPU.poissonexwv, meas_metrics ] = exitwave_update_2DTPA_poisson_v2( sol.GPU.phi,         ...
-                                                                                                  sol.GPU.TFvec,       ...
-                                                                                                  sol.GPU.ind,         ...
-                                                                                                  sol.GPU.batch_indx,  ...
-                                                                                                  sol.GPU.sz,          ...
-                                                                                                  sol.GPU.Nspos,       ...
-                                                                                                  sol.GPU.Nscpm,       ...
-                                                                                                  sol.GPU.poissonexwv, ...
-                                                                                                  sol.GPU.rc,          ... 
-                                                                                                  sol.GPU.sqrt_rc,     ...
-                                                                                                  sol.GPU.meas,        ...
-                                                                                                  sol.GPU.meas_eq0,    ...
-                                                                                                  sol.GPU.measLPF,     ...
-                                                                                                  sol.it.epoch,        ...
-                                                                                                  collect_metrics );
-                
-                
-                
-
-                
-                
-                
-            
-            else
-        
-                error( 'Invalid Exitwave Update Noise Model: Use Only ''gaussian'' or ''poisson'' (Case Sensitive)' )
             
             end
 
@@ -455,443 +278,9 @@ function [ sol, expt ] = ptycho2DTPA_runGPU_stochminibatchgrad( sol, expt, N_epo
             end
             
             %=======
-              
+            
             texwv = texwv + toc( start_exwv );
 
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-            %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% TESTING %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
-            %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-            
-% figure; 
-% plot_2Dscan_positions( expt.spos.rs, [], sol.spos.rs, [] )
-% % set( gca, 'xdir', 'reverse' )
-% set( gca, 'ydir', 'normal' )
-% xlabel('xh, lab frame'); 
-% ylabel('yv, lab frame');
-% xlim([-600, 600])
-% ylim([-600, 600])
-% daspect([1 1 1])  
-% grid on
-                
-
-%====================================================================================================================================================
-
-% spos_opt.sz      = sol.GPU.sz;
-% spos_opt.rc      = sol.GPU.rc;
-% spos_opt.sqrt_rc = sol.GPU.sqrt_rc;
-% spos_opt.szTF    = sol.GPU.samsz;
-% spos_opt.vs_r    = sol.GPU.vs_r;
-% spos_opt.vs_c    = sol.GPU.vs_c;
-% spos_opt.Nspos   = sol.GPU.Nspos;
-% 
-% % spos_opt.noise_model = 'poisson';
-% spos_opt.noise_model = 'gaussian';
-%  
-% spos_opt.delta_FD = 1e-2;
-% spos_opt.scale_x_FD = gpuArray( [ [ 1, 0 ]; [ 0, 1 + spos_opt.delta_FD ] ] );     
-% spos_opt.scale_y_FD = gpuArray( [ [ 1 + spos_opt.delta_FD, 0 ]; [ 0, 1 ] ] );      
-% 
-% spos_opt.delta_FD = 1e-3;
-% spos_opt.shear_x_FD = gpuArray( [ [ 1, 0 ]; [ spos_opt.delta_FD, 1 ] ] );
-% spos_opt.shear_y_FD = gpuArray( [ [ 1, spos_opt.delta_FD ]; [ 0, 1 ] ] );
- 
-%========
-
-% spos_opt.Naalpha_affineT = gpuArray( 51 );  
-% spos_opt.aalpha_affineT  = gpuArray( linspace( -0.01, 0.01, spos_opt.Naalpha_affineT ));   
-% 
-% spos_opt.affineT = gpuArray( [ 1, 0, 0, 1 ] );
-% 
-% [ ~, spos_opt ] = scanpositions_update_2DTPA_affine( sol.GPU.batch_rs, ...
-%                                                      sol.GPU.TFvec, ...
-%                                                      sol.GPU.phi,  ...
-%                                                      sol.GPU.meas, ...
-%                                                      not( sol.GPU.meas_eq0 ), ...
-%                                                      spos_opt );
-
-%========
-
-% [ rs, rot ] = scanpositions_update_2DTPA_rotation( sol.GPU.batch_rs, ...
-%                                                    sol.GPU.TFvec, ...
-%                                                    sol.GPU.phi,  ...
-%                                                    sol.GPU.meas, ...
-%                                                    not( sol.GPU.meas_eq0 ), ...
-%                                                    spos_opt );
-
-%========
-
-
-%====================================================================================================================================================                        
-
-%{
-
-%             tmp1 = modulus_limits_project( sol.GPU.TFvec, sol.GPU.abs_TF_lim );   
-%             tmp1 = reshape( tmp1, sol.GPU.samsz );
-%             figure; imagescHSV( tmp1 )
-              
-            %========
-            
-%             Nrr           = 200;
-%             scalex_search = gpuArray( single( 1 + linspace( -0.3, 0.3, 7 ) ));
-%             scaley_search = gpuArray( single( 1 + linspace( -0.3, 0.3, 7 ) ));
-            
-            Nrr = 50;
-            
-            scalex_search = gpuArray( single( 1 + 1 * linspace( -0.03, 0.03, 7 ) ));
-            scaley_search = gpuArray( single( 1 + 1 * linspace( -0.03, 0.03, 7 ) ));
-            gauss_magnitude_scalexy = gpuArray.zeros( length( scaley_search ), length( scalex_search ), Nrr, 'single' );
-            
-%             shearx_search = gpuArray( single( 0 + 1 * linspace( -0.005, 0.005, 11 ) ));
-%             sheary_search = gpuArray( single( 0 + 1 * linspace( -0.005, 0.005, 11 ) ));  
-%             gauss_magnitude_shearxy = gpuArray.zeros( length( sheary_search ), length( shearx_search ), Nrr, 'single' );
-            
-            for scx = 1 : length( scalex_search )
-                for scy = 1 : length( scaley_search )
-               
-%             for shx = 1 : length( shearx_search )
-%                 for shy = 1 : length( sheary_search )
-                    
-                    dt = tic;
-    
-GPU.TFvec = sol.GPU.TFvec;
-       
-GPU.samsz = sol.GPU.samsz;
-GPU.samrc = sol.GPU.samrc;
-GPU.vs_r = sol.GPU.vs_r;
-GPU.vs_c = sol.GPU.vs_c;
-
-
-% GPU.TFvec = padarray( reshape( GPU.TFvec, sol.GPU.samsz ), [ 0, 0 ], 1 );
-% 
-% GPU.samsz = gpuArray( single( size( GPU.TFvec )));
-% GPU.samrc = GPU.samsz( 1 ) * GPU.samsz( 2 );
-% GPU.vs_r = gpuArray( single( round( ( 0.5 * ( GPU.samsz(1) - sol.GPU.sz(1) ) + 1 ) : ( 0.5 * ( GPU.samsz(1) + sol.GPU.sz(1) )))));
-% GPU.vs_c = gpuArray( single( round( ( 0.5 * ( GPU.samsz(2) - sol.GPU.sz(2) ) + 1 ) : ( 0.5 * ( GPU.samsz(2) + sol.GPU.sz(2) )))));
-% 
-% GPU.TFvec = GPU.TFvec( : );                 
-                    
-                    
-%                     GPU.batch_indx = gpuArray( single( randperm( sol.spos.N, round( 0.05 * sol.spos.N ) )));
-                    GPU.batch_indx = gpuArray( single( 1 : 10 : sol.spos.N ));
-                    
-                    GPU.Nspos = gpuArray( length( GPU.batch_indx ) );
-
-                    GPU.batch_rs = gpuArray( sol.spos.rs( GPU.batch_indx, : ) );
-
-                    GPU.meas     = gpuArray( reshape( expt.meas.D( :, :, GPU.batch_indx ), [ sol.GPU.sz, 1, GPU.Nspos ] ));
-                    GPU.meas_eq0 = ( GPU.meas == 0 );
-                               
-                     for rr = 1 : Nrr
-                         
-
-%                         GPU.batch_indx = gpuArray( single( randperm( sol.spos.N, round( 0.05 * sol.spos.N ) )));
-% 
-%                         GPU.Nspos = gpuArray( length( GPU.batch_indx ) );
-% 
-%                         GPU.batch_rs = gpuArray( sol.spos.rs( GPU.batch_indx, : ) );
-% 
-%                         GPU.meas     = gpuArray( reshape( expt.meas.D( :, :, GPU.batch_indx ), [ sol.GPU.sz, 1, GPU.Nspos ] ));
-%                         GPU.meas_eq0 = ( GPU.meas == 0 );
-
-                        
-                        %========
-
-                        GPU.rs_search( :, 2 ) = scalex_search( scx ) * GPU.batch_rs( :, 2 );
-                        GPU.rs_search( :, 1 ) = scaley_search( scy ) * GPU.batch_rs( :, 1 );
-
-                        %========
-
-% %                         shy_shx_T = gpuArray( [ [ 1, sheary_search( shy ) ]; [ shearx_search( shx ), 1 ] ]);
-% %                         GPU.rs_search = transpose( shy_shx_T *  transpose( GPU.batch_rs ));
-%                         
-%            
-%                         shy_T = gpuArray( [ [ 1, sheary_search( shy ) ]; [ 0, 1 ] ]);
-%                         shx_T = gpuArray( [ [ 1, 0 ]; [ shearx_search( shx ), 1 ] ]);
-%                         
-%                         GPU.rs_search = transpose( shx_T *  transpose( GPU.batch_rs ));
-%                         GPU.rs_search = transpose( shy_T *  transpose( GPU.rs_search ));
-%                         
-% %                         GPU.rs_search = transpose( shy_T *  transpose( GPU.batch_rs ));
-% %                         GPU.rs_search = transpose( shx_T *  transpose( GPU.rs_search ));
-                        
-                        %========
-                        
-                        GPU.ind_new = gpuArray( uint32( get_indices_2Dframes( GPU.rs_search, GPU.samsz, GPU.vs_r, GPU.vs_c ))); 
-
-                        GPU.ind_new_offset = GPU.ind_new + gpuArray( uint32( GPU.samrc * ( 0 : 1 : ( GPU.Nspos - 1 ) )));
-
-                        %========
-                        
-                        
-                        % apply measurement constraint
-                        [ GPU.psi, metrics_rot ] = exitwave_update_2DTPA_gaussian( sol.GPU.phi,      ...            
-                                                                                   GPU.TFvec,    ...
-                                                                                   GPU.ind_new,      ...
-                                                                                   sol.GPU.sz,       ...
-                                                                                   GPU.Nspos,    ...
-                                                                                   sol.GPU.sqrt_rc,  ...
-                                                                                   GPU.meas,     ...
-                                                                                   GPU.meas_eq0, ...
-                                                                                   sol.GPU.measLPF,  ...
-                                                                                   logical( 1 ) );
-
-                                                                                   
-                        % get new sample    
-                        [ GPU.TFvec ] = rPIEupdate_batch_2DTPA_sample( GPU.psi,        ...
-                                                                       GPU.TFvec,      ...
-                                                                       sol.GPU.phi,        ...
-                                                                       GPU.ind_new_offset, ...
-                                                                       sol.GPU.rc,         ...
-                                                                       GPU.Nspos,      ...
-                                                                       sol.GPU.rPIE_alpha_T );  
-
-                        GPU.TFvec = modulus_limits_project( GPU.TFvec, sol.GPU.abs_TF_lim );
-                        
-                        gauss_magnitude_scalexy( scy, scx, rr ) = metrics_rot.gauss_magnitude / sol.GPU.Nspos;
-%                         gauss_magnitude_shearxy( shy, shx, rr ) = metrics_rot.gauss_magnitude / sol.GPU.Nspos;
-                         
-                     end
-                    
-                     t = toc( dt );
-                     
-                      fprintf( [ num2str( [ scalex_search( scx ), scaley_search( scy ), t ], '( scx, scy ) = ( %0.3f, %0.3f ), t = %0.3f' ), '\n' ] )
-%                     fprintf( [ num2str( [ shearx_search( shx ), sheary_search( shy ), t ], '( shx, shy ) = ( %0.4f, %0.4f ), t = %0.3f' ), '\n' ] )
-                        
-% TFA = reshape( GPU.TFvec, GPU.samsz );
-% TFB = reshape( sol.GPU.TFvec, sol.GPU.samsz );
-% 
-% figure( 666 );
-% subplot(121)
-% imagescHSV( TFA  )  
-% subplot(122)
-% imagescHSV( TFB )  
-% 
-% close all;
-
-                end
-
-            end
-            
-            
-            
-%             min_cost = min( gauss_magnitude_shearxy( : ));
-%             max_cost = max( gauss_magnitude_shearxy( : ));
-%             
-%             sz = size( gauss_magnitude_shearxy );
-%             
-%             
-%             for rr = [ 1, 5 : 5 : sz( 3 ) ]
-% %             for rr = 1 : 5 : sz( 3 )
-% %             for rr = round( linspace( 1, Nrr, 20 ))
-%                 
-%                 A          = gauss_magnitude_shearxy( :, :, rr );
-%                 [ ~, II ]  = min( A(:) );
-%                 [ ir, ic ] = ind2sub( [ sz( 1 ), sz( 2 ) ], II );
-%                 
-%                 figure;  
-% %                 set( figure, 'Visible', 'on', 'Position',[ 1, 1, 1920, 1080 ] )
-% %                 imagesc( scalex_search, scaley_search, gauss_magnitude_scalexy( :, :, rr ), [ min_cost, max_cost ] )
-%                 imagesc( scalex_search, scaley_search, gauss_magnitude_shearxy( :, :, rr ))  
-%                 hold on
-%                 plot( scalex_search( ic ), scaley_search( ir ), 'x', 'markersize', 30, 'linewidth', 2, 'color', [ 0.8, 0.0, 0.0 ] )
-%                 hold off
-%                 daspect([1 1 1]); 
-%                 colorbar; 
-%                 colormap turbo
-%                 title(num2str(rr, 'Epoch = %d'))
-%                 grid on
-%                 
-% %                 export_fig( num2str( rr, 'shearxy_cost_%d.jpg' ), '-r120.0' )
-% %                 rr
-%         
-%             end
-%             
-%             close all;
-%             
-            
-            
-               
-            min_cost = min( gauss_magnitude_scalexy( : ));
-            max_cost = max( gauss_magnitude_scalexy( : ));
-            
-            sz = size( gauss_magnitude_scalexy );
-            
-            
-            for rr = [ 1, 10 : 10 : sz( 3 ) ]
-%             for rr = 1 : 1 : sz( 3 )
-%             for rr = round( linspace( 1, Nrr, 20 ))
-                
-                A          = gauss_magnitude_scalexy( :, :, rr );
-                [ ~, II ]  = min( A(:) );
-                [ ir, ic ] = ind2sub( [ sz( 1 ), sz( 2 ) ], II );
-%                 
-%                 figure;  
-                set( figure, 'Visible', 'off', 'Position',[ 1, 1, 1920, 1080 ] )
-%                 imagesc( scalex_search, scaley_search, gauss_magnitude_scalexy( :, :, lose arr ), [ min_cost, max_cost ] )
-                imagesc( scalex_search, scaley_search, gauss_magnitude_scalexy( :, :, rr ))  
-                hold on
-                plot( scalex_search( ic ), scaley_search( ir ), 'x', 'markersize', 30, 'linewidth', 2, 'color', [ 0.8, 0.0, 0.0 ] )
-                hold off
-                daspect([1 1 1]); 
-                colorbar; 
-                colormap turbo
-                title(num2str(rr, 'Epoch = %d'))
-                grid on
-                
-                export_fig( num2str( rr, 'scalexy_cost_%d.jpg' ), '-r120.0' )
-                rr
-        
-            end
-            
-            close all;
-            
-            
-            scalex_search           = gather( scalex_search );
-            scaley_search           = gather( scaley_search );
-            gauss_magnitude_scalexy = gather( gauss_magnitude_scalexy );
-            
-            
-            
-            
-            
-            %========            
-            
-            
-            
-            
-            
-% %             rot_search = gpuArray( single( [ -30, -20, -10, -1, 0, 1, 10, 20, 30 ] ));   
-% %             rot_search = gpuArray( single( [ -1.00, -0.75, -0.50, -0.25, 0, +0.25, +0.50, +0.75, +1.00 ] ));
-%             rot_search = gpuArray( single( [ -0.20, -0.10, 0, +0.10, +0.20 ] ));
-% 
-%             for aa = 1 : length( rot_search )
-%                 
-%                 GPU.TFvec = sol.GPU.TFvec;
-%                             
-%                 % modify scan positions using rotation matrix
-% 
-%                 Arot = gpuArray( [ [ +cosd( rot_search( aa ) ), +sind( rot_search( aa ) ) ]; ...
-%                                    [ -sind( rot_search( aa ) ), +cosd( rot_search( aa ) ) ] ] );     
-% 
-%                 GPU.rs_rot = transpose( Arot * transpose( sol.GPU.batch_rs ));
-% 
-%                 GPU.ind_rot = gpuArray( uint32( get_indices_2Dframes( GPU.rs_rot, sol.GPU.samsz, sol.GPU.vs_r, sol.GPU.vs_c ))); 
-%        
-%                 GPU.ind_rot_offset = GPU.ind_rot + gpuArray( uint32( sol.GPU.samrc * ( 0 : 1 : ( sol.GPU.Nspos - 1 ) )));
-% 
-%                 for rr = 1 : 25
-% 
-% 
-% 
-% 
-%                     % apply measurement constraint
-% 
-%                     [ sol.GPU.psi, metrics_rot ] = exitwave_update_2DTPA_gaussian( sol.GPU.phi,      ...            
-%                                                                                   GPU.TFvec,    ...
-%                                                                                   GPU.ind_rot,      ...
-%                                                                                   sol.GPU.sz,       ...
-%                                                                                   sol.GPU.Nspos,    ...
-%                                                                                   sol.GPU.sqrt_rc,  ...
-%                                                                                   sol.GPU.meas,     ...
-%                                                                                   sol.GPU.meas_eq0, ...
-%                                                                                   sol.GPU.measLPF,  ...
-%                                                                                   logical( 1 ) );
-% 
-% 
-%                     % get new sample    
-%                     [ GPU.TFvec ] = rPIEupdate_batch_2DTPA_sample( sol.GPU.psi,        ...
-%                                                                    GPU.TFvec,      ...
-%                                                                    sol.GPU.phi,        ...
-%                                                                    GPU.ind_rot_offset, ...
-%                                                                    sol.GPU.rc,         ...
-%                                                                    sol.GPU.Nspos,      ...
-%                                                                    sol.GPU.rPIE_alpha_T );  
-% 
-%                                                                    
-%                                                                    
-%              
-%                     gauss_magnitude_rot( aa, rr ) = metrics_rot.gauss_magnitude / sol.GPU.Nspos;
-% %                     grad_gauss_magnitude_rot( aa, rr ) = metrics_rot.grad_gauss_magnitude / sol.GPU.Nspos;
-% 
-% 
-% 
-% 
-%                 end
-%                 
-%                 aa
-%             
-%             end
-% 
-%             figure; 
-%             plot( log10( transpose( tmp0 )), 'linewidth', 2 )
-% %             legend( '-30', '-20', '-10', '-1', '0', '+1', '+10', '+20', '+30' )
-% %             legend( '-1.00', '-0.75', '-0.50', '-0.25', '0', '+0.25', '+0.50', '+0.75', '+1.00' )
-%             legend( '-0.20', '-0.10', '0', '+0.10', '+0.20' )
-%             grid on
-%             xlabel('Epochs')
-%             ylabel('log10( Cost Function Value )')
-%             
-% %             figure; 
-% %             plot(  diff( transpose( gauss_magnitude_rot )), 'linewidth', 2 )
-% %             legend( '-30', '-20', '-10', '-1', '0', '+1', '+10', '+20', '+30' )      
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-
-%  [ rs, rot ] = scanpositions_update_2DTPA_rotation_v2( sol.GPU.batch_rs, ...
-%                                                        sol.GPU.psi, ...
-%                                                        sol.GPU.TFvec, ...
-%                                                        sol.GPU.phi, ...
-%                                                        sol.GPU.meas,  ...
-%                                                        sol.GPU.meas_eq0, ...
-%                                                        sol.GPU.spos_opt, ...
-%                                                        sol.GPU, ...
-%                                                        expt );
-            
-            
-            
-            
-            
-            
-            
-%}
-
-            
             %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
             %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% Sample Update %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
             %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -1030,14 +419,13 @@ GPU.vs_c = sol.GPU.vs_c;
 
                 if ( mod( sol.it.epoch, sol.it.probe_centering ) == 0 ) 
 
-%                     [~, Ic ] = max( sum( abs( sol.GPU.phi( :, :, end )), 1 ));
-%                     [~, Ir ] = max( sum( abs( sol.GPU.phi( :, :, end )), 2 ));
-%                     shift_px = gather( -1 * round( [ Ir, Ic ] - 0.5 * sol.GPU.sz - 1 ));
+                    [~, Ic ] = max( sum( abs( sol.GPU.phi( :, :, end )), 1 ));
+                    [~, Ir ] = max( sum( abs( sol.GPU.phi( :, :, end )), 2 ));
+                    shift_px = double( gather( -1 * round( [ Ir, Ic ] - 0.5 * sol.GPU.sz - 1 )));
 
-                    [ com ] = centerofmass( abs( sol.GPU.phi( :, :, end )));
-%                     [ com ] = centerofmass( sum( abs( sol.GPU.phi .^ 2 ), 3 ));
-
-                    shift_px = double( gather( -1 * round( com - 0.5 * sol.GPU.sz - 1 ) ));
+%                     [ com ] = centerofmass( abs( sol.GPU.phi( :, :, end )));
+% %                     [ com ] = centerofmass( sum( abs( sol.GPU.phi .^ 2 ), 3 ));
+%                     shift_px = double( gather( -1 * round( com - 0.5 * sol.GPU.sz - 1 ) ));
                     
                     if sum( shift_px ) ~= 0
 
@@ -1047,10 +435,16 @@ GPU.vs_c = sol.GPU.vs_c;
 
                         end
                         
+                        %======================================================================
+                        % also need to shift the sample and scan positions based on probe shift
+                        %======================================================================
+                        
                         sol.GPU.TFvec = nocircshift2D( reshape( sol.GPU.TFvec, sol.GPU.samsz ), shift_px );
                         sol.GPU.TFvec = sol.GPU.TFvec( : );
 
                         sol.GPU.TFvec( sol.GPU.TFvec == 0 ) = 1;
+                        
+%                         sol.GPU.spos_rs = sol.GPU.spos_rs - shift_px;
                         
                     end
                     
@@ -1156,17 +550,96 @@ GPU.vs_c = sol.GPU.vs_c;
             %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% SCAN POSITIONS UPDATE %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
             %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
             
-            
-            
-            if 0 %( mod( sol.it.epoch, sol.it.spos_update ) == 0 ) && ( sol.it.epoch >= sol.it.spos_start )
+            if ( mod( sol.it.epoch, sol.it.spos_update ) == 0 ) && ( sol.it.epoch >= sol.it.spos_start )
+
+                [ sol.GPU.batch_rs ] = scanpositions_update_2DTPA( sol.GPU.batch_rs, ...
+                                                                   sol.GPU.batch_indx, ...
+                                                                   sol.GPU.TFvec, ...
+                                                                   sol.GPU.phi,   ...
+                                                                   sol.GPU.meas,  ...
+                                                                   sol.GPU.meas_eq0, ...
+                                                                   sol.GPU.spos_opt );
+
+%                 sol.spos.rs( sol.spos.batch_indx, : ) = gather( sol.GPU.batch_rs );   
+                sol.GPU.spos_rs( sol.GPU.batch_indx, : ) = sol.GPU.batch_rs;
+
+                %============================================================
+                % make sure the scan positions are centered around the origin
+                %============================================================
+
+                tmp0 = sol.GPU.spos_rs - min( sol.GPU.spos_rs, [], 1 );
+                tmp0 = tmp0 - max( tmp0, [], 1 ) * 0.5;  
+
+                shift_px = mean( sol.GPU.spos_rs - tmp0 );
+
+                sol.GPU.spos_rs = sol.GPU.spos_rs - shift_px;
+
+                %========
+
+%                 sol.GPU.TFvec = nocircshift2D( reshape( sol.GPU.TFvec, sol.GPU.samsz ), double( gather( round( shift_px ) )) );
+%                 sol.GPU.TFvec = sol.GPU.TFvec( : );
+% 
+%                 sol.GPU.TFvec( sol.GPU.TFvec == 0 ) = 1;
+% 
+%                 %========
+% 
+%                 for pp = 1 : sol.GPU.Nscpm
+% 
+%                     sol.GPU.phi( :, :, pp ) = nocircshift2D( sol.GPU.phi( :, :, pp ), double( gather( round( shift_px ))) );
+% 
+%                 end
+          
+
+
+
+% figure; 
+% plot_2Dscan_positions( expt.spos.rs, [], tmp0, [] )
+% set( gca, 'xdir', 'reverse' )
+% set( gca, 'ydir', 'normal' )
+% xlabel('xh, lab frame'); 
+% ylabel('yv, lab frame');
+% % xlim([-500, 500])
+% % ylim([-500, 500])
+% daspect([1 1 1])  
+% grid on
+% 
+% 5;
+%         
+
+
+%                     if sum( shift_px ) ~= 0
+% 
+%                         for pp = 1 : sol.GPU.Nscpm
+% 
+%                             sol.GPU.phi( :, :, pp ) = nocircshift2D( sol.GPU.phi( :, :, pp ), shift_px );
+% 
+%                         end
+%                         
+%                         sol.GPU.TFvec = nocircshift2D( reshape( sol.GPU.TFvec, sol.GPU.samsz ), shift_px );
+%                         sol.GPU.TFvec = sol.GPU.TFvec( : );
+% 
+%                         sol.GPU.TFvec( sol.GPU.TFvec == 0 ) = 1;
+%                         
+%                         sol.GPU.spos_rs = sol.GPU.spos_rs - shift_px;
+% 
+%                     end
+
+                %======================================================================
+                % make sure the scan positions are centered close to where they started
+                %======================================================================
+                 
+%                 tmp0 = sol.GPU.spos_rs - min( sol.GPU.spos_rs, [], 1 );
+%                 tmp0 = tmp0 - max( tmp0, [], 1 ) * 0.5;  
+%                 
+%                 shift_rc = sol.GPU.spos_rs - tmp0;
+%                 
+%                 sol.GPU.spos_rs = sol.GPU.spos_rs - shift_rc;
+%                 
+%                 
+%                 TF = gather( reshape( sol.GPU.TFvec, sol.sample.sz.sz ));
+%                 sol.probe.phi = sol.GPU.phi;
+
                 
-                
-       
-                
-
-
-
-
 
 % 
 %  [ rs, rot ] = scanpositions_update_2DTPA_rotation_v2( sol.GPU.batch_rs, ...
@@ -1202,16 +675,7 @@ GPU.vs_c = sol.GPU.vs_c;
 
 
 
-% 
-% [ sol.GPU.batch_rs ] = scanpositions_update_2DTPA( sol.GPU.batch_rs, ...
-%                                                    sol.GPU.TFvec, ...
-%                                                    sol.GPU.phi,   ...
-%                                                    sol.GPU.meas,  ...
-%                                                    sol.GPU.meas_eq0, ...
-%                                                    sol.GPU.spos_opt );
-%       
-%                                                
-% sol.spos.rs( sol.spos.batch_indx, : ) = gather( sol.GPU.batch_rs );                                           
+                                        
 
 
 
@@ -1318,6 +782,405 @@ GPU.vs_c = sol.GPU.vs_c;
         %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% COARSE UPDATE OF SCAN POSITIONS USING AFFINE TRANSFORMATIONS %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     
+        
+        
+
+            %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+            %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% TESTING %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
+            %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+            
+% figure; 
+% plot_2Dscan_positions( expt.spos.rs, [], sol.spos.rs, [] )
+% % set( gca, 'xdir', 'reverse' )
+% set( gca, 'ydir', 'normal' )
+% xlabel('xh, lab frame'); 
+% ylabel('yv, lab frame');
+% xlim([-600, 600])
+% ylim([-600, 600])
+% daspect([1 1 1])  
+% grid on
+                
+
+%====================================================================================================================================================
+
+% spos_opt.sz      = sol.GPU.sz;
+% spos_opt.rc      = sol.GPU.rc;
+% spos_opt.sqrt_rc = sol.GPU.sqrt_rc;
+% spos_opt.szTF    = sol.GPU.samsz;
+% spos_opt.vs_r    = sol.GPU.vs_r;
+% spos_opt.vs_c    = sol.GPU.vs_c;
+% spos_opt.Nspos   = sol.GPU.Nspos;
+% 
+% % spos_opt.noise_model = 'poisson';
+% spos_opt.noise_model = 'gaussian';
+%  
+% spos_opt.delta_FD = 1e-2;
+% spos_opt.scale_x_FD = gpuArray( [ [ 1, 0 ]; [ 0, 1 + spos_opt.delta_FD ] ] );     
+% spos_opt.scale_y_FD = gpuArray( [ [ 1 + spos_opt.delta_FD, 0 ]; [ 0, 1 ] ] );      
+% 
+% spos_opt.delta_FD = 1e-3;
+% spos_opt.shear_x_FD = gpuArray( [ [ 1, 0 ]; [ spos_opt.delta_FD, 1 ] ] );
+% spos_opt.shear_y_FD = gpuArray( [ [ 1, spos_opt.delta_FD ]; [ 0, 1 ] ] );
+ 
+%========
+
+% spos_opt.Naalpha_affineT = gpuArray( 51 );  
+% spos_opt.aalpha_affineT  = gpuArray( linspace( -0.01, 0.01, spos_opt.Naalpha_affineT ));   
+% 
+% spos_opt.affineT = gpuArray( [ 1, 0, 0, 1 ] );
+% 
+% [ ~, spos_opt ] = scanpositions_update_2DTPA_affine( sol.GPU.batch_rs, ...
+%                                                      sol.GPU.TFvec, ...
+%                                                      sol.GPU.phi,  ...
+%                                                      sol.GPU.meas, ...
+%                                                      not( sol.GPU.meas_eq0 ), ...
+%                                                      spos_opt );
+
+%========
+
+% [ rs, rot ] = scanpositions_update_2DTPA_rotation( sol.GPU.batch_rs, ...
+%                                                    sol.GPU.TFvec, ...
+%                                                    sol.GPU.phi,  ...
+%                                                    sol.GPU.meas, ...
+%                                                    not( sol.GPU.meas_eq0 ), ...
+%                                                    spos_opt );
+
+%========
+
+
+%====================================================================================================================================================                        
+% SCALE BRUTE FORCE 2D SEARCH
+
+% if ( mod( sol.it.epoch, 100e99 ) == 0 ) || ( kk == 1 ) % && ( sol.it.epoch >= sol.it.spos_start )
+% 
+%     [ opt_scale_y, opt_scale_x ] = scanpositions_update_2DTPA_scalexy_gridsearch( sol, expt );
+% 
+%     sol.spos.rs( :, 1 ) = opt_scale_y * sol.spos.rs( :, 1 );
+%     sol.spos.rs( :, 2 ) = opt_scale_x * sol.spos.rs( :, 2 );       
+% 
+% end
+
+%====================================================================================================================================================                        
+% SHEAR BRUTE FORCE 2D SEARCH
+            
+%{  
+
+Nrr = 20;
+
+
+shearx_search = gpuArray( single( 0 + 1 * linspace( -0.010, 0.010, 5 ) ));
+sheary_search = gpuArray( single( 0 + 1 * linspace( -0.010, 0.010, 5 ) ));  
+gauss_magnitude_shearxy = gpuArray.zeros( length( sheary_search ), length( shearx_search ), Nrr, 'single' );
+
+
+% GPU.batch_indx = gpuArray( single( 1 : 10 : sol.spos.N ));
+GPU.batch_indx = gpuArray( single( randperm( sol.spos.N, round( 0.10 * sol.spos.N ) )));
+
+GPU.Nspos = gpuArray( length( GPU.batch_indx ) );
+
+GPU.batch_rs = gpuArray( sol.spos.rs( GPU.batch_indx, : ) );
+
+GPU.meas     = gpuArray( reshape( expt.meas.D( :, :, GPU.batch_indx ), [ sol.GPU.sz, 1, GPU.Nspos ] ));
+GPU.meas_eq0 = ( GPU.meas == 0 );
+
+
+for shx = 1 : length( shearx_search )
+    
+    for shy = 1 : length( sheary_search )
+
+        dt = tic;
+    
+        GPU.TFvec = sol.GPU.TFvec;
+
+        GPU.samsz = sol.GPU.samsz;
+        GPU.samrc = sol.GPU.samrc;
+        GPU.vs_r = sol.GPU.vs_r;
+        GPU.vs_c = sol.GPU.vs_c;
+
+
+%         GPU.TFvec = padarray( reshape( GPU.TFvec, sol.GPU.samsz ), [ 0, 0 ], 1 );
+% 
+%         GPU.samsz = gpuArray( single( size( GPU.TFvec )));
+%         GPU.samrc = GPU.samsz( 1 ) * GPU.samsz( 2 );
+%         GPU.vs_r = gpuArray( single( round( ( 0.5 * ( GPU.samsz(1) - sol.GPU.sz(1) ) + 1 ) : ( 0.5 * ( GPU.samsz(1) + sol.GPU.sz(1) )))));
+%         GPU.vs_c = gpuArray( single( round( ( 0.5 * ( GPU.samsz(2) - sol.GPU.sz(2) ) + 1 ) : ( 0.5 * ( GPU.samsz(2) + sol.GPU.sz(2) )))));
+% 
+%         GPU.TFvec = GPU.TFvec( : );                 
+
+                    
+%             GPU.batch_indx = gpuArray( single( randperm( sol.spos.N, round( 0.10 * sol.spos.N ) )));
+% 
+%             GPU.Nspos = gpuArray( length( GPU.batch_indx ) );
+% 
+%             GPU.batch_rs = gpuArray( sol.spos.rs( GPU.batch_indx, : ) );
+% 
+%             GPU.meas     = gpuArray( reshape( expt.meas.D( :, :, GPU.batch_indx ), [ sol.GPU.sz, 1, GPU.Nspos ] ));
+%             GPU.meas_eq0 = ( GPU.meas == 0 );
+
+            for rr = 1 : Nrr
+                         
+
+%                 GPU.batch_indx = gpuArray( single( randperm( sol.spos.N, round( 0.10 * sol.spos.N ) )));
+% 
+%                 GPU.Nspos = gpuArray( length( GPU.batch_indx ) );
+% 
+%                 GPU.batch_rs = gpuArray( sol.spos.rs( GPU.batch_indx, : ) );
+% 
+%                 GPU.meas     = gpuArray( reshape( expt.meas.D( :, :, GPU.batch_indx ), [ sol.GPU.sz, 1, GPU.Nspos ] ));
+%                 GPU.meas_eq0 = ( GPU.meas == 0 );
+
+                        
+ 
+                %========
+
+                shy_shx_T = gpuArray( [ [ 1, sheary_search( shy ) ]; ...
+                                        [ shearx_search( shx ), 1 ] ]);
+
+                GPU.rs_search = transpose( shy_shx_T *  transpose( GPU.batch_rs ));
+
+           
+%                         shy_T = gpuArray( [ [ 1, sheary_search( shy ) ]; [ 0, 1 ] ]);
+%                         shx_T = gpuArray( [ [ 1, 0 ]; [ shearx_search( shx ), 1 ] ]);
+%                         
+%                         GPU.rs_search = transpose( shx_T *  transpose( GPU.batch_rs ));
+%                         GPU.rs_search = transpose( shy_T *  transpose( GPU.rs_search ));
+%                         
+% %                         GPU.rs_search = transpose( shy_T *  transpose( GPU.batch_rs ));
+% %                         GPU.rs_search = transpose( shx_T *  transpose( GPU.rs_search ));
+                        
+                %========
+
+                GPU.ind_new = gpuArray( uint32( get_indices_2Dframes( GPU.rs_search, GPU.samsz, GPU.vs_r, GPU.vs_c ))); 
+
+                GPU.ind_new_offset = GPU.ind_new + gpuArray( uint32( GPU.samrc * ( 0 : 1 : ( GPU.Nspos - 1 ) )));
+
+                %========
+
+                        
+                % apply measurement constraint
+                [ GPU.psi, metrics_rot ] = exitwave_update_2DTPA_gaussian( sol.GPU.phi,      ...            
+                                                                           GPU.TFvec,    ...
+                                                                           GPU.ind_new,      ...
+                                                                           sol.GPU.sz,       ...
+                                                                           GPU.Nspos,    ...
+                                                                           sol.GPU.sqrt_rc,  ...
+                                                                           GPU.meas,     ...
+                                                                           GPU.meas_eq0, ...
+                                                                           sol.GPU.measLPF,  ...
+                                                                           logical( 1 ) );
+
+
+                % get new sample    
+                [ GPU.TFvec ] = rPIEupdate_batch_2DTPA_sample( GPU.psi,        ...
+                                                               GPU.TFvec,      ...
+                                                               sol.GPU.phi,        ...
+                                                               GPU.ind_new_offset, ...
+                                                               sol.GPU.rc,         ...
+                                                               GPU.Nspos,      ...
+                                                               sol.GPU.rPIE_alpha_T );  
+
+                GPU.TFvec = modulus_limits_project( GPU.TFvec, sol.GPU.abs_TF_lim );
+
+                gauss_magnitude_shearxy( shy, shx, rr ) = metrics_rot.gauss_magnitude / sol.GPU.Nspos;
+                         
+            end
+                    
+        t = toc( dt );
+
+        fprintf( [ num2str( [ shearx_search( shx ), sheary_search( shy ), t ], '( shx, shy ) = ( %0.4f, %0.4f ), t = %0.3f' ), '\n' ] )
+
+
+    end
+end
+            
+            
+            
+            min_cost = min( gauss_magnitude_shearxy( : ));
+            max_cost = max( gauss_magnitude_shearxy( : ));
+            
+            sz = size( gauss_magnitude_shearxy );
+            
+            
+            for rr = [ 1, 5 : 5 : sz( 3 ) ]
+%             for rr = 1 : 1 : sz( 3 )
+%             for rr = round( linspace( 1, Nrr, 20 ))
+                
+                A          = gauss_magnitude_shearxy( :, :, rr );
+                [ ~, II ]  = min( A(:) );
+                [ ir, ic ] = ind2sub( [ sz( 1 ), sz( 2 ) ], II );
+                
+                figure;  
+%                 set( figure( 666 ), 'Visible', 'on', 'Position',[ 1, 1, 1920, 1080 ] )
+                imagesc( shearx_search, sheary_search, gauss_magnitude_shearxy( :, :, rr ))  
+                hold on
+                plot( shearx_search( ic ), sheary_search( ir ), 'x', 'markersize', 30, 'linewidth', 2, 'color', [ 0.8, 0.0, 0.0 ] )
+                hold off
+                daspect([1 1 1]); 
+                colorbar; 
+                colormap turbo
+                set( gca, 'ydir', 'normal' )
+                title(num2str(rr, 'Epoch = %d'))
+                grid on
+                
+%                 export_fig( num2str( rr, 'shearxy_cost_%d.jpg' ), '-r120.0' )
+%                 rr
+        
+            end
+            
+            close all;
+            
+            
+
+            shearx_search           = gather( shearx_search );
+            sheary_search           = gather( sheary_search );
+            gauss_magnitude_shearxy = gather( gauss_magnitude_shearxy );
+            
+            
+%}        
+
+
+            
+%====================================================================================================================================================            
+% ROTATION BRUTE FORCE 1D SEARCH      
+            
+            
+            
+            
+% %             rot_search = gpuArray( single( [ -30, -20, -10, -1, 0, 1, 10, 20, 30 ] ));   
+% %             rot_search = gpuArray( single( [ -1.00, -0.75, -0.50, -0.25, 0, +0.25, +0.50, +0.75, +1.00 ] ));
+%             rot_search = gpuArray( single( [ -0.20, -0.10, 0, +0.10, +0.20 ] ));
+% 
+%             for aa = 1 : length( rot_search )
+%                 
+%                 GPU.TFvec = sol.GPU.TFvec;
+%                             
+%                 % modify scan positions using rotation matrix
+% 
+%                 Arot = gpuArray( [ [ +cosd( rot_search( aa ) ), +sind( rot_search( aa ) ) ]; ...
+%                                    [ -sind( rot_search( aa ) ), +cosd( rot_search( aa ) ) ] ] );     
+% 
+%                 GPU.rs_rot = transpose( Arot * transpose( sol.GPU.batch_rs ));
+% 
+%                 GPU.ind_rot = gpuArray( uint32( get_indices_2Dframes( GPU.rs_rot, sol.GPU.samsz, sol.GPU.vs_r, sol.GPU.vs_c ))); 
+%        
+%                 GPU.ind_rot_offset = GPU.ind_rot + gpuArray( uint32( sol.GPU.samrc * ( 0 : 1 : ( sol.GPU.Nspos - 1 ) )));
+% 
+%                 for rr = 1 : 25
+% 
+% 
+% 
+% 
+%                     % apply measurement constraint
+% 
+%                     [ sol.GPU.psi, metrics_rot ] = exitwave_update_2DTPA_gaussian( sol.GPU.phi,      ...            
+%                                                                                   GPU.TFvec,    ...
+%                                                                                   GPU.ind_rot,      ...
+%                                                                                   sol.GPU.sz,       ...
+%                                                                                   sol.GPU.Nspos,    ...
+%                                                                                   sol.GPU.sqrt_rc,  ...
+%                                                                                   sol.GPU.meas,     ...
+%                                                                                   sol.GPU.meas_eq0, ...
+%                                                                                   sol.GPU.measLPF,  ...
+%                                                                                   logical( 1 ) );
+% 
+% 
+%                     % get new sample    
+%                     [ GPU.TFvec ] = rPIEupdate_batch_2DTPA_sample( sol.GPU.psi,        ...
+%                                                                    GPU.TFvec,      ...
+%                                                                    sol.GPU.phi,        ...
+%                                                                    GPU.ind_rot_offset, ...
+%                                                                    sol.GPU.rc,         ...
+%                                                                    sol.GPU.Nspos,      ...
+%                                                                    sol.GPU.rPIE_alpha_T );  
+% 
+%                                                                    
+%                                                                    
+%              
+%                     gauss_magnitude_rot( aa, rr ) = metrics_rot.gauss_magnitude / sol.GPU.Nspos;
+% %                     grad_gauss_magnitude_rot( aa, rr ) = metrics_rot.grad_gauss_magnitude / sol.GPU.Nspos;
+% 
+% 
+% 
+% 
+%                 end
+%                 
+%                 aa
+%             
+%             end
+% 
+%             figure; 
+%             plot( log10( transpose( tmp0 )), 'linewidth', 2 )
+% %             legend( '-30', '-20', '-10', '-1', '0', '+1', '+10', '+20', '+30' )
+% %             legend( '-1.00', '-0.75', '-0.50', '-0.25', '0', '+0.25', '+0.50', '+0.75', '+1.00' )
+%             legend( '-0.20', '-0.10', '0', '+0.10', '+0.20' )
+%             grid on
+%             xlabel('Epochs')
+%             ylabel('log10( Cost Function Value )')
+%             
+% %             figure; 
+% %             plot(  diff( transpose( gauss_magnitude_rot )), 'linewidth', 2 )
+% %             legend( '-30', '-20', '-10', '-1', '0', '+1', '+10', '+20', '+30' )      
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+
+%  [ rs, rot ] = scanpositions_update_2DTPA_rotation_v2( sol.GPU.batch_rs, ...
+%                                                        sol.GPU.psi, ...
+%                                                        sol.GPU.TFvec, ...
+%                                                        sol.GPU.phi, ...
+%                                                        sol.GPU.meas,  ...
+%                                                        sol.GPU.meas_eq0, ...
+%                                                        sol.GPU.spos_opt, ...
+%                                                        sol.GPU, ...
+%                                                        expt );
+            
+            
+            
+            
+            
+
+              
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
         
 %         
 % sol.it.spos_update = 1;
@@ -1570,6 +1433,7 @@ GPU.vs_c = sol.GPU.vs_c;
             
             sol.sample.T       = gather( reshape( sol.GPU.TFvec, sol.sample.sz.sz ));
             sol.probe.phi      = gather( sol.GPU.phi );
+            sol.spos.rs        = gather( sol.GPU.spos_rs );   
 %             sol.probe.scpm.occ = gather( sol.GPU.scpmocc );
             
             ptycho2DTPA_mkimg_sample_SCPM( sol, expt ); 
@@ -1606,7 +1470,8 @@ GPU.vs_c = sol.GPU.vs_c;
     sol.sample.T       = gather( reshape( sol.GPU.TFvec, sol.sample.sz.sz ));
     sol.probe.phi      = gather( sol.GPU.phi );
     sol.probe.scpm.occ = gather( sol.GPU.scpmocc );
-    
+    sol.spos.rs        = gather( sol.GPU.spos_rs );   
+
     sol = rmfield( sol, 'GPU' );
 
 end
@@ -1622,43 +1487,44 @@ function [ GPU ] = CPUmem2GPUmem( sol, expt, GPU )
     GPU.batch_indx = gpuArray( sol.spos.batch_indx );
     GPU.Nspos      = gpuArray( single( length( GPU.batch_indx )));
 
-    GPU.batch_rs = gpuArray( sol.spos.rs( sol.spos.batch_indx, : ) );
-
+%     GPU.batch_rs = gpuArray( sol.spos.rs( sol.spos.batch_indx, : ) );
+    GPU.batch_rs = sol.GPU.spos_rs( GPU.batch_indx, : );
+    
     GPU.ind = get_indices_2Dframes( GPU.batch_rs, sol.GPU.samsz, sol.GPU.vs_r, sol.GPU.vs_c ); 
     GPU.ind = gpuArray( uint32( GPU.ind )); 
     
     GPU.ind_offset = GPU.ind + gpuArray( uint32( GPU.samrc * ( 0 : 1 : ( GPU.Nspos - 1 ) )));
-    
-    if strcmp( sol.exwv_noisemodel, 'gaussian' )
-        
-        %==========================================================================================
-        % measurement amplitudes for when we use Gaussian cost function w/ constant (ignored) stdev
-        %==========================================================================================
 
-        GPU.meas = gpuArray( reshape( expt.meas.D( :, :, GPU.batch_indx ), [ GPU.sz, 1, GPU.Nspos ] ));
-        GPU.meas_eq0 = ( GPU.meas == 0 );
-
-    elseif strcmp( sol.exwv_noisemodel, 'poisson' )
+    if strcmp( sol.exwv_noisemodel, 'poisson' )
         
         %==============================================================
         % measurement intensities for when we use Poisson cost function
         %==============================================================
 
         GPU.meas = gpuArray( reshape( expt.meas.D( :, :, GPU.batch_indx ) .^ 2, [ GPU.rc, GPU.Nspos ] ));
-        GPU.meas_eq0 = ( GPU.meas == 0 );
-
+        
+%         GPU.meas_eq0 = ( GPU.meas == 0 );
+        GPU.meas_eq0 = reshape( gpuArray( expt.meas.blemish ), [ GPU.rc, 1 ] );
+        
     else
         
-        error( 'Invalid Exitwave Update Noise Model: Use Only ''gaussian'' or ''poisson'' (Case Sensitive)' )
-            
+        %==========================================================================================
+        % measurement amplitudes for when we use Gaussian cost function w/ constant (ignored) stdev
+        %==========================================================================================
+
+        GPU.meas = gpuArray( reshape( expt.meas.D( :, :, GPU.batch_indx ), [ GPU.sz, 1, GPU.Nspos ] ));
+        
+%         GPU.meas_eq0 = ( GPU.meas == 0 );
+        GPU.meas_eq0 = gpuArray( expt.meas.blemish );
+   
     end
     
 end
 
 %====================================================================================================================================================
     
-function [ GPU ] = CPUmem( sol, expt )
+function [ xPU ] = CPUmem( sol, expt )
 
-    GPU = [];
+    xPU = [];
 
 end

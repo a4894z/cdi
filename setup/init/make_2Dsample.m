@@ -77,8 +77,8 @@ sample.sz.sz = [ sample.sz.r, sample.sz.c ];
 
 sample.expofimgabs = false;
 sample.abs_minmax = single( [ +0.6000, +0.999 ] );
-sample.phs_minmax = single( 0.99 * [ -1.0, +1.0 ] * pi );
-sample.phs_offset = single( 0.0 * pi );
+sample.phs_minmax = single( 1.2 * [ -1.0, +1.0 ] * pi );
+sample.phs_offset = single( 0.2 * pi );
 
 %=================
 % make the sample:
@@ -89,6 +89,14 @@ sample.phs_offset = single( 0.0 * pi );
 
 sample.T = imresize( tmp1, 1 * sample.sz.sz, 'bicubic' );
 % sample.T = imresize2D( tmp1, 1 * sample.sz.sz );
+
+%========
+
+sample.T = modulus_limits_scale( sample.T, sample.abs_minmax );
+sample.T = phase_limits_scale( sample.T, sample.phs_minmax );
+
+% figure; imagesc( angle( sample.T )); colormap hsv
+% 5;
 
 %========
 
@@ -131,10 +139,7 @@ sample.vs.c = round( ( 0.5 * ( sample.sz.c - expt.sz.c ) + 1 ) : ( 0.5 * ( sampl
 % sample.T = exp( -1 * abs( sample.T )) .* exp( 1i * angle( sample.T ));
 % sample.T = exp( -1 * abs( sample.T )) .* exp( 1i * abs( sample.T ));
 
-%========
 
-sample.T = modulus_limits_scale( sample.T, sample.abs_minmax );
-sample.T = phase_limits_scale( sample.T, sample.phs_minmax );
 
 % sample.T = abs( sample.T );
 

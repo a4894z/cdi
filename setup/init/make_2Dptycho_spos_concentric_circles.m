@@ -17,48 +17,76 @@ spos.rs0 = spos.rs;
 %=================================================================
 % introduce misc probe position goofiness and scan position errors
 %=================================================================
-
+%============
 % translation
-%
+%============
+
 % spos.rs( :, 1 ) = spos.rs( :, 1 ) + 6;
 % spos.rs( :, 2 ) = spos.rs( :, 2 ) - 20;
 
-%=======================
-
+%======
 % shear
+%======
+
+%{
 
 % sx = +0.5 * sign( 2 * rand - 1 );
 % sy = +0.5 * sign( 2 * rand - 1 );
 % sx = +0.5 * ( 2 * rand - 1 );
 % sy = +0.5 * ( 2 * rand - 1 );
-sx = +0.5;
-sy = -0.0;
+sx = -0.2;
+sy = +0.4;
 
-spos.rs = transpose( [ 1, 0; sx, 1 ] * transpose( spos.rs ));
-
-figure; 
-plot_2Dscan_positions( spos.rs0, [], spos.rs, [] )
-set( gca, 'xdir', 'reverse' )
-set( gca, 'ydir', 'normal' )
-xlabel('xh, lab frame'); 
-ylabel('yv, lab frame');
-xlim([-500, 500])
-ylim([-500, 500])
-daspect([1 1 1])  
-grid on
         
-spos.rs = transpose( [ 1, sy; 0, 1 ] * transpose( spos.rs ));
+% spos.rs = transpose( [ 1, sy; 0, 1 ] * transpose( spos.rs ));
+% 
+% figure; 
+% plot_2Dscan_positions( spos.rs0, [], spos.rs, [] )
+% set( gca, 'xdir', 'reverse' )
+% set( gca, 'ydir', 'normal' )
+% xlabel('xh, lab frame'); 
+% ylabel('yv, lab frame');
+% xlim([-500, 500])
+% ylim([-500, 500])
+% daspect([1 1 1])  
+% grid on
+% 
+% 
+% spos.rs = transpose( [ 1, 0; sx, 1 ] * transpose( spos.rs ));
+% 
+% figure; 
+% plot_2Dscan_positions( spos.rs0, [], spos.rs, [] )
+% set( gca, 'xdir', 'reverse' )
+% set( gca, 'ydir', 'normal' )
+% xlabel('xh, lab frame'); 
+% ylabel('yv, lab frame');
+% xlim([-500, 500])
+% ylim([-500, 500])
+% daspect([1 1 1])  
+% grid on
 
-figure; 
-plot_2Dscan_positions( spos.rs0, [], spos.rs, [] )
-set( gca, 'xdir', 'reverse' )
-set( gca, 'ydir', 'normal' )
-xlabel('xh, lab frame'); 
-ylabel('yv, lab frame');
-xlim([-500, 500])
-ylim([-500, 500])
-daspect([1 1 1])  
-grid on
+
+
+
+
+
+
+spos.rs = transpose( [ 1, sy; sx, 1 ] * transpose( spos.rs ));
+
+% figure; 
+% plot_2Dscan_positions( spos.rs0, [], rs_shear, [] )
+% set( gca, 'xdir', 'reverse' )
+% set( gca, 'ydir', 'normal' )
+% xlabel('xh, lab frame'); 
+% ylabel('yv, lab frame');
+% xlim([-500, 500])
+% ylim([-500, 500])
+% daspect([1 1 1])  
+% grid on
+% 
+% 5;
+
+%}
 
 %=======================
 
@@ -95,29 +123,29 @@ grid on
 
 % scale
 
-sx = 1.0 + 0.0;
-sy = 1.0 + 0.2;
-
-spos.rs = transpose( [ sy, 0; 0, sx ] * transpose( spos.rs ));
-
-figure; 
-plot_2Dscan_positions( spos.rs0, [], spos.rs, [] )
-set( gca, 'xdir', 'reverse' )
-set( gca, 'ydir', 'normal' )
-xlabel('xh, lab frame'); 
-ylabel('yv, lab frame');
-xlim([-500, 500])
-ylim([-500, 500])
-daspect([1 1 1])  
-grid on
-
-5;
+% sx = 1.0 + 0.0;
+% sy = 1.0 + 0.2;
+% 
+% spos.rs = transpose( [ sy, 0; 0, sx ] * transpose( spos.rs ));
+% 
+% figure; 
+% plot_2Dscan_positions( spos.rs0, [], spos.rs, [] )
+% set( gca, 'xdir', 'reverse' )
+% set( gca, 'ydir', 'normal' )
+% xlabel('xh, lab frame'); 
+% ylabel('yv, lab frame');
+% xlim([-500, 500])
+% ylim([-500, 500])
+% daspect([1 1 1])  
+% grid on
+% 
+% 5;
 
 %=======================
 % random position errors
 %=======================
-% 
-% spos.rs = spos.rs + round( 20 * ( 2 * rand( spos.N, 2 ) - 1 ));
+
+spos.rs = spos.rs + round( 15 * ( 2 * rand( spos.N, 2 ) - 1 ));
 
 %====================================================================================================================================================
 

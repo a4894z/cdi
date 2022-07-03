@@ -12,8 +12,8 @@ function ptycho2DTPA_mkimg_sample_SCPM( sol, expt )
         set( gca, 'ydir', 'normal' )
         xlabel('xh, lab frame'); 
         ylabel('yv, lab frame');
-        xlim([-500, 500])
-        ylim([-500, 500])
+%         xlim([-500, 500])
+%         ylim([-500, 500])
         daspect([1 1 1])  
         grid on
         
@@ -44,6 +44,9 @@ function ptycho2DTPA_mkimg_sample_SCPM( sol, expt )
         % sample plotting
         %================
 
+%         hsv_img = complex2hsv( sol.sample.T, 0, 0, 0 );
+%         rgb_img = hsv2rg( hsv_img );
+        
         close all;
     
         pltopts.xaxis = expt.csys.z2.dLx * (1 : sol.sample.sz.c);
@@ -172,7 +175,7 @@ function ptycho2DTPA_mkimg_sample_SCPM( sol, expt )
         title('abs probe')
 
         a2 = subplot(122);
-        imagesc( log10( 1 + abs( V )));
+        imagesc( log10( 1 + 10^1 * abs( V )));
 %         imagesc( pltopts.xaxis, pltopts.yaxis, log10( 1 + 1e-0 * absPmodes2 )); 
         daspect([1 1 1]);
         colormap( a2, expt.cm.blj ); 

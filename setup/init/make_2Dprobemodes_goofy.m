@@ -30,7 +30,7 @@ csys  = Z.expt.csys;
 sz    = Z.expt.sz;
 probe = Z.expt.probe;
 
-probe.scpm.fro2TOT = ( 10 ^ ( +0 )) * probe.scpm.fro2TOT; 
+probe.scpm.fro2TOT = ( 10 ^ ( +1 )) * probe.scpm.fro2TOT; 
 
 % orthogonalize the probe modes:
 [ probe.phi ] = orthog_modes_eigendecomp( probe.phi );
